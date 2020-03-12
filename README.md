@@ -19,10 +19,20 @@ set up a cronjob to purge pending carts (on a daily basis)
 ## Product
 `Cita\eCommerce\Model\Product`
 
-
 ## Order
 `Cita\eCommerce\Model\Order`
 ### implement `createInvoiceRows` function in extension to create your own invoice rows
+
+## Payment settings
+[some doc]
+
+### stripe
+...
+
+Make sure you require Stripe's v3 library in your template
+```
+Requirements::javascript('https://js.stripe.com/v3/');
+```
 
 ### turn off order's default buttons:
 ```
@@ -52,6 +62,18 @@ GST calculation is based on the subtotal amount AFTER the discount (is there is 
 - Shipping cost IS NOT included in GST calculation
 - Shipping cost DOES NOT accept discount (if you want to give the freight provider money, you extend the classes and customise the calculation and take manage your own calculation from there.)
 
+### Templating
+If you are an old-school guy and want to do it the traditional way, then create below `.ss` files under your theme's templates directory and do your magic
+
+```
+Cita\eCommerce\Controller\Cart.ss
+Cita\eCommerce\Controller\Checkout.ss
+Cita\eCommerce\Controller\Complete.ss
+```
+
+
+
+
 
 ## FAQ
 ### Test cards?
@@ -80,12 +102,3 @@ CVV: 100
 
 ### Why Payment Express method rounds my payable total (or amount shows up on the payment gateway is different from what's on the checkout grand total)?
 When on sandbox mode, Payment Express only allows integer value to be the amount to pay, therefore we have to round the amount before we pass it to Payment Express's payment gateway.
-
-### Templating
-If you are an old-school guy and want to do it the traditional way, then create below `.ss` files under your theme's templates directory and do your magic
-
-```
-Cita\eCommerce\Controller\Cart.ss
-Cita\eCommerce\Controller\Checkout.ss
-Cita\eCommerce\Controller\Complete.ss
-```

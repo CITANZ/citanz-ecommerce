@@ -76,6 +76,9 @@ trait CartActions
             if ($item = $cart->Items()->byID($this->request->postVar('id'))) {
                 $item->delete();
             }
+
+            $cart->UpdateAmountWeight();
+            
             return $cart->getData();
         }
 

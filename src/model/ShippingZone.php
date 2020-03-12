@@ -132,7 +132,7 @@ class ShippingZone extends DataObject
 
     private function getNumContainers($value)
     {
-        return ceil($value / $this->ContainerCapacity);
+        return empty($this->ContainerCapacity) ? 0 : ceil($value / $this->ContainerCapacity);
     }
 
     public function CalculateOrderCost(&$order)

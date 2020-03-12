@@ -28,8 +28,13 @@ class CartController extends PageController
      * @var array
      */
     private static $url_handlers = [
-        'checkout'  =>  'render_checkout_page',
-        'complete'  =>  'render_complete_page'
+        'checkout'          =>  'render_checkout_page',
+        'complete/$status'  =>  'render_complete_page',
+        'add'               =>  'index',
+        'delete'            =>  'index',
+        'update'            =>  'index',
+        'estimate_freight'  =>  'index',
+        'coupon_validate'   =>  'index'
     ];
 
     /**
@@ -46,6 +51,16 @@ class CartController extends PageController
         $this->handle_preflight();
 
         if ($this->request->isAjax()) {
+
+            if ($action = $this->request->Param('action')) {
+
+                if ($this->request->isPost()) {
+                    return json_encode($this->{'do_' . $action}());
+                }
+
+                return json_encode($this->{'get_' . $action . '_data'}());
+            }
+
             return json_encode($this->getData());
         }
 

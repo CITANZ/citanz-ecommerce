@@ -66,7 +66,7 @@ class PoliController extends eCommerceController
                 $Order->onPaymentUpdate($payment->Status);
             }
 
-            return $this->route_data($payment->Status, $Order->ID);
+            return $Order;
         }
 
         return $this->httpError(400, 'Order not found');

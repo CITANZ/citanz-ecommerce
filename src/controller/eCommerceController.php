@@ -8,26 +8,20 @@ use Cita\eCommerce\eCommerce;
 
 class eCommerceController extends ContentController
 {
-    protected function route($result)
+    protected function route(&$order)
     {
-        $state      =   $result['state'];
-        $orderID    =   $result['order_id'];
-        $url        =   $this->get_returning_url($state);
+        if (!$order->Payments()->first()) {
+            return $this->httpError(400, 'Payment did not happen!');
+        }
+
+        $url        =   $this->get_returning_url($order->Payments()->first()->Status);
         $queries    =   [
-                            'order_id'  =>  $orderID,
-                            'state'     =>  strtolower($state)
+                            'order_id'  =>  $order->ID
                         ];
 
         $url        .=  ('?' . http_build_query($queries));
 
         return $this->redirect($url);
-    }
-
-    protected function route_data($state, $order_id)
-    {
-        return  [
-                    'order_id'      =>  $order_id
-                ];
     }
 
     protected function handle_postback($data)

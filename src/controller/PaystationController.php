@@ -69,7 +69,7 @@ class PaystationController extends eCommerceController
                 $Order->onPaymentUpdate($payment->Status);
             }
 
-            return 'Cool, thanks!';
+            return $Order;
         }
 
         Injector::inst()->get(LoggerInterface::class)->info('POST:: NO SUCH ORDER');
@@ -102,7 +102,7 @@ class PaystationController extends eCommerceController
                 $Order->onPaymentUpdate($payment->Status);
             }
 
-            return $this->route_data($payment->Status, $Order->ID);
+            return $Order;
         }
 
         Injector::inst()->get(LoggerInterface::class)->info('GET:: NO SUCH ORDER');
