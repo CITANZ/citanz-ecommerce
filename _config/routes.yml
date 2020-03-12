@@ -1,0 +1,11 @@
+---
+Name: cita-ecommerce-routes
+#After: framework/routes#coreroutes
+---
+SilverStripe\Control\Director:
+  rules:
+    'cita-ecommerce/poli-complete': 'Cita\eCommerce\Controller\PoliController'
+    'cita-ecommerce/paystation-complete': 'Cita\eCommerce\Controller\PaystationController'
+    'cita-ecommerce/dps-complete': 'Cita\eCommerce\Controller\DPSController'
+    'cita-ecommerce/stripe-complete': 'Cita\eCommerce\Controller\StripeController'
+    'cart/$action/$status': Cita\eCommerce\Controller\CartController

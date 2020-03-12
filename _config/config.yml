@@ -1,0 +1,162 @@
+---
+Name: 'citanz-silverstripe-ecommerce'
+---
+# Member:
+#   extensions:
+#     - StoredCreditcardExtension
+Cita\eCommerce\eCommerce:
+  DefaultCurrency: 'NZD'
+  AllowAnonymousCustomer: 1
+  # CartlessProducts:
+  #   - ClassName
+  MerchantSettings:
+    SuccessURL: "/cart/complete/success"
+    FailureURL: "/cart/complete/fail"
+    CancellationURL: "/cart/complete/cancel"
+    CardSavedURL: "/cart/complete/saved"
+    PaymentScheduledURL: "/cart/complete/pending"
+  API:
+    POLi: 'https://poliapi.apac.paywithpoli.com/api/v2/Transaction'
+    Paystation: 'https://www.paystation.co.nz/direct/paystation.dll'
+    PaystationLookup: 'https://payments.paystation.co.nz/lookup/'
+    DPS : 'https://uat.paymentexpress.com/pxaccess/pxpay.aspx'
+  GatewaySettings:
+    Paystation:
+        paystation: '_empty'
+        pstn_gi: 'PAYSTATION'
+        pstn_nr: 't'
+  AdditionalSettings:
+    Paystation:
+      QuickMode: 1
+
+Cita\eCommerce\Model\PaymentMethod:
+  payment_methods:
+    Cita\eCommerce\API\DirectDebit: 'Direct Debit'
+    Cita\eCommerce\API\Invoice: 'Invoice'
+    Cita\eCommerce\API\DPS: 'Payment Express'
+    Cita\eCommerce\API\Paystation: 'Paystation'
+    Cita\eCommerce\API\POLi: 'POLi'
+    Cita\eCommerce\API\Stripe: 'Stripe'
+
+SilverStripe\Security\Group:
+  extensions:
+    - Cita\eCommerce\Extension\MemberGroupExtension
+
+SilverStripe\SiteConfig\SiteConfig:
+  extensions:
+    - Cita\eCommerce\Extension\SiteconfigExtension
+
+Cita\eCommerce\Model\Order:
+  default_buttons:
+    complete_order:
+      enabled: true
+      label: 'Complete Order'
+      extra_class: 'btn-primary'
+      message: 'Order Complete!'
+    cheque_cleared:
+      enabled: true
+      label: 'Cheque Cleared'
+      extra_class: 'btn-primary'
+      message: 'Cheque is cleared!'
+    debit_cleared:
+      enabled: true
+      label: 'Debit Cleared'
+      extra_class: 'btn-primary'
+      message: 'Debit is cleared!'
+    send_tracking:
+      enabled: true
+      label: 'Send Tracking Number'
+      extra_class: 'btn-outline-primary'
+      message: 'Tracking information has been sent!'
+    send_invoice:
+      enabled: true
+      label: 'Resend Invoice'
+      extra_class: ''
+      message: 'Invoice has been sent!'
+    refund:
+      enabled: true
+      label: 'Refund'
+      extra_class: 'btn-outline-danger btn-hide-outline action-delete'
+      message: 'Order has been refunded :('
+    delete:
+      enabled: false
+      label: 'Delete'
+      extra_class: 'btn-danger action-delete'
+      message: 'Order has been deleted!'
+
+Cita\eCommerce\Model\Freight:
+  allowed_countries:
+    Domestic:
+      nz: New Zealand
+    Zone A:
+      au: Australia
+    Zone B:
+      ck: Cook Islands
+      fj: Fiji
+      nc: New Caledonia
+      ws: Samoa
+      to: Tonga
+      vu: Vanuatu
+    Zone C:
+      kh: Cambodia
+      ca: Canada
+      cn: China
+      in: India
+      id: Indonesia
+      jp: Japan
+      kr: South Korea
+      lk: Sri Lanka
+      my: Malaysia
+      ph: Philippines
+      sg: Singapore
+      th: Thailand
+      us: United States
+      vn: Vietnam
+    Zone D:
+      at: Austria
+      be: Belgium
+      hr: Croatia
+      cz: Czech Republic
+      dk: Denmark
+      ec: Ecuador
+      fi: Finland
+      fr: France
+      de: Germany
+      gr: Greece
+      hu: Hungary
+      ie: Ireland
+      it: Italy
+      nl: Netherlands
+      no: Norway
+      pl: Poland
+      pt: Portugal
+      ro: Romania
+      si: Slovenia
+      es: Spain
+      se: Sweden
+      ch: Switzerland
+      gb: United Kingdom
+    Zone E:
+      br: Brazil
+      cl: Chile
+      cr: Costa Rica
+      sv: El Salvador
+      mx: Mexico
+      uy: Uruguay
+
+---
+Only:
+  environment: 'dev'
+---
+Cita\eCommerce\eCommerce:
+  GatewaySettings:
+    Paystation:
+      pstn_tm: 't'
+
+---
+Only:
+  environment: 'live'
+---
+Cita\eCommerce\eCommerce:
+  API:
+    DPS : 'https://sec.paymentexpress.com/pxaccess/pxpay.aspx'
