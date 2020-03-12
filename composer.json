@@ -22,7 +22,6 @@
         "colymba/gridfield-bulk-editing-tools": "^3.0",
         "leochenftw/ss-arsenal": "dev-master",
         "stripe/stripe-php": "^7.27",
-        "salted-herring/salted-cropper": "dev-feature/ss4-upgrade",
         "dynamic/silverstripe-country-dropdown-field": "^1.2",
         "symbiote/silverstripe-gridfieldextensions": "^3",
         "cita/image-cropper": "dev-master"
