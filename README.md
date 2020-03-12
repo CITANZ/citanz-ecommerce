@@ -3,6 +3,9 @@ No doc at this stage - use on your own risk.
 ## How does it work?
 It doesn't...
 
+## Demo?
+https://demo-shop.cita.nz/
+
 ## Email Configuration
 ```
 SilverStripe\Control\Email\Email:
@@ -54,18 +57,25 @@ GST calculation is based on the subtotal amount AFTER the discount (is there is 
 ### Test cards?
 #### POLi
 Username: DemoShopper
+
 Password: DemoShopper
 
 #### Payment Express
 Card: 4111111111111111
+
 Card Holder: YOUR_NAME
+
 Expiry: [leave it as it is]
+
 CVV: 100
 
 #### Paystation
 Card: 5555555555554444
+
 Card Holder: YOUR_NAME
+
 Expiry: 0521
+
 CVV: 100
 
 ### Why Payment Express method rounds my payable total (or amount shows up on the payment gateway is different from what's on the checkout grand total)?
