@@ -45,7 +45,9 @@ class CartController extends PageController
             }
         }
 
-        return parent::index($request);
+        if (method_exists(get_parent_class($this), 'index')) {
+            return parent::index($request);
+        }
     }
 
     protected function init()
