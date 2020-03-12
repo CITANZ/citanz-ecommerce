@@ -100,5 +100,12 @@ Expiry: 0521
 
 CVV: 100
 
+#### Stripe
+Card: 4000005540000008
+
+Expiry: 0555
+
+CVV: 555
+
 ### Why Payment Express method rounds my payable total (or amount shows up on the payment gateway is different from what's on the checkout grand total)?
 When on sandbox mode, Payment Express only allows integer value to be the amount to pay, therefore we have to round the amount before we pass it to Payment Express's payment gateway.
