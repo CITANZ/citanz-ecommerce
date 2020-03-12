@@ -12,6 +12,8 @@
         }
     ],
     "require": {
+        "guzzlehttp/guzzle": "^6.3",
+        "silvershop/silverstripe-hasonefield": "^3.0.1",
         "unclecheese/display-logic": "^2.0",
         "stripe/stripe-php": "^7.27",
         "silverstripe/framework": "^4.0",
@@ -19,7 +21,10 @@
         "dynamic/silverstripe-country-dropdown-field": "^1.2",
         "colymba/gridfield-bulk-editing-tools": "^3.0",
         "leochenftw/ss-arsenal": "dev-master",
-        "stripe/stripe-php": "^7.27"
+        "stripe/stripe-php": "^7.27",
+        "salted-herring/salted-cropper": "dev-feature/ss4-upgrade",
+        "dynamic/silverstripe-country-dropdown-field": "^1.2",
+        "symbiote/silverstripe-gridfieldextensions": "^3",
     },
     "extra": {
         "expose": [
