@@ -23,7 +23,43 @@ class CartController extends PageController
 {
     use CartActions;
 
+    /**
+     * Defines URL patterns.
+     * @var array
+     */
+    private static $url_handlers = [
+        'checkout'  =>  'render_checkout_page',
+        'complete'  =>  'render_complete_page'
+    ];
+
+    /**
+     * Defines methods that can be called directly
+     * @var array
+     */
+    private static $allowed_actions = [
+        'render_checkout_page'  =>  true,
+        'render_complete_page'  =>  true
+    ];
+
     public function index(HTTPRequest $request)
+    {
+        $this->handle_preflight();
+
+        if ($this->request->isAjax()) {
+            return json_encode($this->getData());
+        }
+
+        return $this->renderWith(['Cita\eCommerce\Controller\Cart', 'Page']);
+    }
+
+    protected function init()
+    {
+        parent::init();
+
+        Requirements::javascript('https://js.stripe.com/v3/');
+    }
+
+    private function handle_preflight()
     {
         // check for CORS options request
         if ($this->request->httpMethod() === 'OPTIONS' ) {
@@ -34,26 +70,38 @@ class CartController extends PageController
             $response->output();
             exit;
         }
-
-        if ($action = $this->request->Param('action')) {
-            if ($this->request->isAjax()) {
-                if ($this->request->isPost()) {
-                    return json_encode($this->{'do_' . $action}());
-                }
-
-                return json_encode($this->{'get_' . $action . '_data'}());
-            }
-        }
-
-        if (method_exists(get_parent_class($this), 'index')) {
-            return parent::index($request);
-        }
     }
 
-    protected function init()
+    public function render_checkout_page()
     {
-        parent::init();
-        Requirements::javascript('https://js.stripe.com/v3/');
+        $this->handle_preflight();
+
+        if ($this->request->isAjax()) {
+
+            if ($this->request->isPost()) {
+                return json_encode($this->do_checkout());
+            }
+
+            return json_encode($this->get_checkout_data());
+        }
+
+        return $this->renderWith(['Cita\eCommerce\Controller\Checkout', 'Page']);
+    }
+
+    public function render_complete_page()
+    {
+        $this->handle_preflight();
+
+        if ($this->request->isAjax()) {
+
+            if ($this->request->isPost()) {
+                return json_encode($this->do_complete());
+            }
+
+            return json_encode($this->get_complete_data());
+        }
+
+        return $this->renderWith(['Cita\eCommerce\Controller\Complete', 'Page']);
     }
 
     public function Link($action = NULL)
@@ -73,6 +121,10 @@ class CartController extends PageController
                     }
 
                     return 'Payment';
+                }
+
+                if ($action == 'checkout') {
+                    return 'Checkout';
                 }
             }
         }

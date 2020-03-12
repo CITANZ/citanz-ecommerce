@@ -80,3 +80,12 @@ CVV: 100
 
 ### Why Payment Express method rounds my payable total (or amount shows up on the payment gateway is different from what's on the checkout grand total)?
 When on sandbox mode, Payment Express only allows integer value to be the amount to pay, therefore we have to round the amount before we pass it to Payment Express's payment gateway.
+
+### Templating
+If you are an old-school guy and want to do it the traditional way, then create below `.ss` files under your theme's templates directory and do your magic
+
+```
+Cita\eCommerce\Controller\Cart.ss
+Cita\eCommerce\Controller\Checkout.ss
+Cita\eCommerce\Controller\Complete.ss
+```
