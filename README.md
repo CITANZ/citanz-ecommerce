@@ -66,9 +66,9 @@ GST calculation is based on the subtotal amount AFTER the discount (is there is 
 If you are an old-school guy and want to do it the traditional way, then create below `.ss` files under your theme's templates directory and do your magic
 
 ```
-Cita\eCommerce\Controller\Cart.ss
-Cita\eCommerce\Controller\Checkout.ss
-Cita\eCommerce\Controller\Complete.ss
+Cita\eCommerce\Layout\Layout\Cart.ss
+Cita\eCommerce\Layout\Layout\Cart_checkout.ss
+Cita\eCommerce\Layout\Layout\Cart_complete.ss
 ```
 
 

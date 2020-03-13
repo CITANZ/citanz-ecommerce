@@ -1,6 +1,6 @@
 <?php
 
-namespace Cita\eCommerce\Controller;
+namespace Cita\eCommerce\Layout;
 use PageController;
 use SilverStripe\SiteConfig\SiteConfig;
 use Cita\eCommerce\eCommerce;
@@ -19,52 +19,53 @@ use SilverStripe\View\Requirements;
  * @package silverstripe
  * @subpackage mysite
  */
-class CartController extends PageController
+class Cart extends PageController
 {
     use CartActions;
-
-    /**
-     * Defines URL patterns.
-     * @var array
-     */
-    private static $url_handlers = [
-        'checkout'          =>  'render_checkout_page',
-        'complete/$status'  =>  'render_complete_page',
-        'add'               =>  'index',
-        'delete'            =>  'index',
-        'update'            =>  'index',
-        'estimate_freight'  =>  'index',
-        'coupon_validate'   =>  'index'
-    ];
 
     /**
      * Defines methods that can be called directly
      * @var array
      */
     private static $allowed_actions = [
-        'render_checkout_page'  =>  true,
-        'render_complete_page'  =>  true
+        'checkout'          =>  true,
+        'complete'          =>  true,
+        'add'               =>  true,
+        'update'            =>  true,
+        'delete'            =>  true,
+        'estimate_freight'  =>  true,
+        'coupon_validate'   =>  true
     ];
 
-    public function index(HTTPRequest $request)
+    protected function handleAction($request, $action)
     {
-        $this->handle_preflight();
-
-        if ($this->request->isAjax()) {
-
-            if ($action = $this->request->Param('action')) {
-
-                if ($this->request->isPost()) {
-                    return json_encode($this->{'do_' . $action}());
-                }
-
-                return json_encode($this->{'get_' . $action . '_data'}());
-            }
-
-            return json_encode($this->getData());
+        if (!$this->request->isAjax()) {
+            return parent::handleAction($request, $action);
         }
 
-        return $this->renderWith(['Cita\eCommerce\Controller\Cart', 'Page']);
+        if ($this->request->httpMethod() === 'OPTIONS' ) {
+            // create direct response without requesting any controller
+            $response   =   $this->getResponse();
+            // set CORS header from config
+            $response   =   $this->addCORSHeaders($response);
+            $response->output();
+            exit;
+        }
+
+        $header     =   $this->getResponse();
+
+        $this->addCORSHeaders($header);
+
+        if ($action = $this->request->Param('action')) {
+
+            if ($this->request->isPost()) {
+                return json_encode($this->{'do_' . $action}());
+            }
+
+            return json_encode($this->{'get_' . $action . '_data'}());
+        }
+
+        return json_encode($this->getData());
     }
 
     protected function init()
@@ -85,38 +86,6 @@ class CartController extends PageController
             $response->output();
             exit;
         }
-    }
-
-    public function render_checkout_page()
-    {
-        $this->handle_preflight();
-
-        if ($this->request->isAjax()) {
-
-            if ($this->request->isPost()) {
-                return json_encode($this->do_checkout());
-            }
-
-            return json_encode($this->get_checkout_data());
-        }
-
-        return $this->renderWith(['Cita\eCommerce\Controller\Checkout', 'Page']);
-    }
-
-    public function render_complete_page()
-    {
-        $this->handle_preflight();
-
-        if ($this->request->isAjax()) {
-
-            if ($this->request->isPost()) {
-                return json_encode($this->do_complete());
-            }
-
-            return json_encode($this->get_complete_data());
-        }
-
-        return $this->renderWith(['Cita\eCommerce\Controller\Complete', 'Page']);
     }
 
     public function Link($action = NULL)
