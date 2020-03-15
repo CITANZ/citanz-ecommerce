@@ -517,6 +517,13 @@ class Order extends DataObject
         }
     }
 
+    public function getDiscounted()
+    {
+        $dt     =   $this->DiscountableTaxable;
+        $dnt    =   $this->DiscountableNonTaxalbe;
+        return $this->Discount()->calc_discount($dt + $dnt);
+    }
+
     public function getGST()
     {
         $dt         =   $this->DiscountableTaxable;
@@ -659,7 +666,7 @@ class Order extends DataObject
         if ($this->Discount()->exists()) {
             $dt     =   $this->DiscountableTaxable;
             $dnt    =   $this->DiscountableNonTaxalbe;
-            $data['discount']['amount'] =   $this->Discount()->calc_discount($dt + $dnt);
+            $data['discount']['amount'] =   $this->getDiscounted();
         }
 
         $this->extend('getData', $data);

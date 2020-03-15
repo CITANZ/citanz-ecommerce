@@ -62,7 +62,7 @@
                         <% if $Discount %>
                         <tr>
                             <td colspan="2">$Discount.Title: $Discount.Description</td>
-                            <td class="has-text-right">-${$Discount.calc_discount($TotalAmount)}</td>
+                            <td class="has-text-right">-${$Discounted}</td>
                         </tr>
                         <% end_if %>
                         <tr v-if="site_data.cart.gst">

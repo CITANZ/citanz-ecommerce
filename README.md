@@ -26,7 +26,7 @@ set up a cronjob to purge pending carts (on a daily basis)
 ## Payment settings
 [some doc]
 
-### stripe
+### Stripe
 ...
 
 Make sure you require Stripe's v3 library in your template
@@ -35,6 +35,7 @@ Requirements::javascript('https://js.stripe.com/v3/');
 ```
 
 ### turn off order's default buttons:
+Choose which one(s) you wish to turn off, and set the value(s) to false
 ```
 Cita\eCommerce\Model\Order:
   default_buttons:
@@ -47,7 +48,7 @@ Cita\eCommerce\Model\Order:
 
 ## OrderItem
 
-### Email sending
+## Email sending
 If you want to customise emails, please implement below methods:
 - SendCustomerEmail($from, $to, $str, $customer_sent_flag)
 - SendAdminEmail($from, $to_admin, $str, $admin_sent_flag)
@@ -63,14 +64,13 @@ GST calculation is based on the subtotal amount AFTER the discount (is there is 
 - Shipping cost DOES NOT accept discount (if you want to give the freight provider money, you extend the classes and customise the calculation and take manage your own calculation from there.)
 
 ### Templating
-If you are an old-school guy and want to do it the traditional way, then create below `.ss` files under your theme's templates directory and do your magic
+If you would like to create your own cart templates, please override below files:
 
 ```
-Cita\eCommerce\Layout\Layout\Cart.ss
-Cita\eCommerce\Layout\Layout\Cart_checkout.ss
-Cita\eCommerce\Layout\Layout\Cart_complete.ss
+Cita\eCommerce\Controller\Layout\Cart.ss
+Cita\eCommerce\Controller\Layout\Cart_checkout.ss
+Cita\eCommerce\Controller\Layout\Cart_complete.ss
 ```
-
 
 
 
