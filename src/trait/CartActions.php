@@ -154,7 +154,7 @@ trait CartActions
 
     private function get_complete_data()
     {
-        $cart   =   eCommerce::get_last_processed_cart($this->request->getVar('order_id'));
+        $cart   =   eCommerce::get_last_processed_cart($this->request->param('id'));
 
         if (!$cart) {
             return $this->httpError(404, 'Not found');
