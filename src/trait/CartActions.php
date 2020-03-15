@@ -160,6 +160,7 @@ trait CartActions
             return $this->httpError(404, 'Not found');
         }
 
+        // fugly hack to work with Stripe's Element code behaviour
         if ($this->request->getVar('mini')) {
             if (!$cart->Payments()->first()) return false;
             return true;
