@@ -156,7 +156,8 @@ class Discount extends DataObject
             'title' =>  $this->Title,
             'by'    =>  $this->DiscountBy == 'ByPercentage' ? '%' : '-',
             'rate'  =>  (float) $this->DiscountRate,
-            'code'  =>  $this->CouponCode
+            'code'  =>  $this->CouponCode,
+            'desc'  =>  $this->getDescription()
         ];
 
         $this->extend('CustomGetData', $data);

@@ -656,6 +656,12 @@ class Order extends DataObject
             'shipping_cost' =>  $this->ShippingCost
         ];
 
+        if ($this->Discount()->exists()) {
+            $dt     =   $this->DiscountableTaxable;
+            $dnt    =   $this->DiscountableNonTaxalbe;
+            $data['discount']['amount'] =   $this->Discount()->calc_discount($dt + $dnt);
+        }
+
         $this->extend('getData', $data);
 
         return $data;
