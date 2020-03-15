@@ -10,11 +10,7 @@ Cita\eCommerce\eCommerce:
   # CartlessProducts:
   #   - ClassName
   MerchantSettings:
-    SuccessURL: "/cart/complete/success"
-    FailureURL: "/cart/complete/fail"
-    CancellationURL: "/cart/complete/cancel"
-    CardSavedURL: "/cart/complete/saved"
-    PaymentScheduledURL: "/cart/complete/pending"
+    CompleteURL: "/cart/complete/"
   API:
     POLi: 'https://poliapi.apac.paywithpoli.com/api/v2/Transaction'
     Paystation: 'https://www.paystation.co.nz/direct/paystation.dll'

@@ -164,6 +164,11 @@ class Discount extends DataObject
         return $data;
     }
 
+    public function getDescription()
+    {
+        return $this->DiscountBy == 'ByPercentage' ? (((float) $this->DiscountRate) . '% off') : ('-$' . $this->DiscountRate);
+    }
+
     public static function check_valid($promo_code)
     {
         if ($coupon = Discount::get()->filter(['CouponCode' => $promo_code, 'Used' => false])->first()) {

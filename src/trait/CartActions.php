@@ -393,12 +393,4 @@ trait CartActions
             }
         }
     }
-
-    public function checkout() { return $this->do_checkout(); }
-    public function complete() { return $this->do_complete(); }
-    public function add() { return $this->do_add(); }
-    public function update() { return $this->do_update(); }
-    public function delete() { return $this->do_delete(); }
-    public function estimate_freight() { return $this->do_estimate_freight(); }
-    public function coupon_validate() { return $this->do_coupon_validate(); }
 }

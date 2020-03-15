@@ -121,4 +121,14 @@ class PaymentMethod extends DataObject
             'gateway'   =>  $this->Gateway
         ];
     }
+
+    public function getGatewayName()
+    {
+        if (!empty($this->Gateway)) {
+            $seg    =   explode('\\', $this->Gateway);
+            return $seg[count($seg) - 1];
+        }
+
+        return '';
+    }
 }

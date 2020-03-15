@@ -494,6 +494,12 @@ class Order extends DataObject
             $this->CustomerReference    =   strtoupper(substr($this->MerchantReference, 0, 8));
         }
 
+        if (!$this->Customer()->exists() && Member::currentUser()) {
+            if (Member::currentUser()->ClassName == Customer::class) {
+                $this->CustomerID           =   Member::currentUser()->ID;
+            }
+        }
+
         if ($this->Status == 'Pending') {
             if ($this->SameBilling) {
                 $this->BillingFirstname    =   $this->ShippingFirstname;

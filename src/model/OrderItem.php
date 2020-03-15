@@ -67,10 +67,10 @@ class OrderItem extends DataObject
      * @var array
      */
     private static $summary_fields = [
-        'ShowTitle'     =>  'Title',
-        'UnitPrice'         =>  'Unit Price',
-        'Quantity'          =>  'Quantity',
-        'Subtotal'          =>  'Subtotal'
+        'ShowTitle' =>  'Title',
+        'UnitPrice' =>  'Unit Price',
+        'Quantity'  =>  'Quantity',
+        'Subtotal'  =>  'Subtotal'
     ];
 
     public function ShowTitle()
@@ -89,7 +89,7 @@ class OrderItem extends DataObject
             return $product . $this->Variant()->Title;
         }
 
-        return '-';
+        return 'DELETED ITEM';
     }
 
     public function UnitPrice()

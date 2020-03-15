@@ -1,6 +1,6 @@
 <?php
 
-namespace Cita\eCommerce\Layout;
+namespace Cita\eCommerce\Controller;
 use PageController;
 use SilverStripe\SiteConfig\SiteConfig;
 use Cita\eCommerce\eCommerce;
@@ -9,6 +9,8 @@ use Cita\eCommerce\Model\Freight;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\Director;
 use Cita\eCommerce\Traits\CartActions;
+use Cita\eCommerce\Traits\CartTemplateActions;
+use Cita\eCommerce\Traits\CartTemplateVariables;
 use SilverStripe\Control\Cookie;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\View\Requirements;
@@ -21,7 +23,7 @@ use SilverStripe\View\Requirements;
  */
 class Cart extends PageController
 {
-    use CartActions;
+    use CartActions, CartTemplateActions, CartTemplateVariables;
 
     /**
      * Defines methods that can be called directly
@@ -34,12 +36,21 @@ class Cart extends PageController
         'update'            =>  true,
         'delete'            =>  true,
         'estimate_freight'  =>  true,
-        'coupon_validate'   =>  true
+        'coupon_validate'   =>  true,
+        // For forms
+        'CartUpdateForm'    =>  true,
+        'CheckoutForm'      =>  true,
+        'DeleteCartItem'    =>  true
     ];
 
     protected function handleAction($request, $action)
     {
         if (!$this->request->isAjax()) {
+
+            if (($this->request->Param('action') == 'complete') && empty(eCommerce::get_last_processed_cart($this->request->param('id')))) {
+                return $this->httpError(404);
+            }
+
             return parent::handleAction($request, $action);
         }
 
@@ -93,18 +104,14 @@ class Cart extends PageController
         return '/cart/';
     }
 
-    public function Title($cart = null)
+    public function Title()
     {
         if ($this->request) {
             if ($action = $this->request->param('action')) {
-                if ($action == 'complete') {
-                    if ($cart && ($payment = $cart->Payments()->first())) {
-                        return 'Payment: ' . $payment->Status;
-                    } elseif ($status = $this->request->param('status')) {
-                        return 'Payment: ' . ucwords($status);
+                if (($action == 'complete') && ($id = $this->request->param('id'))) {
+                    if ($cart = eCommerce::get_last_processed_cart($id)) {
+                        return 'Payment: ' . $cart->Payments()->first()->Status;
                     }
-
-                    return 'Payment';
                 }
 
                 if ($action == 'checkout') {

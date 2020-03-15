@@ -10,6 +10,7 @@ use Cita\eCommerce\Extension\ProductVariantCommonFields;
 use Cita\eCommerce\Extension\ProductOrderItemCommonFields;
 use Leochenftw\Grid;
 use UncleCheese\DisplayLogic\Forms\Wrapper;
+use Cita\eCommerce\Controller\ProductController;
 
 /**
  * Description
@@ -19,6 +20,10 @@ use UncleCheese\DisplayLogic\Forms\Wrapper;
  */
 class Product extends Page
 {
+    public function getControllerName()
+    {
+        return ProductController::class;
+    }
     /**
      * Defines whether a page can be in the root of the site tree
      * @var boolean

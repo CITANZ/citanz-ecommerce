@@ -2,6 +2,8 @@
 
 namespace Cita\eCommerce\API;
 use Cita\eCommerce\Model\Payment;
+use SilverStripe\Core\Config\Config;
+use Cita\eCommerce\eCommerce;
 
 class Invoice
 {
@@ -18,6 +20,6 @@ class Invoice
 
         $order->onPaymentUpdate($payment->Status);
 
-        return ['URI' => '/cart/complete/invoice-pending'];
+        return ['URI' => Config::int()->get(eCommerce::class, 'MerchantSettings')['CompleteURL']];
     }
 }
