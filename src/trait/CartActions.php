@@ -7,12 +7,12 @@ use Cita\eCommerce\Model\Freight;
 use Cita\eCommerce\Model\Discount;
 use Cita\eCommerce\Model\GatewayResponse;
 use SilverStripe\Control\Director;
-use Page;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Security\Member;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Environment;
 use Cita\eCommerce\API\Stripe;
+use Page;
 
 trait CartActions
 {

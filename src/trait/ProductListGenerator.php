@@ -3,12 +3,17 @@ namespace Cita\eCommerce\Traits;
 
 use SilverStripe\Forms\TextField;
 use SilverStripe\Control\Controller;
+use SilverStripe\Core\Injector\Injector;
 use Leochenftw\Util\CacheHandler;
+use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Versioned\Versioned;
 use Cita\eCommerce\Model\Product;
 use Cita\eCommerce\Model\Category;
 use Leochenftw\Util;
 use SilverStripe\ORM\DB;
+use SilverStripe\ORM\ArrayList;
+use SilverStripe\View\ArrayData;
+use SilverStripe\ORM\PaginatedList;
 
 trait ProductListGenerator
 {
@@ -26,10 +31,44 @@ trait ProductListGenerator
         );
     }
 
+    public function getProductList()
+    {
+        $request    =   Injector::inst()->get(HTTPRequest::class);
+        $category   =   !empty($request->getVar('category')) ? $request->getVar('category') : null;
+        $cslug      =   $category;
+        $brand      =   !empty($request->getVar('brand')) ? $request->getVar('brand') : null;
+        $price_from =   !is_null($request->getVar('price_from')) ? ( (int) $request->getVar('price_from') ) : null;
+        $price_to   =   !is_null($request->getVar('price_to')) ? ( (int) $request->getVar('price_to') ) : null;
+        $sort_by    =   !empty($request->getVar('sort')) ? $request->getVar('sort') : 'Title';
+        $order_by   =   !empty($request->getVar('order')) ? $request->getVar('order') : 'ASC';
+        $page       =   !empty($request->getVar('page')) ? $request->getVar('page') : 0;
+        $sort_by    =   $sort_by == 'Price' ? 'SortingPrice' : $sort_by;
+
+        $result     =   $this->get_products($category, $brand);
+
+        if (empty($price_ranges)) {
+            $price_ranges   =   $this->get_price_ranges($result);
+            CacheHandler::save('page.' . $this->key_cutter($this->ID, $category, $brand) . '.price_ranges', $price_ranges, 'PageData');
+        }
+
+        $data['price_ranges']   =   $price_ranges;
+
+        if (!is_null($price_from) && !is_null($price_to)) {
+            $result =   $result->filter([
+                'SortingPrice:GreaterThanOrEqual'   =>  $price_from,
+                'SortingPrice:LessThanOrEqual'      =>  $price_to
+            ]);
+        }
+
+        $result     =   $result->sort([$sort_by => $order_by]);
+
+        return PaginatedList::create($result, $request)->setPageLength($this->PageSize);
+    }
+
     public function getData()
     {
         $key        =   $this->ID;
-        $request    =   Controller::curr()->request;
+        $request    =   Injector::inst()->get(HTTPRequest::class);
         $category   =   !empty($request->getVar('category')) ? $request->getVar('category') : null;
         $cslug      =   $category;
         $brand      =   !empty($request->getVar('brand')) ? $request->getVar('brand') : null;
@@ -106,7 +145,7 @@ trait ProductListGenerator
 
         $data['related_categories'] =   $this->get_related_categories($cslug);
 
-        return $this->attach_session($data);
+        return $data;
     }
 
     private function get_related_categories($category = null)

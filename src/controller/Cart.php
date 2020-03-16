@@ -14,6 +14,7 @@ use Cita\eCommerce\Traits\CartTemplateVariables;
 use SilverStripe\Control\Cookie;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\View\Requirements;
+use SilverStripe\Security\SecurityToken;
 
 /**
  * Description
@@ -64,8 +65,15 @@ class Cart extends PageController
         }
 
         $header     =   $this->getResponse();
-
         $this->addCORSHeaders($header);
+
+        if ($this->request->getVar('mini')) {
+            if ($cart = eCommerce::get_cart()) {
+                return json_encode($cart->getData());
+            }
+
+            return null;
+        }
 
         if ($action = $this->request->Param('action')) {
 
@@ -73,10 +81,12 @@ class Cart extends PageController
                 return json_encode($this->{'do_' . $action}());
             }
 
-            return json_encode($this->{'get_' . $action . '_data'}());
+            return json_encode(array_merge($this->{'get_' . $action . '_data'}(), [
+                'session' => ['csrf' => SecurityToken::inst()->getSecurityID()]
+            ]));
         }
 
-        return json_encode($this->getData());
+        return parent::handleAction($request, $action);
     }
 
     protected function init()

@@ -70,6 +70,9 @@ If you would like to create your own cart templates, please override below files
 Cita\eCommerce\Controller\Layout\Cart.ss
 Cita\eCommerce\Controller\Layout\Cart_checkout.ss
 Cita\eCommerce\Controller\Layout\Cart_complete.ss
+Cita\eCommerce\Model\Layout\Catalog.ss
+Cita\eCommerce\Model\Layout\Product.ss
+Cita\eCommerce\Model\Layout\ProductCollection.ss
 ```
 
 

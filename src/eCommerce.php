@@ -83,9 +83,10 @@ class eCommerce
         $cart_id    =   $session->get('cart_id');
 
         if (!empty($cart_id)) {
-            $order  =   Order::get()->byID($cart_id);
-            if ($order->Status == 'Pending') {
-                return $order;
+            if ($order = Order::get()->byID($cart_id)) {
+                if ($order->Status == 'Pending') {
+                    return $order;
+                }
             }
         }
 
