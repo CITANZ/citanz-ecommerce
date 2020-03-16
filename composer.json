@@ -23,7 +23,8 @@
         "leochenftw/ss-arsenal": "dev-master",
         "stripe/stripe-php": "^7.27",
         "dynamic/silverstripe-country-dropdown-field": "^1.2",
-        "symbiote/silverstripe-gridfieldextensions": "^3"
+        "symbiote/silverstripe-gridfieldextensions": "^3",
+        "silverstripe/tagfield": "^2.4"
     },
     "extra": {
         "expose": [

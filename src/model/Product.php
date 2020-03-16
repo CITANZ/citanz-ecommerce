@@ -11,6 +11,7 @@ use Cita\eCommerce\Extension\ProductOrderItemCommonFields;
 use Leochenftw\Grid;
 use UncleCheese\DisplayLogic\Forms\Wrapper;
 use Cita\eCommerce\Controller\ProductController;
+use Cita\eCommerce\Traits\TopSellerGenerator;
 
 /**
  * Description
@@ -20,6 +21,8 @@ use Cita\eCommerce\Controller\ProductController;
  */
 class Product extends Page
 {
+    use TopSellerGenerator;
+
     public function getControllerName()
     {
         return ProductController::class;
@@ -60,6 +63,31 @@ class Product extends Page
     ];
 
     /**
+     * Has_one relationship
+     * @var array
+     */
+    private static $has_one = [
+        'Brand' =>  Brand::class
+    ];
+
+    /**
+     * Belongs_many_many relationship
+     * @var array
+     */
+    private static $belongs_many_many = [
+        'Categories'    =>  Category::class,
+        'RelatedWith'   =>  Product::class
+    ];
+
+    /**
+     * Many_many relationship
+     * @var array
+     */
+    private static $many_many = [
+        'Related'   =>  Product::class
+    ];
+
+    /**
      * Has_many relationship
      * @var array
      */
@@ -97,30 +125,5 @@ class Product extends Page
 
         $this->extend('updateCMSFields', $fields);
         return $fields;
-    }
-
-    public function getData()
-    {
-        $data   =   parent::getData();
-        $data   =   array_merge($data, [
-            'variants'  =>  $this->hasVariants ?
-                            $this->Variants()->getData() :
-                            [ $this->getMiniData() ]
-        ]);
-
-        return $data;
-    }
-
-    public function getMiniData()
-    {
-        return array_merge($this->getBaseData(), [
-            'link'  =>  $this->Link(),
-            'title' =>  $this->Title
-        ]);
-    }
-
-    public function getTileData()
-    {
-        return array_merge($this->getMiniData(), []);
     }
 }

@@ -13,6 +13,8 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\ORM\DataExtension;
 use Cita\eCommerce\Model\Variant;
+use Cita\eCommerce\Model\Tag;
+use SilverStripe\TagField\TagField;
 
 class ProductVariantCommonFields extends DataExtension
 {
@@ -38,6 +40,14 @@ class ProductVariantCommonFields extends DataExtension
         'SKU'   =>  [
             'type'      =>  'unique'
         ]
+    ];
+
+    /**
+     * Many_many relationship
+     * @var array
+     */
+    private static $many_many = [
+        'Tags'  =>  Tag::class
     ];
 
     /**
@@ -104,6 +114,12 @@ class ProductVariantCommonFields extends DataExtension
                     'Image',
                     'Product Image'
                 ),
+                TagField::create(
+                    'Tags',
+                    'Tags',
+                    Tag::get(),
+                    $this->owner->Tags()
+                )->setShouldLazyLoad(true)->setCanCreate(true),
                 CheckboxField::create(
                     'isDigital',
                     'is Digital Product'
@@ -171,7 +187,6 @@ class ProductVariantCommonFields extends DataExtension
                                 $this->owner->Image()->getAbsoluteURL() : null
         ];
     }
-
 
     public function get_special_price()
     {
