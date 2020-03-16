@@ -15,6 +15,7 @@ use SilverStripe\ORM\DataExtension;
 use Cita\eCommerce\Model\Variant;
 use Cita\eCommerce\Model\Tag;
 use SilverStripe\TagField\TagField;
+use Cita\eCommerce\Model\Product;
 
 class ProductVariantCommonFields extends DataExtension
 {
@@ -181,6 +182,7 @@ class ProductVariantCommonFields extends DataExtension
             'sku'           =>  $this->owner->SKU,
             'class'         =>  $this->owner->ClassName,
             'price'         =>  $this->owner->Price,
+            'price_label'   =>  $this->owner->getPriceLabel(),
             'special_price' =>  $this->owner->get_special_price(),
             'special_rate'  =>  $this->owner->calc_special_price_discount_rate(),
             'image'         =>  $this->owner->Image()->exists() ?
@@ -226,5 +228,29 @@ class ProductVariantCommonFields extends DataExtension
         }
 
         $this->owner->SortingPrice =    !empty($this->owner->get_special_price()) ? $this->owner->get_special_price() : $this->owner->Price;
+    }
+
+    public function getPriceLabel()
+    {
+        if (($this->owner instanceof Product) && $this->owner->hasVariants && $this->owner->Variants()->exists()) {
+            $numbers    =   [];
+            $numbers[]  =   $this->owner->Variants()->sort(['Price' => 'ASC'])->first()->Price;
+            $numbers[]  =   $this->owner->Variants()->sort(['Price' => 'DESC'])->first()->Price;
+            foreach ($this->owner->Variants() as $variant) {
+                if ($special = $variant->get_special_price()) {
+                    $numbers[]  =   $special;
+                }
+            }
+
+            if (!empty($numbers)) {
+                sort($numbers);
+                $lowest     =   $numbers[0];
+                $highest    =   $numbers[count($numbers) - 1];
+
+                return $lowest == $highest ? ('$' . number_format($lowest, 2)) : ('$' . number_format($lowest, 2) . ' - $' . number_format($highest));
+            }
+        }
+
+        return '$' . number_format($this->owner->Price, 2);
     }
 }
