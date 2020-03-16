@@ -18,7 +18,7 @@ class Stripe
 
         \Stripe\Stripe::setApiKey(Director::isDev() ? $settings->secret_dev : $settings->secret);
         $intent     =   PaymentIntent::create([
-                            'amount'                =>  $amount * 100,
+                            'amount'                =>  round($amount * 100),
                             'currency'              =>  strtolower(Config::inst()->get(eCommerce::class, 'DefaultCurrency')),
                             'payment_method_types'  =>  ['card'],
                             'metadata'              =>  [
