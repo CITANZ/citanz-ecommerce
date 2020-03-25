@@ -7,61 +7,57 @@ use Cita\eCommerce\API\DPS;
 use Cita\eCommerce\API\Invoice;
 use Cita\eCommerce\API\DirectDebit;
 use Cita\eCommerce\API\Stripe;
+use Cita\eCommerce\API\Paypal;
 
 class GatewayResponse
 {
-    private $uri;
-    private $error;
-    private $client_secret;
-
-    public function __construct(String $gateway, Array $response)
+    public static function create(String $method, Array $response)
     {
-        if ($gateway == POLi::class) {
+        $uri            =   null;
+        $error          =   null;
+        $client_secret  =   null;
+
+        if ($method == POLi::class) {
             if (!empty($response['Success'])) {
-                $this->uri      =   $response['NavigateURL'];
+                $uri      =   $response['NavigateURL'];
             } else {
-                $this->error    =   $response['ErrorMessage'];
+                $error    =   $response['ErrorMessage'];
             }
         }
 
-        if ($gateway == DPS::class) {
+        if ($method == DPS::class) {
             if (!empty($response['URI'])) {
-                $this->uri      =   $response['URI'];
+                $uri      =   $response['URI'];
             } elseif (!empty($response['ResponseText'])) {
-                $this->error    =   $response['ResponseText'];
+                $error    =   $response['ResponseText'];
             }
         }
 
-        if ($gateway == Paystation::class) {
+        if ($method == Paystation::class) {
             if (!empty($response['InitiationRequestResponse']['DigitalOrder'])) {
-                $this->uri      =   $response['InitiationRequestResponse']['DigitalOrder'];
+                $uri      =   $response['InitiationRequestResponse']['DigitalOrder'];
             } elseif (!empty($response['response']['em'])) {
-                $this->error    =   $response['response']['em'];
+                $error    =   $response['response']['em'];
             }
         }
 
-        if ($gateway == Invoice::class || $gateway == DirectDebit::class) {
-            $this->uri  =   $response['URI'];
+        if ($method == Invoice::class || $method == DirectDebit::class) {
+            $uri  =   $response['URI'];
         }
 
-        if ($gateway == Stripe::class) {
-            $this->client_secret    =   $response['client_secret'];
-        }
-    }
-
-    public function __get($property)
-    {
-        if (property_exists($this, $property)) {
-            return $this->$property;
-        }
-    }
-
-    public function __set($property, $value)
-    {
-        if (property_exists($this, $property)) {
-            $this->$property = $value;
+        if ($method == Stripe::class) {
+            $client_secret    =   $response['client_secret'];
         }
 
-        return $this;
+        if ($method == Paypal::class) {
+            $uri      =   !empty($response['URL']) ? $response['URL'] : null;
+            $error    =   !empty($response['error']) ? $response['error'] : null;
+        }
+
+        return json_decode(json_encode([
+            'uri'   =>  $uri,
+            'error' =>  $error,
+            'client_secret' =>  $client_secret
+        ]));
     }
 }

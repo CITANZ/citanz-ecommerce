@@ -73,6 +73,17 @@ class OrderItem extends DataObject
         'Subtotal'  =>  'Subtotal'
     ];
 
+    public function getSKU()
+    {
+        if ($this->Product()->exists()) {
+            return $this->Product()->SKU;
+        } elseif ($this->Variant()->exists()) {
+            return $this->Variant()->SKU;
+        }
+
+        return 'DELETED-ITEM-SKU';
+    }
+
     public function ShowTitle()
     {
         if ($this->Product()->exists()) {

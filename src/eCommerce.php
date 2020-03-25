@@ -15,6 +15,9 @@ use Cita\eCommerce\Model\PaymentMethod;
 use SilverStripe\Core\Environment;
 use SilverStripe\Security\Member;
 use Cita\eCommerce\Model\Catalog;
+use PayPal\Rest\ApiContext;
+use PayPal\Auth\OAuthTokenCredential;
+use SilverStripe\Control\Director;
 
 class eCommerce
 {
@@ -160,5 +163,23 @@ class eCommerce
         }
 
         return json_decode($settings);
+    }
+
+    public static function get_paypal_apicontext()
+    {
+        $settings   =   Environment::getEnv('Cita_eCommerce_PaymentMethod_Paypal');
+
+        if (empty($settings)) {
+            throw new \Exception("POLi settings not found in .env file. Please create a Cita_eCommerce_PaymentMethod_Paypal envvar in .env file.", 1);
+        }
+
+        $settings   =   json_decode($settings);
+
+        return new ApiContext(
+            new OAuthTokenCredential(
+                Director::isDev() ? $settings->key_dev : $settings->key,
+                Director::isDev() ? $settings->secret_dev : $settings->secret
+            )
+        );
     }
 }

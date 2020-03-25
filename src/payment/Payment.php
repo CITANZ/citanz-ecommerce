@@ -40,10 +40,12 @@ class Payment extends DataObject
         'CardHolder'            =>  'Varchar(128)',
         'Expiry'                =>  'Varchar(8)',
         'TransacID'             =>  'Varchar(128)',
-        'Status'                =>  "Enum('Pending,Invoice Pending,Debit Pending,Success,Failed,Cancelled,CardSavedOnly','Pending')",
+        'Status'                =>  "Enum('Pending,Invoice Pending,Debit Pending,Unverified,Success,Failed,Cancelled,CardSavedOnly','Pending')",
         'Amount'                =>  'Currency',
         'Message'               =>  'Text',
-        'IP'                    =>  'Varchar(48)'
+        'IP'                    =>  'Varchar(48)',
+        'PaypalPayerID'         =>  'Varchar(64)',
+        'PaypalApprovalURL'     =>  'Varchar(1024)'
     ];
 
     /**
@@ -139,7 +141,8 @@ class Payment extends DataObject
             'card_type'         =>  $this->CardType,
             'card_number'       =>  $this->CardNumber,
             'card_holder'       =>  $this->CardHolder,
-            'card_expiry'       =>  $this->Expiry
+            'card_expiry'       =>  $this->Expiry,
+            'approval_url'      =>  $this->Status == 'Unverified' && !empty($this->PaypalApprovalURL) ? $this->PaypalApprovalURL : null
         ];
     }
 }

@@ -33,6 +33,7 @@ Cita\eCommerce\Model\PaymentMethod:
     Cita\eCommerce\API\Paystation: 'Paystation'
     Cita\eCommerce\API\POLi: 'POLi'
     Cita\eCommerce\API\Stripe: 'Stripe'
+    Cita\eCommerce\API\Paypal: 'Paypal'
 
 SilverStripe\Security\Group:
   extensions:

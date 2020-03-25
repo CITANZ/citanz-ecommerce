@@ -138,8 +138,12 @@ trait CartActions
 
     private function getPaymentURL($method, &$cart)
     {
-        $gateway    =   ($method)::process($cart->PayableTotal, $cart->MerchantReference, $cart);
-        $response   =   new GatewayResponse($method, $gateway);
+        $raw_resp   =   ($method)::process($cart->PayableTotal, $cart->MerchantReference, $cart);
+        $response   =   GatewayResponse::create($method, $raw_resp);
+
+        if (!empty($response->error)) {
+            return $this->httpError(500, $response->error);
+        }
 
         if ($method == Stripe::class) {
             return [
