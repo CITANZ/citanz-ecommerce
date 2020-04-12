@@ -153,7 +153,7 @@ class ProductVariantCommonFields extends DataExtension
             CheckboxField::create('OutOfStock', 'Out of Stock')
         ];
 
-        if ($this->owner->ClassName == Variant::class) {
+        if ($this->owner instanceof Variant) {
             $fields->addFieldsToTab(
                 'Root.ProductDetails',
                 $product_detail_fields
@@ -235,7 +235,9 @@ class ProductVariantCommonFields extends DataExtension
             'sku'           =>  $this->owner->SKU,
             'class'         =>  $this->owner->ClassName,
             'price'         =>  $this->owner->Price,
-            'price_label'   =>  $this->owner->getPriceLabel(),
+            'price_label'   =>  $this->owner->hasMethod('overridePriceLabel') ?
+                                $this->owner->overridePriceLabel() :
+                                $this->owner->getPriceLabel(),
             'special_price' =>  $this->owner->get_special_price(),
             'special_rate'  =>  $this->owner->calc_special_price_discount_rate(),
             'image'         =>  $this->owner->Image()->exists() ?
