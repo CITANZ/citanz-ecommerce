@@ -300,7 +300,7 @@ class ProductVariantCommonFields extends DataExtension
                 $lowest     =   $numbers[0];
                 $highest    =   $numbers[count($numbers) - 1];
 
-                return $lowest == $highest ? ('$' . number_format($lowest, 2)) : ('$' . number_format($lowest, 2) . ' - $' . number_format($highest));
+                return $lowest == $highest ? ('$' . number_format($lowest, 2)) : ('$' . number_format($lowest, 2) . ' - $' . number_format($highest, 2));
             }
         }
 
