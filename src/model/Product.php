@@ -8,8 +8,6 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\FieldList;
 use Cita\eCommerce\Extension\ProductVariantCommonFields;
 use Cita\eCommerce\Extension\ProductOrderItemCommonFields;
-use Leochenftw\Grid;
-use UncleCheese\DisplayLogic\Forms\Wrapper;
 use Cita\eCommerce\Controller\ProductController;
 use Cita\eCommerce\Traits\TopSellerGenerator;
 
@@ -95,35 +93,4 @@ class Product extends Page
         'OrderItems'    =>  OrderItem::class,
         'Variants'      =>  Variant::class
     ];
-
-    /**
-     * CMS Fields
-     * @return FieldList
-     */
-    public function getCMSFields()
-    {
-        $fields =   parent::getCMSFields();
-
-        $fields->addFieldsToTab(
-            'Root.Variants',
-            [
-                CheckboxField::create(
-                    'hasVariants',
-                    'Product has variants'
-                )
-            ]
-        );
-
-        if ($this->exists()) {
-            $fields->addFieldToTab(
-                'Root.Variants',
-                Wrapper::create(
-                    Grid::make('Variants', 'Variants', $this->Variants(), true, 'GridFieldConfig_RelationEditor')
-                )->displayIf('hasVariants')->isChecked()->end()
-            );
-        }
-
-        $this->extend('updateCMSFields', $fields);
-        return $fields;
-    }
 }

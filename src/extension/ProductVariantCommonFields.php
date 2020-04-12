@@ -16,6 +16,8 @@ use Cita\eCommerce\Model\Variant;
 use Cita\eCommerce\Model\Tag;
 use SilverStripe\TagField\TagField;
 use Cita\eCommerce\Model\Product;
+use UncleCheese\DisplayLogic\Forms\Wrapper;
+use Leochenftw\Grid;
 
 class ProductVariantCommonFields extends DataExtension
 {
@@ -27,6 +29,9 @@ class ProductVariantCommonFields extends DataExtension
         'SKU'                   =>  'Varchar(64)',
         'OutOfStock'            =>  'Boolean',
         'Price'                 =>  'Currency',
+        'Height'                =>  'Decimal',
+        'Width'                 =>  'Decimal',
+        'Depth'                 =>  'Decimal',
         'UnitWeight'            =>  'Decimal',
         'ShortDesc'             =>  'HTMLText',
         'StockCount'            =>  'Int',
@@ -76,6 +81,9 @@ class ProductVariantCommonFields extends DataExtension
 
         if ($owner->isDigital) {
             $fields->removeByName([
+                'Width',
+                'Height',
+                'Depth',
                 'UnitWeight'
             ]);
         }
@@ -114,30 +122,75 @@ class ProductVariantCommonFields extends DataExtension
                 UploadField::create(
                     'Image',
                     'Product Image'
-                ),
-                TagField::create(
-                    'Tags',
-                    'Tags',
-                    Tag::get(),
-                    $this->owner->Tags()
-                )->setShouldLazyLoad(true)->setCanCreate(true),
-                CheckboxField::create(
-                    'isDigital',
-                    'is Digital Product'
-                )->setDescription('means no freight required'),
-                CheckboxField::create(
-                    'NoDiscount',
-                    'This product does not accept any discout'
-                ),
-                CheckboxField::create(
-                    'isExempt',
-                    'This product is not subject to GST'
-                ),
-                CurrencyField::create('Price'),
-                TextField::create('UnitWeight')->setDescription('in KG. If you are not charging the freight cost on weight, leave it 0.00'),
-                CheckboxField::create('OutOfStock', 'Out of Stock')
+                )
             ]
         );
+
+        $product_detail_fields = [
+            TagField::create(
+                'Tags',
+                'Tags',
+                Tag::get(),
+                $this->owner->Tags()
+            )->setShouldLazyLoad(true)->setCanCreate(true),
+            CheckboxField::create(
+                'isDigital',
+                'is Digital Product'
+            )->setDescription('means no freight required'),
+            CheckboxField::create(
+                'NoDiscount',
+                'This product does not accept any discout'
+            ),
+            CheckboxField::create(
+                'isExempt',
+                'This product is not subject to GST'
+            ),
+            CurrencyField::create('Price'),
+            TextField::create('Width'),
+            TextField::create('Height'),
+            TextField::create('Depth'),
+            TextField::create('UnitWeight')->setDescription('in KG. If you are not charging the freight cost on weight, leave it 0.00'),
+            CheckboxField::create('OutOfStock', 'Out of Stock')
+        ];
+
+        if ($this->owner->ClassName == Variant::class) {
+            $fields->addFieldsToTab(
+                'Root.ProductDetails',
+                $product_detail_fields
+            );
+        } else {
+
+            $fields->removeByName([
+                'Variants'
+            ]);
+
+            $fields->addFieldsToTab(
+                'Root.ProductDetails',
+                [
+                    CheckboxField::create(
+                        'hasVariants',
+                        'Product has variants'
+                    )
+                ]
+            );
+
+            if ($this->owner->exists()) {
+                $fields->addFieldsToTab(
+                    'Root.ProductDetails',
+                    Wrapper::create(
+                        Grid::make('Variants', 'Variants', $this->owner->Variants(), true, 'GridFieldConfig_RelationEditor')
+                    )->displayIf('hasVariants')->isChecked()->end()
+                );
+
+                foreach ($product_detail_fields as $product_detail_field) {
+                    $fields->addFieldsToTab(
+                        'Root.ProductDetails',
+                        $f = Wrapper::create($product_detail_field)->displayIf('hasVariants')->isNotChecked()->end()
+                    );
+                }
+            }
+
+        }
 
 
         $fields->addFieldsToTab(
