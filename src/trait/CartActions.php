@@ -12,6 +12,7 @@ use SilverStripe\Security\Member;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Environment;
 use Cita\eCommerce\API\Stripe;
+use Cita\eCommerce\Model\PaymentMethod;
 use Page;
 
 trait CartActions
@@ -227,7 +228,11 @@ trait CartActions
         $data['payment_methods']    =   eCommerce::get_available_payment_methods()->getData();
         $data['gst_rate']           =   SiteConfig::current_site_config()->GSTRate;
         $data['checkout']           =   !empty($checkout) ? $checkout : null;
-        $data['stripe_key']         =   Director::isDev() ? eCommerce::get_stripe_settings()->key_dev : eCommerce::get_stripe_settings()->key;
+
+        if (PaymentMethod::get()->filter(['Gateway' => Stripe::class])->first()) {
+            $data['stripe_key'] = Director::isDev() ? eCommerce::get_stripe_settings()->key_dev : eCommerce::get_stripe_settings()->key;
+        }
+
         $data['session_oid']        =   $this->request->getSession()->get('cart_id');
 
         return $data;

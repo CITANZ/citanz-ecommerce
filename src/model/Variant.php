@@ -79,10 +79,24 @@ class Variant extends DataObject
     {
         return array_merge($this->getBaseData(), [
             'link'          =>  $this->Product()->exists() ? $this->Product()->Link() : null,
-            'title'         =>  trim($this->Product()->Title),
+            'title'         =>  $this->getProductTitle(),
             'variant_title' =>  $this->Title,
             'content'       =>  Util::preprocess_content(empty($this->Content) ? $this->Product()->Content : $this->Content)
         ]);
+    }
+
+    public function getProductTitle()
+    {
+        if ($this->Product()->exists()) {
+            return trim($this->Product()->Title);
+        }
+
+        $result = $this->extend('getProductTitle');
+        if (!empty($result)) {
+            return $result[0];
+        }
+
+        return null;
     }
 
     /**
