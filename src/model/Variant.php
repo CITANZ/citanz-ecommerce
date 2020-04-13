@@ -69,7 +69,7 @@ class Variant extends DataObject
         $fields = parent::getCMSFields();
 
         $fields->removeByName([
-            'isDigital'
+            'ProductID'
         ]);
 
         return $fields;

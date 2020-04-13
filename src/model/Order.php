@@ -732,10 +732,17 @@ class Order extends DataObject
 
     public function get_freight_data()
     {
-        if ($this->Freight()->exists()) {
+        if ($this->is_freeshipping()) {
+            return [
+                'title' => 'Free shipping',
+                'cost' => 0
+            ];
+        } elseif ($this->Freight()->exists()) {
             $freight = $this->Freight();
             return $freight->Calculate($this);
         }
+
+        return null;
     }
 
     public function CalculatePayableTotal()
