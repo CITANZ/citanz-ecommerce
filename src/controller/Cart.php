@@ -94,7 +94,7 @@ class Cart extends PageController
     {
         parent::init();
 
-        if ($stripe = PaymentMethod::get()->filter(['Gateway' => Stripe::class, 'Disabled' => false])->first()) {
+        if ($stripe = PaymentMethod::get()->filter(['Gateway' => Stripe::class])->first()) {
             Requirements::javascript('https://js.stripe.com/v3/');
         }
     }
