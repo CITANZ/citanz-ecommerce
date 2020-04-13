@@ -90,12 +90,10 @@ trait CartActions
     {
         if (($freight_id = $this->request->postVar('freight_id')) && ($code = $this->request->postVar('country_code'))) {
             if ($freight = Freight::get()->byID($freight_id)) {
-
+                
                 $cart   =   eCommerce::get_cart();
 
-                if ($cart && ($zone = $freight->find_zone($code))) {
-                    return $zone->CalculateOrderCost($cart);
-                }
+                return $freight->Calculate($cart);
             }
         }
 

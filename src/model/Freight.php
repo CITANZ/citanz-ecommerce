@@ -6,6 +6,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Assets\Image;
 use SilverStripe\ORM\DB;
+use Cita\eCommerce\Interfaces\ShippingInterface;
 
 /**
  * Description
@@ -13,7 +14,7 @@ use SilverStripe\ORM\DB;
  * @package silverstripe
  * @subpackage mysite
  */
-class Freight extends DataObject
+class Freight extends DataObject implements ShippingInterface
 {
     private static $table_name = 'Cita_eCommerce_Freight';
 
@@ -114,19 +115,6 @@ class Freight extends DataObject
         return $fields;
     }
 
-    private function CalculateContainerCost($value)
-    {
-        if ($this->ContainerCapacity == 0) {
-            return 0;
-        }
-
-        if ($this->ContainerCapacity > $value) {
-            return $this->ContainerPrice;
-        }
-
-        return ceil($value / $this->ContainerCapacity) * $this->ContainerPrice;
-    }
-
     public function find_zone($country)
     {
         foreach ($this->Zones() as $zone) {
@@ -158,5 +146,16 @@ class Freight extends DataObject
                 DB::alteration_message('NZ Post\'s zone: ' . $zone . ' created', 'created');
             }
         }
+    }
+
+    public function Calculate(&$order)
+    {
+        if (!empty($order->ShippingCountry)) {
+            if ($zone = $this->find_zone($order->ShippingCountry)) {
+                return $zone->CalculateOrderCost($this);
+            }
+        }
+
+        return null;
     }
 }

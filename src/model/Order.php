@@ -717,7 +717,7 @@ class Order extends DataObject
 
         $this->Comment                  =   $data->comment;
 
-        if ($freight = $this->get_freight_data($data->shipping->country)) {
+        if ($freight = $this->get_freight_data()) {
             $this->ShippingCost         =   $freight['cost'];
         } else {
             $this->ShippingCost         =   0;
@@ -726,17 +726,12 @@ class Order extends DataObject
         $this->UpdateAmountWeight();
     }
 
-    public function get_freight_data($country = null)
+    public function get_freight_data()
     {
-        $country    =   $country ? $country : $this->ShippingCountry;
-
-        if ($country) {
-            if ($zone = $this->Freight()->find_zone($country)) {
-                return $zone->CalculateOrderCost($this);
-            }
+        if ($this->Freight()->exists()) {
+            $freight = $this->Freight();
+            return $freight->Calculate($this);
         }
-
-        return null;
     }
 
     public function CalculatePayableTotal()

@@ -21,7 +21,6 @@
         "dynamic/silverstripe-country-dropdown-field": "^1.2",
         "colymba/gridfield-bulk-editing-tools": "^3.0",
         "leochenftw/ss-arsenal": "dev-master",
-        "stripe/stripe-php": "^7.27",
         "dynamic/silverstripe-country-dropdown-field": "^1.2",
         "symbiote/silverstripe-gridfieldextensions": "^3",
         "silverstripe/tagfield": "^2.4",
