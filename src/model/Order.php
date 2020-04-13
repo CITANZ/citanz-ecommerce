@@ -600,7 +600,7 @@ class Order extends DataObject
     public function is_freeshipping()
     {
         if ($this->Items()->count() == 0) {
-            return false;
+            return true;
         }
 
         $n  =   0;
