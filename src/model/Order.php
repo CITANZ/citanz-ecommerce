@@ -674,7 +674,7 @@ class Order extends DataObject
         return $data;
     }
 
-    public function digest(&$data)
+    public function digest(&$data, $cal_freight = true)
     {
         $this->Email                    =   $data->email;
         $this->FreightID                =   $data->freight;
@@ -717,10 +717,14 @@ class Order extends DataObject
 
         $this->Comment                  =   $data->comment;
 
-        if ($freight = $this->get_freight_data()) {
-            $this->ShippingCost         =   $freight['cost'];
-        } else {
-            $this->ShippingCost         =   0;
+        if ($cal_freight) {
+            if ($freight = $this->get_freight_data()) {
+                if (is_array($freight)) {
+                    $this->ShippingCost         =   $freight['cost'];
+                }
+            } else {
+                $this->ShippingCost         =   0;
+            }
         }
 
         $this->UpdateAmountWeight();

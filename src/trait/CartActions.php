@@ -88,12 +88,18 @@ trait CartActions
 
     private function do_estimate_freight()
     {
-        if (($freight_id = $this->request->postVar('freight_id')) && ($code = $this->request->postVar('country_code'))) {
-            if ($freight = Freight::get()->byID($freight_id)) {
-                
-                $cart   =   eCommerce::get_cart();
-
-                return $freight->Calculate($cart);
+        if ($payload = $this->request->postVar('payload')) {
+            $payload = json_decode($payload);
+            if ($cart = eCommerce::get_cart()) {
+                $cart->digest($payload, false);
+                if ($cart->is_freeshipping()) {
+                    return [
+                        'title' => 'Free shipping',
+                        'cost' => 0
+                    ];
+                } elseif ($freight = $cart->Freight()) {
+                    return $freight->Calculate($cart);
+                }
             }
         }
 
@@ -211,7 +217,7 @@ trait CartActions
                 'shipping'          =>  $cart->getShippingData(false),
                 'same_addr'         =>  $cart->SameBilling ? 1 : 0,
                 'billing'           =>  $cart->getBillingData(false),
-                'is_freeshipping'   =>   $cart->is_freeshipping(),
+                'is_freeshipping'   =>  $cart->is_freeshipping(),
                 'amount'            =>  $cart->TotalAmount,
                 'shipping_cost'     =>  $cart->ShippingCost
             ];
