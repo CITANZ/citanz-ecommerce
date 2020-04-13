@@ -15,7 +15,8 @@ use SilverStripe\Control\Cookie;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\View\Requirements;
 use SilverStripe\Security\SecurityToken;
-
+use Cita\eCommerce\Model\PaymentMethod;
+use Cita\eCommerce\API\Stripe;
 /**
  * Description
  *
@@ -93,7 +94,9 @@ class Cart extends PageController
     {
         parent::init();
 
-        Requirements::javascript('https://js.stripe.com/v3/');
+        if ($stripe = PaymentMethod::get()->filter(['Gateway' => Stripe::class, 'Disabled' => false])->first()) {
+            Requirements::javascript('https://js.stripe.com/v3/');
+        }
     }
 
     private function handle_preflight()
