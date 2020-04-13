@@ -643,20 +643,23 @@ class Order extends DataObject
 
     public function getData()
     {
+        $amount = $this->TotalAmount;
+        $gst = $this->getGST();
+
         $data   =   [
             'id'    =>  $this->ID,
             'ref'   =>  $this->CustomerReference,
             'count'         =>  $this->ItemCount(),
             'items'         =>  $this->Items()->sort(['LastEdited' => 'DESC'])->getData(),
-            'amount'        =>  $this->TotalAmount,
+            'amount'        =>  $amount,
             'amounts'       =>  [
                 'discoutable_taxable'           =>  $this->DiscountableTaxable,
                 'discoutable_nontaxable'        =>  $this->DiscountableNonTaxalbe,
                 'nondiscountable_taxable'       =>  $this->NonDiscountableTaxable,
                 'nondiscountable_nontaxable'    =>  $this->NonDiscountableNonTaxable
             ],
-            'gst'           =>  $this->getGST(),
-            'grand_total'   =>  $this->PayableTotal,
+            'gst'           =>  $gst,
+            'grand_total'   =>  $gst + $amount,
             'weight'        =>  $this->TotalWeight,
             'comment'       =>  $this->Comment,
             'discount'      =>  $this->Discount()->getData(),
