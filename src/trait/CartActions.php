@@ -98,12 +98,17 @@ trait CartActions
                         'cost' => 0
                     ];
                 } elseif ($freight = $cart->Freight()) {
-                    return $freight->Calculate($cart);
+                    try {
+                        $result = $freight->Calculate($cart);
+                        return $result;
+                    } catch (\Exception $e) {
+                        return $this->httpError(400, $e->getMessage());
+                    }
                 }
             }
         }
 
-        return null;
+        return $this->httpError(400, "Missing payload!");
     }
 
     private function do_coupon_validate()

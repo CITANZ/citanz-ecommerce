@@ -742,7 +742,12 @@ class Order extends DataObject
             ];
         } elseif ($this->Freight()->exists()) {
             $freight = $this->Freight();
-            return $freight->Calculate($this);
+            try {
+                $result = $freight->Calculate($this);
+                return $result;
+            } catch (\Exception $e) {
+                
+            }
         }
 
         return null;

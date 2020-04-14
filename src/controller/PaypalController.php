@@ -25,11 +25,10 @@ class PaypalController extends eCommerceController
         if (!$request->isPost()) {
 
             $data   =   [
-                'payment_id'    =>  $this->request->getVar('paymentId'),
-                'payer_id'      =>  $this->request->getVar('PayerID')
+                'payment_id'    =>  $this->request->getVar('paymentId')
             ];
 
-            if (empty($data['payment_id']) || empty($data['payer_id'])) {
+            if (empty($data['payment_id'])) {
                 Injector::inst()->get(LoggerInterface::class)->error('Missing payment or payer id');
                 return $this->httpError(400, 'Missing payment or payer id');
             }
@@ -52,9 +51,8 @@ class PaypalController extends eCommerceController
 
         if (is_array($data)) {
             $payment_id =   $data['payment_id'];
-            $payer_id   =   $data['payer_id'];
         } else {
-            // $payment_id =   $data->
+            $payment_id =   $data->resource->id;
         }
 
         try {
