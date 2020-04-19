@@ -15,7 +15,6 @@
         "guzzlehttp/guzzle": "^6.3",
         "silvershop/silverstripe-hasonefield": "^3.0.1",
         "unclecheese/display-logic": "^2.0",
-        "stripe/stripe-php": "^7.27",
         "silverstripe/framework": "^4.0",
         "konekt/pdf-invoice": "^1.5",
         "dynamic/silverstripe-country-dropdown-field": "^1.2",
@@ -24,7 +23,12 @@
         "dynamic/silverstripe-country-dropdown-field": "^1.2",
         "symbiote/silverstripe-gridfieldextensions": "^3",
         "silverstripe/tagfield": "^2.4",
-        "paypal/rest-api-sdk-php": "*"
+        "silverstripe/silverstripe-omnipay": "^3@dev",
+        "omnipay/paymentexpress": "^2@dev",
+        "omnipay/paypal": "^2.6.4",
+        "burnbright/omnipay-poli": "~2.0",
+        "burnbright/omnipay-paystation": "^2.0",
+        "omnipay/stripe": "^2.4.7"
     },
     "extra": {
         "expose": [

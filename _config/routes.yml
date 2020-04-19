@@ -9,4 +9,5 @@ SilverStripe\Control\Director:
     'cita-ecommerce/dps-complete': 'Cita\eCommerce\Controller\DPSController'
     'cita-ecommerce/stripe-complete': 'Cita\eCommerce\Controller\StripeController'
     'cita-ecommerce/paypal-complete': 'Cita\eCommerce\Controller\PaypalController'
+    'cita-ecommerce/complete/$ID!': 'Cita\eCommerce\Controller\eCommerceController'
     'cart//$action/$id': Cita\eCommerce\Controller\Cart

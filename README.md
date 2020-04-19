@@ -24,7 +24,31 @@ set up a cronjob to purge pending carts (on a daily basis)
 ### implement `createInvoiceRows` function in extension to create your own invoice rows
 
 ## Payment settings
-[some doc]
+Payment is using Omnipay and its plugins. We have implemented 5 payment gateways in this module.
+
+```
+---
+Name: 'citanz-silverstripe-ecommerce-payment'
+---
+SilverStripe\Omnipay\Model\Payment:
+  file_logging: true
+  # allowed_gateways:
+    # - PaymentExpress_PxPay
+    # - PayPal_Express
+    # - Poli
+    # - Paystation_Hosted
+    # - Stripe
+```
+To enable the payment gateway that you wish to use, create a `payment.yml` file in your '_config' directory, and uncomment the line(s) accordingly. Example:
+```
+---
+Name: 'payment'
+---
+SilverStripe\Omnipay\Model\Payment:
+  file_logging: true
+  allowed_gateways:
+    - PaymentExpress_PxPay
+```
 
 ### Stripe
 ...

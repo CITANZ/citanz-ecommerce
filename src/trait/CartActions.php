@@ -5,14 +5,13 @@ use SilverStripe\SiteConfig\SiteConfig;
 use Cita\eCommerce\Model\Order;
 use Cita\eCommerce\Model\Freight;
 use Cita\eCommerce\Model\Discount;
-use Cita\eCommerce\Model\GatewayResponse;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Security\Member;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Environment;
 use Cita\eCommerce\API\Stripe;
-use Cita\eCommerce\Model\PaymentMethod;
+use Cita\eCommerce\Service\PaymentService;
 use Page;
 
 trait CartActions
@@ -140,30 +139,12 @@ trait CartActions
                 return $this->httpError(500, 'There is nothing to pay!');
             }
 
-            return $this->getPaymentURL($method, $cart);
-        }
-
-        return $this->httpError(500, 'Something went wrong');
-    }
-
-    private function getPaymentURL($method, &$cart)
-    {
-        $raw_resp   =   ($method)::process($cart->PayableTotal, $cart->MerchantReference, $cart);
-        $response   =   GatewayResponse::create($method, $raw_resp);
-
-        if (!empty($response->error)) {
-            return $this->httpError(500, $response->error);
-        }
-
-        if ($method == Stripe::class) {
             return [
-                'client_secret' =>  $response->client_secret
+                'url'   =>  PaymentService::initiate($method, $cart, !empty($data->stripe_token) ? $data->stripe_token : null)
             ];
         }
 
-        return [
-            'url'   =>  $response->uri
-        ];
+        return $this->httpError(500, 'Something went wrong');
     }
 
     private function get_complete_data()
@@ -234,12 +215,15 @@ trait CartActions
         $data['title']              =   'Checkout';
         $data['countries']          =   eCommerce::get_all_countries();
         $data['freight_options']    =   eCommerce::get_freight_options()->getData();
-        $data['payment_methods']    =   eCommerce::get_available_payment_methods()->getData();
+        $data['payment_methods']    =   eCommerce::get_available_payment_methods();
         $data['gst_rate']           =   SiteConfig::current_site_config()->GSTRate;
         $data['checkout']           =   !empty($checkout) ? $checkout : null;
 
-        if (PaymentMethod::get()->filter(['Gateway' => Stripe::class])->first()) {
-            $data['stripe_key'] = Director::isDev() ? eCommerce::get_stripe_settings()->key_dev : eCommerce::get_stripe_settings()->key;
+        if (in_array('Stripe', eCommerce::get_available_payment_methods())) {
+            if ($config = Environment::getEnv('Stripe')) {
+                $config = json_decode($config);
+                $data['stripe_key'] = $config->privateKey;
+            }
         }
 
         $data['session_oid']        =   $this->request->getSession()->get('cart_id');

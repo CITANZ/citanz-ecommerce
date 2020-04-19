@@ -112,7 +112,7 @@
                     <% end_with %>
                 </dl>
                 <hr />
-                <p class="help">Paid at $Payments.First.Created.Nice, with <strong>$Payments.First.PaymentMethod</strong></p>
+                <p class="help">Paid at $Payments.First.Created.Nice, with <strong>$Payments.First.GatewayTitle</strong></p>
                 <hr />
                 <% if $Payments.First.Status == 'Cancelled' || $Payments.First.Status == 'Pending' || $Payments.First.Status == 'Failed' %>
                     <a class="button is-info" href="/cart">Try again</a>

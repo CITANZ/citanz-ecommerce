@@ -11,13 +11,13 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Control\Cookie;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Injector\Injector;
-use Cita\eCommerce\Model\PaymentMethod;
 use SilverStripe\Core\Environment;
 use SilverStripe\Security\Member;
 use Cita\eCommerce\Model\Catalog;
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
 use SilverStripe\Control\Director;
+use SilverStripe\Omnipay\GatewayInfo;
 
 class eCommerce
 {
@@ -121,7 +121,7 @@ class eCommerce
 
     public static function get_available_payment_methods()
     {
-        return PaymentMethod::get();
+        return GatewayInfo::getSupportedGateways();
     }
 
     public static function get_all_countries()
@@ -152,34 +152,5 @@ class eCommerce
     public static function get_freight_options()
     {
         return Freight::get();
-    }
-
-    public static function get_stripe_settings()
-    {
-        $settings   =   Environment::getEnv('Cita_eCommerce_PaymentMethod_Stripe');
-
-        if (empty($settings)) {
-            throw new \Exception("Stripe settings not found in .env file. Please create a Cita_eCommerce_PaymentMethod_Stripe envvar in .env file.", 1);
-        }
-
-        return json_decode($settings);
-    }
-
-    public static function get_paypal_apicontext()
-    {
-        $settings   =   Environment::getEnv('Cita_eCommerce_PaymentMethod_Paypal');
-
-        if (empty($settings)) {
-            throw new \Exception("POLi settings not found in .env file. Please create a Cita_eCommerce_PaymentMethod_Paypal envvar in .env file.", 1);
-        }
-
-        $settings   =   json_decode($settings);
-
-        return new ApiContext(
-            new OAuthTokenCredential(
-                Director::isDev() ? $settings->key_dev : $settings->key,
-                Director::isDev() ? $settings->secret_dev : $settings->secret
-            )
-        );
     }
 }

@@ -13,7 +13,6 @@ use SilverStripe\Forms\RequiredFields;
 use SilverStripe\View\ArrayData;
 use Cita\eCommerce\eCommerce;
 use Cita\eCommerce\Model\Freight;
-use Cita\eCommerce\Model\PaymentMethod;
 use Cita\eCommerce\API\DirectDebit;
 use Cita\eCommerce\API\Invoice;
 use Cita\eCommerce\API\Paystation;
@@ -143,9 +142,12 @@ trait CartTemplateActions
         $actions    =   FieldList::create(FormAction::create('CalculateFreight')->setTitle('Calculate Shipping')->addExtraClass('button is-warning'));
 
         if ($cart->Freight()->exists()) {
-            foreach (PaymentMethod::get() as $method) {
+
+            $gateways = eCommerce::get_available_payment_methods();
+
+            foreach ($gateways as $name => $title) {
                 $actions->push(
-                    FormAction::create('Pay' . $method->getGatewayName())->setTitle('Pay with ' . $method->Title)
+                    FormAction::create('Pay' . $name)->setTitle('Pay with ' . $title)
                     ->addExtraClass('button is-info')
                 );
             }

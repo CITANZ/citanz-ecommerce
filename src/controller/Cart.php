@@ -15,7 +15,6 @@ use SilverStripe\Control\Cookie;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\View\Requirements;
 use SilverStripe\Security\SecurityToken;
-use Cita\eCommerce\Model\PaymentMethod;
 use Cita\eCommerce\API\Stripe;
 /**
  * Description
@@ -47,15 +46,6 @@ class Cart extends PageController
 
     protected function handleAction($request, $action)
     {
-        if (!$this->request->isAjax()) {
-
-            if (($this->request->Param('action') == 'complete') && empty(eCommerce::get_last_processed_cart($this->request->param('id')))) {
-                return $this->httpError(404);
-            }
-
-            return parent::handleAction($request, $action);
-        }
-
         if ($this->request->httpMethod() === 'OPTIONS' ) {
             // create direct response without requesting any controller
             $response   =   $this->getResponse();
@@ -63,6 +53,15 @@ class Cart extends PageController
             $response   =   $this->addCORSHeaders($response);
             $response->output();
             exit;
+        }
+
+        if (!$this->request->isAjax()) {
+
+            if (($this->request->Param('action') == 'complete') && empty(eCommerce::get_last_processed_cart($this->request->param('id')))) {
+                return $this->httpError(404);
+            }
+
+            return parent::handleAction($request, $action);
         }
 
         $header     =   $this->getResponse();
@@ -94,21 +93,10 @@ class Cart extends PageController
     {
         parent::init();
 
-        if ($stripe = PaymentMethod::get()->filter(['Gateway' => Stripe::class])->first()) {
-            Requirements::javascript('https://js.stripe.com/v3/');
-        }
-    }
+        $gateways = eCommerce::get_available_payment_methods();
 
-    private function handle_preflight()
-    {
-        // check for CORS options request
-        if ($this->request->httpMethod() === 'OPTIONS' ) {
-            // create direct response without requesting any controller
-            $response   =   $this->getResponse();
-            // set CORS header from config
-            $response   =   $this->addCORSHeaders($response);
-            $response->output();
-            exit;
+        if (in_array('Stripe', $gateways)) {
+            Requirements::javascript('https://js.stripe.com/v3/');
         }
     }
 
@@ -123,7 +111,7 @@ class Cart extends PageController
             if ($action = $this->request->param('action')) {
                 if (($action == 'complete') && ($id = $this->request->param('id'))) {
                     if ($cart = eCommerce::get_last_processed_cart($id)) {
-                        return 'Payment: ' . $cart->Payments()->first()->Status;
+                        return 'Payment: ' . $cart->Payments()->first()->TranslatedStatus;
                     }
                 }
 

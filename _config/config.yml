@@ -9,31 +9,8 @@ Cita\eCommerce\eCommerce:
   AllowAnonymousCustomer: 1
   # CartlessProducts:
   #   - ClassName
-  MerchantSettings:
-    CompleteURL: "/cart/complete/"
-  API:
-    POLi: 'https://poliapi.apac.paywithpoli.com/api/v2/Transaction'
-    Paystation: 'https://www.paystation.co.nz/direct/paystation.dll'
-    PaystationLookup: 'https://payments.paystation.co.nz/lookup/'
-    DPS : 'https://uat.paymentexpress.com/pxaccess/pxpay.aspx'
-  GatewaySettings:
-    Paystation:
-        paystation: '_empty'
-        pstn_gi: 'PAYSTATION'
-        pstn_nr: 't'
-  AdditionalSettings:
-    Paystation:
-      QuickMode: 1
-
-Cita\eCommerce\Model\PaymentMethod:
-  payment_methods:
-    Cita\eCommerce\API\DirectDebit: 'Direct Debit'
-    Cita\eCommerce\API\Invoice: 'Invoice'
-    Cita\eCommerce\API\DPS: 'Payment Express'
-    Cita\eCommerce\API\Paystation: 'Paystation'
-    Cita\eCommerce\API\POLi: 'POLi'
-    Cita\eCommerce\API\Stripe: 'Stripe'
-    Cita\eCommerce\API\Paypal: 'Paypal'
+Cita\eCommerce\Controller\eCommerceController:
+  CompleteURL: "/cart/complete/"
 
 SilverStripe\Security\Group:
   extensions:
@@ -141,19 +118,10 @@ Cita\eCommerce\Model\Freight:
       mx: Mexico
       uy: Uruguay
 
----
-Only:
-  environment: 'dev'
----
-Cita\eCommerce\eCommerce:
-  GatewaySettings:
-    Paystation:
-      pstn_tm: 't'
+SilverStripe\Omnipay\Model\Payment:
+  extensions:
+    - Cita\eCommerce\Extension\PaymentExtension
 
----
-Only:
-  environment: 'live'
----
-Cita\eCommerce\eCommerce:
-  API:
-    DPS : 'https://sec.paymentexpress.com/pxaccess/pxpay.aspx'
+SilverStripe\Omnipay\Service\PurchaseService:
+  extensions:
+    - Cita\eCommerce\Extension\PurchaseServiceExtension

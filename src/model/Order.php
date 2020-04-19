@@ -10,7 +10,6 @@ use SilverStripe\Security\Member;
 use Cita\eCommerce\Model\OrderItem;
 use Cita\eCommerce\Model\Customer;
 use Cita\eCommerce\Model\Variant;
-use Cita\eCommerce\Model\Payment;
 use SilverStripe\Core\Config\Config;
 use Cita\eCommerce\API\DPS;
 use Cita\eCommerce\API\Poli;
@@ -22,7 +21,7 @@ use SilverStripe\Control\Email\Email;
 use SilverStripe\Control\Director;
 use Leochenftw\Grid;
 use Dynamic\CountryDropdownField\Fields\CountryDropdownField;
-
+use SilverStripe\Omnipay\Model\Payment;
 /**
  * Description
  *
@@ -43,7 +42,7 @@ class Order extends DataObject
     private static $db = [
         'MerchantReference'         =>  'Varchar(64)',
         'CustomerReference'         =>  'Varchar(8)',
-        'Status'                    =>  'Enum("Pending,Invoice Pending,Debit Pending,Payment Received,Shipped,Cancelled,Refunded,Completed")',
+        'Status'                    =>  'Enum("Pending,Invoice Pending,Debit Pending,Payment Received,Shipped,Cancelled,Refunded,CardCreated,Completed")',
         'AnonymousCustomer'         =>  'Varchar(128)',
         'TotalAmount'               =>  'Currency',
         'DiscountableTaxable'       =>  'Currency',
@@ -171,7 +170,7 @@ class Order extends DataObject
     public function getSuccessPayment()
     {
         if ($this->exists() && $this->Payments()->exists()) {
-            return $this->Payments()->filter(['Status' => 'Success'])->first();
+            return $this->Payments()->filter(['Status' => 'Captured'])->first();
         }
 
         return null;
@@ -189,14 +188,8 @@ class Order extends DataObject
             $items  =   $fields->fieldByName('Root.Items.Items');
 
             $fields->removeByName([
-                'Items',
-                // 'Payments'
+                'Items'
             ]);
-
-            // $fields->addFieldToTab(
-            //     'Root.Payments',
-            //     Grid::make('Payments', 'Payments', $this->Payments(), false, 'GridFieldConfig_RecordViewer')
-            // );
 
             $fields->addFieldToTab(
                 'Root.OrderItems',
@@ -455,6 +448,32 @@ class Order extends DataObject
 
         $this->extend('updateOrderFields', $this);
         $this->write();
+    }
+
+    public function completePayment($status)
+    {
+        if ($this->Status == 'Payment Received' || $this->Status == 'Shipped' || $this->Status == 'Cancelled' || $this->Status == 'Refunded' || $this->Status == 'Completed') return false;
+        if ($status != 'CardCreated' && $status != 'Captured' && $status != 'Invoice Pending' && $status != 'Debit Pending') return false;
+
+        if ($status == 'Success' || $status == 'Captured') {
+            $this->Status   =   'Payment Received';
+        } else {
+            $this->Status   =   $status;
+        }
+
+        if ($this->Discount()->exists()) {
+            $discount   =   $this->Discount();
+
+            if (!$discount->InfiniteUse) {
+                $discount->LifePoint--;
+            }
+
+            $discount->write();
+        }
+
+        $this->extend('doPaymentupdateActions', $this);
+        $this->write();
+        $this->send_invoice();
     }
 
     public function onPaymentUpdate($status)
@@ -746,7 +765,7 @@ class Order extends DataObject
                 $result = $freight->Calculate($this);
                 return $result;
             } catch (\Exception $e) {
-                
+
             }
         }
 

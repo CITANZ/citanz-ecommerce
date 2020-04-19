@@ -1,0 +1,11 @@
+---
+Name: 'citanz-silverstripe-ecommerce-payment'
+---
+SilverStripe\Omnipay\Model\Payment:
+  file_logging: true
+  # allowed_gateways:
+    # - PaymentExpress_PxPay
+    # - PayPal_Express
+    # - Poli
+    # - Paystation_Hosted
+    # - Stripe

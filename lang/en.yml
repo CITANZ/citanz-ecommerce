@@ -1,0 +1,6 @@
+en:
+  Gateway:
+    PaymentExpress_PxPay: "Payment Express"
+    PayPal_Express: "PayPal"
+    Poli: "POLi"
+    Paystation_Hosted: 'Paystation'
