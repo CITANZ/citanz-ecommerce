@@ -14,8 +14,6 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Environment;
 use SilverStripe\Security\Member;
 use Cita\eCommerce\Model\Catalog;
-use PayPal\Rest\ApiContext;
-use PayPal\Auth\OAuthTokenCredential;
 use SilverStripe\Control\Director;
 use SilverStripe\Omnipay\GatewayInfo;
 

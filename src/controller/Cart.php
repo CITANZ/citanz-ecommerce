@@ -15,7 +15,7 @@ use SilverStripe\Control\Cookie;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\View\Requirements;
 use SilverStripe\Security\SecurityToken;
-use Cita\eCommerce\API\Stripe;
+
 /**
  * Description
  *
@@ -93,9 +93,7 @@ class Cart extends PageController
     {
         parent::init();
 
-        $gateways = eCommerce::get_available_payment_methods();
-
-        if (in_array('Stripe', $gateways)) {
+        if (in_array('Stripe', eCommerce::get_available_payment_methods())) {
             Requirements::javascript('https://js.stripe.com/v3/');
         }
     }
