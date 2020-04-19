@@ -12,7 +12,7 @@ class PaymentService
 {
     public static function initiate($gateway, &$order, $stripe_token = null)
     {
-        $amount = $order->PayableTotal;
+        $amount = number_format($order->PayableTotal, 2, '.', '');
 
         if (Director::isDev() && $gateway == 'PaymentExpress_PxPay') {
             $amount =   round($amount);
