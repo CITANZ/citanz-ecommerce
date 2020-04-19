@@ -194,6 +194,7 @@ trait CartActions
                 'grand_total'       =>  $cart->PayableTotal,
                 'weight'            =>  $cart->TotalWeight,
                 'items'             =>  $cart->ItemCount(),
+                'gst_included'      =>  $cart->IncludedGST,
                 'freight'           =>  !empty($cart->FreightID) ? $cart->FreightID :
                                         (eCommerce::get_freight_options()->count() > 0 ?
                                         eCommerce::get_freight_options()->first()->ID : null),
