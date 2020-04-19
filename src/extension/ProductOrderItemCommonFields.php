@@ -16,6 +16,7 @@ class ProductOrderItemCommonFields extends DataExtension
     private static $db = [
         'isDigital'     =>  'Boolean',
         'isExempt'      =>  'Boolean',
+        'GSTIncluded'   =>  'Boolean',
         'NoDiscount'    =>  'Boolean'
     ];
 }

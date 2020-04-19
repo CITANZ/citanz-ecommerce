@@ -46,9 +46,10 @@ class Order extends DataObject
         'AnonymousCustomer'         =>  'Varchar(128)',
         'TotalAmount'               =>  'Currency',
         'DiscountableTaxable'       =>  'Currency',
-        'DiscountableNonTaxalbe'    =>  'Currency',
+        'DiscountableNonTaxable'    =>  'Currency',
         'NonDiscountableTaxable'    =>  'Currency',
         'NonDiscountableNonTaxable' =>  'Currency',
+        'TaxIncludedTotal'          =>  'Currency',
         'TotalWeight'               =>  'Decimal',
         'PayableTotal'              =>  'Currency',
         'Email'                     =>  'Varchar(256)',
@@ -418,31 +419,38 @@ class Order extends DataObject
         $nondistax      =   0;
         $disnontax      =   0;
         $nondisnontax   =   0;
+        $taxincluded    =   0;
 
         foreach ($this->Items() as $item) {
             $amount     +=  $item->Subtotal;
             $weight     +=  $item->Subweight;
+
             if ($item->NoDiscount) {
-                if ($item->isExempt) {
+                if ($item->isExempt || $item->GSTIncluded) {
                     $nondisnontax   +=  $item->Subtotal;
                 } else {
                     $nondistax      +=  $item->Subtotal;
                 }
             } else {
-                if ($item->isExempt) {
+                if ($item->isExempt || $item->GSTIncluded) {
                     $disnontax      +=  $item->Subtotal;
                 } else {
                     $distax         +=  $item->Subtotal;
                 }
+            }
+
+            if ($item->GSTIncluded) {
+                $taxincluded += $item->Subtotal;
             }
         }
 
         $this->TotalAmount                  =   $amount;
         $this->TotalWeight                  =   $weight;
         $this->DiscountableTaxable          =   $distax;
-        $this->DiscountableNonTaxalbe       =   $disnontax;
+        $this->DiscountableNonTaxable       =   $disnontax;
         $this->NonDiscountableTaxable       =   $nondistax;
         $this->NonDiscountableNonTaxable    =   $nondisnontax;
+        $this->TaxIncludedTotal             =   $taxincluded;
 
         $this->PayableTotal                 =   $this->CalculatePayableTotal();
 
@@ -539,28 +547,36 @@ class Order extends DataObject
     public function getDiscounted()
     {
         $dt     =   $this->DiscountableTaxable;
-        $dnt    =   $this->DiscountableNonTaxalbe;
+        $dnt    =   $this->DiscountableNonTaxable;
         return $this->Discount()->calc_discount($dt + $dnt);
     }
 
     public function getGST()
     {
-        $dt         =   $this->DiscountableTaxable;
-        $ndt        =   $this->NonDiscountableTaxable;
-        $gst_rate   =   SiteConfig::current_site_config()->GSTRate;
+        $dt = $this->DiscountableTaxable;
+        $ndt = $this->NonDiscountableTaxable;
+        $gst_rate = SiteConfig::current_site_config()->GSTRate;
 
-        $discounted_taxable     =   $this->Discount()->exists() ? $this->Discount()->calc_discount($dt) : 0;
+        $discounted_taxable = $this->Discount()->exists() ? $this->Discount()->calc_discount($dt) : 0;
 
-        $gst_base   =   $dt - $discounted_taxable + $ndt;
-        $gst        =   $gst_base * $gst_rate;
+        $gst_base = $dt - $discounted_taxable + $ndt;
+        $gst = $gst_base * $gst_rate;
 
         return number_format($gst, 2);
+    }
+
+    public function getIncludedGST()
+    {
+        $gst_rate = SiteConfig::current_site_config()->GSTRate;
+        $includedGST = $this->TaxIncludedTotal * $gst_rate / (1 + $gst_rate);
+
+        return number_format($includedGST, 2);
     }
 
     public function send_tracking()
     {
         if ($this->Status == 'Payment Received') {
-            $this->Status  =   'Shipped';
+            $this->Status = 'Shipped';
             $this->write();
         }
 
@@ -573,8 +589,8 @@ class Order extends DataObject
             $this->extend('SendTracking', $from, $to, $customer_sent_flag);
 
             if (!$customer_sent_flag['sent']) {
-                $subject    =   $siteconfig->Title . ': order #' . $this->ID . ' has been dispatched';
-                $email      =   Email::create($from, $to, $subject);
+                $subject = $siteconfig->Title . ': order #' . $this->ID . ' has been dispatched';
+                $email = Email::create($from, $to, $subject);
                 $email->setBody('Hi, <br /><br />The trakcing number for your order #' . $this->ID . ' is: ' . $this->TrackingNumber . '.<br /><br />Kind regards<br />' . $siteconfig->Title . ' team');
                 $email->send();
             }
@@ -673,11 +689,13 @@ class Order extends DataObject
             'amount'        =>  $amount,
             'amounts'       =>  [
                 'discoutable_taxable'           =>  $this->DiscountableTaxable,
-                'discoutable_nontaxable'        =>  $this->DiscountableNonTaxalbe,
+                'discoutable_nontaxable'        =>  $this->DiscountableNonTaxable,
                 'nondiscountable_taxable'       =>  $this->NonDiscountableTaxable,
-                'nondiscountable_nontaxable'    =>  $this->NonDiscountableNonTaxable
+                'nondiscountable_nontaxable'    =>  $this->NonDiscountableNonTaxable,
+                'gst_included_amount'           =>  $this->TaxIncludedTotal
             ],
             'gst'           =>  $gst,
+            'gst_included'  =>  $this->IncludedGST,
             'grand_total'   =>  $gst + $amount,
             'weight'        =>  $this->TotalWeight,
             'comment'       =>  $this->Comment,
@@ -687,7 +705,7 @@ class Order extends DataObject
 
         if ($this->Discount()->exists()) {
             $dt     =   $this->DiscountableTaxable;
-            $dnt    =   $this->DiscountableNonTaxalbe;
+            $dnt    =   $this->DiscountableNonTaxable;
             $data['discount']['amount'] =   $this->getDiscounted();
         }
 
@@ -775,7 +793,7 @@ class Order extends DataObject
     public function CalculatePayableTotal()
     {
         $dt         =   $this->DiscountableTaxable;
-        $dnt        =   $this->DiscountableNonTaxalbe;
+        $dnt        =   $this->DiscountableNonTaxable;
         $ndt        =   $this->NonDiscountableTaxable;
         $ndnt       =   $this->NonDiscountableNonTaxable;
         $gst_rate   =   SiteConfig::current_site_config()->GSTRate;

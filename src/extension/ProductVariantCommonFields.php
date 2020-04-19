@@ -112,6 +112,7 @@ class ProductVariantCommonFields extends DataExtension
         $fields->removeByName([
             'isExempt',
             'isDigital',
+            'GSTIncluded',
             'SortingPrice'
         ]);
 
@@ -140,6 +141,10 @@ class ProductVariantCommonFields extends DataExtension
             CheckboxField::create(
                 'NoDiscount',
                 'This product does not accept any discout'
+            ),
+            CheckboxField::create(
+                'GSTIncluded',
+                'The price has already included GST'
             ),
             CheckboxField::create(
                 'isExempt',

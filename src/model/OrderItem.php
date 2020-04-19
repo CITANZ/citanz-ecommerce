@@ -145,6 +145,7 @@ class OrderItem extends DataObject
         if ($this->Product()->exists()) {
             $this->isDigital    =   $this->Product()->isDigital;
             $this->isExempt     =   $this->Product()->isExempt;
+            $this->GSTIncluded  =   $this->Product()->GSTIncluded;
             $this->NoDiscount   =   $this->Product()->NoDiscount;
 
             $this->Subtotal     =   $this->Quantity * $this->Product()->SortingPrice;
@@ -155,6 +156,7 @@ class OrderItem extends DataObject
         } elseif ($this->Variant()->exists()) {
             $this->isDigital    =   $this->Variant()->isDigital;
             $this->isExempt     =   $this->Variant()->isExempt;
+            $this->GSTIncluded  =   $this->Variant()->GSTIncluded;
             $this->NoDiscount   =   $this->Variant()->NoDiscount;
             $this->Subtotal  =   $this->Quantity * $this->Variant()->SortingPrice;
             if (!$this->Variant()->isDigital) {
