@@ -109,7 +109,9 @@ class Cart extends PageController
             if ($action = $this->request->param('action')) {
                 if (($action == 'complete') && ($id = $this->request->param('id'))) {
                     if ($cart = eCommerce::get_last_processed_cart($id)) {
-                        return 'Payment: ' . $cart->Payments()->first()->TranslatedStatus;
+                        if ($cart->Payments()->exists()) {
+                            return 'Payment: ' . $cart->Payments()->first()->TranslatedStatus;
+                        }
                     }
                 }
 
