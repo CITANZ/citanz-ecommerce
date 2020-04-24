@@ -469,45 +469,22 @@ class Order extends DataObject
             $this->Status   =   $status;
         }
 
-        if ($this->Discount()->exists()) {
-            $discount   =   $this->Discount();
+        $this->write();
 
-            if (!$discount->InfiniteUse) {
-                $discount->LifePoint--;
+        if ($this->Status == 'Payment Received') {
+            if ($this->Discount()->exists()) {
+                $discount   =   $this->Discount();
+
+                if (!$discount->InfiniteUse) {
+                    $discount->LifePoint--;
+                }
+
+                $discount->write();
             }
 
-            $discount->write();
+            $this->extend('doPaymentSuccessAction', $this);
+            $this->send_invoice();
         }
-
-        $this->extend('doPaymentupdateActions', $this);
-        $this->write();
-        $this->send_invoice();
-    }
-
-    public function onPaymentUpdate($status)
-    {
-        if ($this->Status == 'Payment Received' || $this->Status == 'Shipped' || $this->Status == 'Cancelled' || $this->Status == 'Refunded' || $this->Status == 'Completed') return false;
-        if ($status != 'Success' && $status != 'Invoice Pending' && $status != 'Debit Pending') return false;
-
-        if ($status == 'Success') {
-            $this->Status   =   'Payment Received';
-        } else {
-            $this->Status   =   $status;
-        }
-
-        if ($this->Discount()->exists()) {
-            $discount   =   $this->Discount();
-
-            if (!$discount->InfiniteUse) {
-                $discount->LifePoint--;
-            }
-
-            $discount->write();
-        }
-
-        $this->extend('doPaymentupdateActions', $this);
-        $this->write();
-        $this->send_invoice();
     }
 
     /**
@@ -618,7 +595,7 @@ class Order extends DataObject
             $payment->write();
         }
 
-        $this->onPaymentUpdate('Success');
+        $this->completePayment('Success');
     }
 
     public function debit_cleared()
@@ -629,7 +606,7 @@ class Order extends DataObject
             $payment->write();
         }
 
-        $this->onPaymentUpdate('Success');
+        $this->completePayment('Success');
     }
 
     public function is_freeshipping()
@@ -650,22 +627,15 @@ class Order extends DataObject
 
     public function add_to_cart($id, $qty, $class = null)
     {
-        if ($class == Variant::class) {
-            $existing_item = $this->Items()->filter(['VariantID' => $id])->first();
-        } else {
-            $existing_item = $this->Items()->filter(['ProductID' => $id])->first();
-        }
+        $existing_item = $this->Items()->filter(['VariantID' => $id])->first();
 
         if (!empty($existing_item)) {
             $existing_item->Quantity    +=  $qty;
             $existing_item->write();
         } else {
             $item   =   OrderItem::create();
-            if ($class == Variant::class) {
-                $item->VariantID    =   $id;
-            } else {
-                $item->ProductID    =   $id;
-            }
+            $item->VariantID    =   $id;
+
             $item->Quantity =   $qty;
             $item->OrderID  =   $this->ID;
             $item->write();
@@ -678,9 +648,22 @@ class Order extends DataObject
 
     public function getData()
     {
-        $amount = $this->TotalAmount;
-        $gst = $this->getGST();
+        // scan the order items, just in case the product has been deleted
+        $count = $this->Items()->count();
+        $iterator = $this->Items()->getIterator();
 
+        foreach ($iterator as $item) {
+            if (!$item->Variant()->exists()) {
+                $item->delete();
+            }
+        }
+
+        if ($count != $this->Items()->count()) {
+            $this->UpdateAmountWeight();
+        }
+
+        $amount = $this->TotalAmount;
+        $gst = $this->GST;
         $data   =   [
             'id'    =>  $this->ID,
             'ref'   =>  $this->CustomerReference,

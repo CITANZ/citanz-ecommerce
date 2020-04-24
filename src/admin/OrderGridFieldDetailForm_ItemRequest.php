@@ -63,6 +63,8 @@ class OrderGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_ItemReque
             $formActions    =   $form->Actions();
         }
 
+        $this->extend('UpdateActions', $formActions);
+
         $form->setActions($formActions);
 
         return $form;
@@ -169,7 +171,7 @@ class OrderGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_ItemReque
         return $this->goback($data);
     }
 
-    private function goback(&$data)
+    public function goback(&$data)
     {
         $url    =   Controller::curr()->removeAction($data['BackURL']);
         Controller::curr()->getRequest()->addHeader('X-Pjax', 'Content');

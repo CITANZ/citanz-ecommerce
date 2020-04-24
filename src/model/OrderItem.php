@@ -51,7 +51,6 @@ class OrderItem extends DataObject
      * @var array
      */
     private static $has_one = [
-        'Product'   =>  Product::class,
         'Variant'   =>  Variant::class,
         'Order'     =>  Order::class
     ];
@@ -75,9 +74,7 @@ class OrderItem extends DataObject
 
     public function getSKU()
     {
-        if ($this->Product()->exists()) {
-            return $this->Product()->SKU;
-        } elseif ($this->Variant()->exists()) {
+        if ($this->Variant()->exists()) {
             return $this->Variant()->SKU;
         }
 
@@ -86,15 +83,11 @@ class OrderItem extends DataObject
 
     public function ShowTitle()
     {
-        if ($this->Product()->exists()) {
-            return $this->Product()->Title;
-        }
-
         if ($this->Variant()->exists()) {
-            $product    =   '';
+            $product = '';
 
             if ($this->Variant()->Product()->exists()) {
-                $product    =   $this->Variant()->Product()->Title . ' - ';
+                $product = $this->Variant()->Product()->Title . ' - ';
             }
 
             return $product . $this->Variant()->Title;
@@ -105,13 +98,7 @@ class OrderItem extends DataObject
 
     public function UnitPrice()
     {
-        return  $this->Product()->exists() ?
-                '$' . money_format('%i',  $this->Product()->Price) :
-                (
-                    $this->Variant()->exists() ?
-                    '$' . money_format('%i',  $this->Variant()->Price) :
-                    '-'
-                );
+        return  $this->Variant()->exists() ? '$' . money_format('%i',  $this->Variant()->Price) : '-';
     }
 
     public function getData()
@@ -129,10 +116,7 @@ class OrderItem extends DataObject
 
     private function get_product_details()
     {
-        return  $this->Product()->exists() ?
-                $this->Product()->getMiniData() :
-                ($this->Variant()->exists() ?
-                $this->Variant()->getData() : null);
+        return $this->Variant()->exists() ? $this->Variant()->getData() : null;
     }
 
     /**
@@ -142,18 +126,7 @@ class OrderItem extends DataObject
     {
         parent::onBeforeWrite();
 
-        if ($this->Product()->exists()) {
-            $this->isDigital    =   $this->Product()->isDigital;
-            $this->isExempt     =   $this->Product()->isExempt;
-            $this->GSTIncluded  =   $this->Product()->GSTIncluded;
-            $this->NoDiscount   =   $this->Product()->NoDiscount;
-
-            $this->Subtotal     =   $this->Quantity * $this->Product()->SortingPrice;
-
-            if (!$this->Product()->isDigital) {
-                $this->Subweight    =   $this->Quantity * $this->Product()->UnitWeight;
-            }
-        } elseif ($this->Variant()->exists()) {
+        if ($this->Variant()->exists()) {
             $this->isDigital    =   $this->Variant()->isDigital;
             $this->isExempt     =   $this->Variant()->isExempt;
             $this->GSTIncluded  =   $this->Variant()->GSTIncluded;

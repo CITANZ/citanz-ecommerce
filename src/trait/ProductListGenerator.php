@@ -14,6 +14,7 @@ use SilverStripe\ORM\DB;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\View\ArrayData;
 use SilverStripe\ORM\PaginatedList;
+use Cita\eCommerce\Model\Variant;
 
 trait ProductListGenerator
 {
@@ -243,7 +244,17 @@ trait ProductListGenerator
         } else {
             $children_ids   =   $this->AllChildren()->column('ID');
         }
-        return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => $children_ids]);
+
+        $variants = Variant::get()->where("ProductID IN (" . implode(',', $children_ids) . ") AND ((OutOfStock = 1 AND StockCount > 0) OR (InfiniteStock = 1)) ");
+
+
+        $eligibles = $variants->column('ProductID');
+
+        if (empty($eligibles)) {
+            $eligibles = -1;
+        }
+
+        return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => $eligibles]);
     }
 
     private function get_category($slug)

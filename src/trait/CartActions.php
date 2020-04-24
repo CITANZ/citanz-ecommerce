@@ -29,7 +29,7 @@ trait CartActions
         $data['pagetype']   =   'CartPage';
         $data['title']      =   $this->Title;
         $data['gst_rate']   =   SiteConfig::current_site_config()->GSTRate;
-        $data['cart']       =   $cart ? $cart->getData() : $cart;
+        $data['cart']       =   $cart && $cart->Items()->exists() ? $cart->getData() : $cart;
 
         return $data;
     }
