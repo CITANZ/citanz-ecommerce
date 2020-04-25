@@ -32,7 +32,7 @@ class Variant extends DataObject
      * @var array
      */
     private static $db = [
-        'Title' => 'Varchar(128)',
+        'VariantTitle' => 'Varchar(128)',
         'Content' => 'HTMLText',
         'SKU' => 'Varchar(64)',
         'InfiniteStock' => 'Boolean',
@@ -72,9 +72,18 @@ class Variant extends DataObject
      * @var array
      */
     private static $summary_fields = [
-        'Product.Title' =>  'Product',
-        'Title'         =>  'Title',
-        'Price'         =>  'Price'
+        'Title' => 'Title',
+        'Price' => 'Price',
+        'Stock' => 'Stock'
+    ];
+
+    /**
+     * Defines a default list of filters for the search context
+     * @var array
+     */
+    private static $searchable_fields = [
+        'Product.Title',
+        'VariantTitle'
     ];
 
     /**
@@ -109,7 +118,10 @@ class Variant extends DataObject
     {
         $fields = parent::getCMSFields();
 
+        $fields->fieldByName('Root.Main.VariantTitle')->setDescription('Leave empty if you wish to use the same name as the product title');
+
         $fields->removeByName([
+            'Title',
             'ProductID',
             'Tags',
             'UnitWeight'
@@ -225,16 +237,16 @@ class Variant extends DataObject
     {
         return array_merge($this->getBaseData(), [
             'link'          =>  $this->Product()->exists() ? $this->Product()->Link() : null,
-            'title'         =>  $this->getProductTitle(),
-            'variant_title' =>  $this->Title,
+            'title'         =>  $this->Title,
+            'variant_title' =>  $this->VariantTitle,
             'content'       =>  Util::preprocess_content(empty($this->Content) ? $this->Product()->Content : $this->Content)
         ]);
     }
 
-    public function getProductTitle()
+    public function getTitle()
     {
         if ($this->Product()->exists()) {
-            return trim($this->Product()->Title);
+            return trim($this->Product()->Title . ($this->VariantTitle ? " - $this->VariantTitle" : ""));
         }
 
         $result = $this->extend('getProductTitle');
@@ -243,6 +255,15 @@ class Variant extends DataObject
         }
 
         return null;
+    }
+
+    public function getStock()
+    {
+        if ($this->InfiniteStock) {
+            return 'Infinite';
+        }
+
+        return $this->StockCount;
     }
 
     /**
@@ -279,6 +300,15 @@ class Variant extends DataObject
         }
     }
 
+    public function getMiniData()
+    {
+        return [
+            'id' => $this->ID,
+            'title' => $this->Title,
+            'price' => $this->Price
+        ];
+    }
+
     public function getBaseData()
     {
         $special_price = $this->get_special_price();
@@ -286,9 +316,8 @@ class Variant extends DataObject
             'id'            =>  $this->ID,
             'sku'           =>  $this->SKU,
             'price'         =>  $this->Price,
-            'price_label'   =>  $special_price ?
-                                $special_price :
-                                ('$' . number_format($this->Price, 2)),
+            'stock'         =>  $this->Stock,
+            'price_label'   =>  '$' . number_format($special_price ? $special_price : $this->Price, 2),
             'special_price' =>  $this->get_special_price(),
             'special_rate'  =>  $this->calc_special_price_discount_rate(),
             'image'         =>  $this->Image()->exists() ?
@@ -320,5 +349,14 @@ class Variant extends DataObject
         }
 
         return 0;
+    }
+
+    public function getisSoldout()
+    {
+        if (!$this->InfiniteStock && ($this->OutOfStock || $this->StockCount <= 0)) {
+            return true;
+        }
+
+        return false;
     }
 }

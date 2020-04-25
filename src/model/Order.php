@@ -22,6 +22,8 @@ use SilverStripe\Control\Director;
 use Leochenftw\Grid;
 use Dynamic\CountryDropdownField\Fields\CountryDropdownField;
 use SilverStripe\Omnipay\Model\Payment;
+use Cita\eCommerce\Model\Bundle;
+
 /**
  * Description
  *
@@ -165,7 +167,8 @@ class Order extends DataObject
      */
     private static $has_many = [
         'Items'     =>  OrderItem::class,
-        'Payments'  =>  Payment::class
+        'Payments'  =>  Payment::class,
+        'Messages'  =>  OrderMessage::class
     ];
 
     public function getSuccessPayment()
@@ -646,20 +649,45 @@ class Order extends DataObject
         return $this->getData();
     }
 
-    public function getData()
+    public function CheckOrderRoutine()
     {
         // scan the order items, just in case the product has been deleted
         $count = $this->Items()->count();
         $iterator = $this->Items()->getIterator();
+        $removed = [];
 
         foreach ($iterator as $item) {
-            if (!$item->Variant()->exists()) {
+            $goods = $item->Bundle()->exists() ? $item->Bundle() : $item->Variant();
+
+            if (!$goods->exists() || $goods->isSoldout) {
+                $removed[] = "<strong>$item->Title</strong>";
                 $item->delete();
             }
         }
 
-        if ($count != $this->Items()->count()) {
+        if (!empty($removed)) {
+            $removed = implode(', ', $removed);
+            $this->Log("<p>The following item(s) has removed due to out-of-stock: $removed</p>");
             $this->UpdateAmountWeight();
+        }
+
+        // check bundle
+        Bundle::MatchBundle($this);
+    }
+
+    public function Log($message, $admin = false)
+    {
+        OrderMessage::create([
+            'Message' => $message,
+            'AdminUse' => $admin,
+            'OrderID' => $this->ID
+        ])->write();
+    }
+
+    public function getData()
+    {
+        if ($this->Status == 'Pending') {
+            $this->CheckOrderRoutine();
         }
 
         $amount = $this->TotalAmount;
@@ -668,7 +696,8 @@ class Order extends DataObject
             'id'    =>  $this->ID,
             'ref'   =>  $this->CustomerReference,
             'count'         =>  $this->ItemCount(),
-            'items'         =>  $this->Items()->sort(['LastEdited' => 'DESC'])->getData(),
+            'messages'      =>  $this->Messages()->filter(['Displayed' => false, 'AdminUse' => false])->column('Message'),
+            'items'         =>  $this->Items()->sort(['Created' => 'DESC'])->getData(),
             'amount'        =>  $amount,
             'amounts'       =>  [
                 'discoutable_taxable'           =>  $this->DiscountableTaxable,

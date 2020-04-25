@@ -23,10 +23,11 @@ class OrderItem extends DataObject
      * @var array
      */
     private static $db = [
+        'Title'         =>  'Text',
         'Quantity'      =>  'Decimal',
         'Subtotal'      =>  'Currency', // this is the product price x qty
         'Subweight'     =>  'Decimal',
-        'isRefunded'    =>  'Boolean'
+        'isRefunded'    =>  'Boolean',
     ];
 
     /**
@@ -52,6 +53,7 @@ class OrderItem extends DataObject
      */
     private static $has_one = [
         'Variant'   =>  Variant::class,
+        'Bundle'    =>  Bundle::class,
         'Order'     =>  Order::class
     ];
 
@@ -66,7 +68,7 @@ class OrderItem extends DataObject
      * @var array
      */
     private static $summary_fields = [
-        'ShowTitle' =>  'Title',
+        'Title'     =>  'Title',
         'UnitPrice' =>  'Unit Price',
         'Quantity'  =>  'Quantity',
         'Subtotal'  =>  'Subtotal'
@@ -74,26 +76,15 @@ class OrderItem extends DataObject
 
     public function getSKU()
     {
+        if ($this->Bundle()->exists()) {
+            return $this->Bundle()->SKU;
+        }
+
         if ($this->Variant()->exists()) {
             return $this->Variant()->SKU;
         }
 
         return 'DELETED-ITEM-SKU';
-    }
-
-    public function ShowTitle()
-    {
-        if ($this->Variant()->exists()) {
-            $product = '';
-
-            if ($this->Variant()->Product()->exists()) {
-                $product = $this->Variant()->Product()->Title . ' - ';
-            }
-
-            return $product . $this->Variant()->Title;
-        }
-
-        return 'DELETED ITEM';
     }
 
     public function UnitPrice()
@@ -116,6 +107,10 @@ class OrderItem extends DataObject
 
     private function get_product_details()
     {
+        if ($this->Bundle()->exists()) {
+            return $this->Bundle()->getMiniData();
+        }
+
         return $this->Variant()->exists() ? $this->Variant()->getData() : null;
     }
 
@@ -126,7 +121,25 @@ class OrderItem extends DataObject
     {
         parent::onBeforeWrite();
 
-        if ($this->Variant()->exists()) {
+        if ($this->Bundle()->exists()) {
+            $this->Quantity = 1;
+            $this->Title = $this->Bundle()->Title;
+
+            foreach ($this->Bundle()->Variants() as $variant) {
+                $this->Title .= "- $variant->Title x 1\n";
+            }
+
+            $this->Title = trim($this->Title);
+
+            $this->isDigital = $this->Bundle()->isDigital;
+            $this->isExempt = $this->Bundle()->isExempt;
+            $this->GSTIncluded = $this->Bundle()->GSTIncluded;
+            $this->NoDiscount = $this->Bundle()->NoDiscount;
+            $this->Subtotal = $this->Quantity * $this->Bundle()->BundledPrice;
+            $this->Subweight = $this->Bundle()->UnitWeight;
+
+        } elseif ($this->Variant()->exists()) {
+            $this->Title = $this->Variant()->Title;
             $this->isDigital    =   $this->Variant()->isDigital;
             $this->isExempt     =   $this->Variant()->isExempt;
             $this->GSTIncluded  =   $this->Variant()->GSTIncluded;
