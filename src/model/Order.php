@@ -695,7 +695,7 @@ class Order extends DataObject
             'id'    =>  $this->ID,
             'ref'   =>  $this->CustomerReference,
             'count'         =>  $this->ItemCount(),
-            'messages'      =>  $this->Messages()->filter(['Displayed' => false, 'AdminUse' => false])->column('Message'),
+            'messages'      =>  $this->Messages()->filter(['Displayed' => false, 'AdminUse' => false])->getData(),
             'items'         =>  $this->Items()->sort(['Created' => 'DESC'])->getData(),
             'amount'        =>  $amount,
             'amounts'       =>  [

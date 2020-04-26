@@ -36,6 +36,7 @@ class Cart extends PageController
         'add'               =>  true,
         'update'            =>  true,
         'delete'            =>  true,
+        'read'              =>  true,
         'estimate_freight'  =>  true,
         'coupon_validate'   =>  true,
         // For forms

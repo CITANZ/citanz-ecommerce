@@ -34,10 +34,25 @@ trait CartActions
         return $data;
     }
 
+    private function do_read()
+    {
+        $cart   =   eCommerce::get_cart();
+
+        if ($cart && ($id = $this->request->param('id'))) {
+            if ($message = $cart->Messages()->byID($id)) {
+                $message->Displayed = true;
+                $message->write();
+                return $cart->getData();
+            }
+        }
+
+        return $this->httpError(500, 'Cannot close message!');
+    }
+
     private function do_add()
     {
         $cart   =   eCommerce::get_cart();
-        
+
         if (!$cart) {
             $cart       =   Order::create();
             $cart->write();

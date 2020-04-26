@@ -44,4 +44,12 @@ class OrderMessage extends DataObject
     {
         return subtr($this->Message, 0, 50);
     }
+
+    public function getData()
+    {
+        return [
+            'id' => $this->ID,
+            'content' => $this->Message
+        ];
+    }
 }

@@ -26,6 +26,7 @@ trait CartTemplateActions
     public function add() { return $this->do_add(); }
     public function update() { return $this->do_update(); }
     public function delete() { return $this->do_delete(); }
+    public function read() { return $this->do_read(); }
     public function estimate_freight() { return $this->do_estimate_freight(); }
     public function coupon_validate() { return $this->do_coupon_validate(); }
 
