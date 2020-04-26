@@ -13,6 +13,7 @@ use Cita\eCommerce\Extension\ProductOrderItemCommonFields;
 use SilverStripe\TagField\TagField;
 use SilverStripe\Forms\CheckboxField;
 use UncleCheese\DisplayLogic\Forms\Wrapper;
+use SilverStripe\ORM\ArrayList;
 
 /**
  * Description
@@ -92,6 +93,14 @@ class Variant extends DataObject
      */
     private static $has_one = [
         'Product' =>  Product::class
+    ];
+
+    /**
+     * Has_many relationship
+     * @var array
+     */
+    private static $has_many = [
+        'OrderItems' => OrderItem::class
     ];
 
     /**
@@ -290,6 +299,7 @@ class Variant extends DataObject
     public function onAfterWrite()
     {
         parent::onAfterWrite();
+        
         if ($this->Product()->exists()) {
             $this->Product()->SortingPrice = $this->SortingPrice;
             $this->Product()->UpdatePrices();

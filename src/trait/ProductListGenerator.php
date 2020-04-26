@@ -245,8 +245,11 @@ trait ProductListGenerator
             $children_ids   =   $this->AllChildren()->column('ID');
         }
 
-        $variants = Variant::get()->where("ProductID IN (" . implode(',', $children_ids) . ") AND ((OutOfStock = 1 AND StockCount > 0) OR (InfiniteStock = 1)) ");
+        if (empty($children_ids)) {
+            return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => -1]);
+        }
 
+        $variants = Variant::get()->where("ProductID IN (" . implode(',', $children_ids) . ") AND ((OutOfStock = 1 AND StockCount > 0) OR (InfiniteStock = 1)) ");
 
         $eligibles = $variants->column('ProductID');
 

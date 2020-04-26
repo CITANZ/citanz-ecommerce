@@ -123,7 +123,7 @@ class OrderItem extends DataObject
 
         if ($this->Bundle()->exists()) {
             $this->Quantity = 1;
-            $this->Title = $this->Bundle()->Title;
+            $this->Title = $this->Bundle()->Title . "\n";
 
             foreach ($this->Bundle()->Variants() as $variant) {
                 $this->Title .= "- $variant->Title x 1\n";

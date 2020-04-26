@@ -661,14 +661,17 @@ class Order extends DataObject
             if (!$goods->exists() || $goods->isSoldout) {
                 $removed[] = "<strong>$item->Title</strong>";
                 $item->delete();
+            } else {
+                $item->write();
             }
         }
 
         if (!empty($removed)) {
             $removed = implode(', ', $removed);
             $this->Log("<p>The following item(s) has removed due to out-of-stock: $removed</p>");
-            $this->UpdateAmountWeight();
         }
+
+        $this->UpdateAmountWeight();
 
         // check bundle
         Bundle::MatchBundle($this);
