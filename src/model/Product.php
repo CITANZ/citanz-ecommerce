@@ -13,6 +13,7 @@ use Cita\eCommerce\Controller\ProductController;
 use Cita\eCommerce\Traits\TopSellerGenerator;
 use Leochenftw\Grid;
 use Leochenftw\Util;
+use SilverStripe\TagField\TagField;
 
 /**
  * Description
@@ -107,6 +108,19 @@ class Product extends Page
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
+
+        $fields->addFieldsToTab(
+            'Root.ProductDetails',
+            [
+                TagField::create(
+                    'Categories',
+                    'Categories',
+                    Category::get(),
+                    $this->Categories()
+                )->setShouldLazyLoad(true)->setCanCreate(true),
+            ]
+        );
+
         $fields->addFieldsToTab(
             'Root.Variants',
             [

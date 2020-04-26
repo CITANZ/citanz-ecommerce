@@ -11,7 +11,6 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\ORM\DataExtension;
 use Cita\eCommerce\Model\Variant;
-use Cita\eCommerce\Model\Tag;
 use Cita\eCommerce\Model\Product;
 use Leochenftw\Grid;
 
@@ -64,27 +63,15 @@ class ProductVariantCommonFields extends DataExtension
             'Content'
         );
 
-        if ($this->owner instanceof Variant) {
-            $fields->addFieldsToTab(
-                'Root.ProductDetails',
-                [
-                    UploadField::create(
-                        'Image',
-                        'Product Image'
-                    )
-                ]
-            );
-        } else {
-            $fields->addFieldsToTab(
-                'Root.ProductImages',
-                [
-                    UploadField::create(
-                        'Image',
-                        'Product Image'
-                    )
-                ]
-            );
-        }
+        $fields->addFieldsToTab(
+            'Root.ProductDetails',
+            [
+                UploadField::create(
+                    'Image',
+                    'Product Image'
+                )
+            ]
+        );
 
         return $fields;
     }
