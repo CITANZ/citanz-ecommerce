@@ -29,7 +29,7 @@ trait CartActions
         $data['pagetype']   =   'CartPage';
         $data['title']      =   $this->Title;
         $data['gst_rate']   =   SiteConfig::current_site_config()->GSTRate;
-        $data['cart']       =   $cart && $cart->Items()->exists() ? $cart->getData() : $cart;
+        $data['cart']       =   $cart && $cart->Items()->exists() ? $cart->getData() : null;
 
         return $data;
     }
@@ -37,7 +37,7 @@ trait CartActions
     private function do_add()
     {
         $cart   =   eCommerce::get_cart();
-
+        
         if (!$cart) {
             $cart       =   Order::create();
             $cart->write();
@@ -45,7 +45,7 @@ trait CartActions
             $session->set('cart_id', $cart->ID);
         }
 
-        $cart->add_to_cart($this->request->postVar('id'), $this->request->postVar('qty'), $this->request->postVar('class'));
+        $cart->add_to_cart($this->request->postVar('id'), $this->request->postVar('qty'));
 
         return $cart->getData();
     }

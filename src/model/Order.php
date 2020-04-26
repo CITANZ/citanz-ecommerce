@@ -628,7 +628,7 @@ class Order extends DataObject
         return $n == $this->Items()->count();
     }
 
-    public function add_to_cart($id, $qty, $class = null)
+    public function add_to_cart($id, $qty)
     {
         $existing_item = $this->Items()->filter(['VariantID' => $id])->first();
 
@@ -636,11 +636,10 @@ class Order extends DataObject
             $existing_item->Quantity    +=  $qty;
             $existing_item->write();
         } else {
-            $item   =   OrderItem::create();
-            $item->VariantID    =   $id;
-
-            $item->Quantity =   $qty;
-            $item->OrderID  =   $this->ID;
+            $item = OrderItem::create();
+            $item->VariantID = $id;
+            $item->Quantity = $qty;
+            $item->OrderID = $this->ID;
             $item->write();
         }
 
