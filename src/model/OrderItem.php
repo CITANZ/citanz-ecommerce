@@ -90,7 +90,7 @@ class OrderItem extends DataObject
 
     public function UnitPrice()
     {
-        return  $this->Variant()->exists() ? '$' . money_format('%i',  $this->Variant()->Price) : '-';
+        return  $this->Variant()->exists() ? '$' . number_format($this->Variant()->Price,2) : '-';
     }
 
     public function getData()
