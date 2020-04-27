@@ -118,7 +118,7 @@ class OrderItem extends DataObject
             'product'       =>  $this->get_product_details()
         ];
 
-        if ($this->Order()->eixsts() && $this->Order()->Status != 'Pending') {
+        if ($this->Order()->exists() && $this->Order()->Status != 'Pending') {
             return array_merge($data, [
                 'paid_unit_price' => $this->UnitPrice
             ]);
