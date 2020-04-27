@@ -95,7 +95,6 @@ class OrderItem extends DataObject
 
     public function getUnitPrice()
     {
-        // \Leochenftw\Debugger::inspect($this->UnitPriceUponPayment);
         if (!empty($this->UnitPriceUponPayment)) {
             return $this->UnitPriceUponPayment;
         }
