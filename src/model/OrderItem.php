@@ -69,10 +69,10 @@ class OrderItem extends DataObject
      * @var array
      */
     private static $summary_fields = [
-        'Title'     =>  'Title',
-        'UnitPrice' =>  'Unit Price',
-        'Quantity'  =>  'Quantity',
-        'Subtotal'  =>  'Subtotal'
+        'Title' => 'Title',
+        'UnitPriceLabel' => 'Unit Price',
+        'Quantity' => 'Quantity',
+        'Subtotal' => 'Subtotal'
     ];
 
     public function getSKU()
@@ -88,22 +88,43 @@ class OrderItem extends DataObject
         return 'DELETED-ITEM-SKU';
     }
 
-    public function UnitPrice()
+    public function getUnitPriceLabel()
     {
-        return  $this->Variant()->exists() ? '$' . number_format($this->Variant()->Price,2) : '-';
+        return '$' . number_format($this->UnitPrice, 2);
+    }
+
+    public function getUnitPirce()
+    {
+        if (!empty($this->UnitPirceUponPayment)) {
+            return $this->UnitPirceUponPayment;
+        }
+
+        if ($this->Bundle()->exists()) {
+            return $this->Bundle()->BundledPrice;
+        }
+
+        return  $this->Variant()->exists() ? $this->Variant()->Price : 0;
     }
 
     public function getData()
     {
-        return [
+        $data = [
             'id'            =>  $this->ID,
-            'product'       =>  $this->get_product_details(),
             'quantity'      =>  $this->Quantity,
             'subtotal'      =>  $this->Subtotal,
             'subweight'     =>  $this->Subweight,
             'discountable'  =>  !$this->NoDiscount,
             'taxable'       =>  !$this->isExempt
+            'product'       =>  $this->get_product_details()
         ];
+
+        if ($this->Order()->eixsts() && $this->Order()->Status != 'Pending') {
+            return array_merge($data, [
+                'paid_unit_price' => $this->UnitPrice
+            ]);
+        }
+
+        return $data;
     }
 
     private function get_product_details()
@@ -122,32 +143,38 @@ class OrderItem extends DataObject
     {
         parent::onBeforeWrite();
 
-        if ($this->Bundle()->exists()) {
-            $this->Quantity = 1;
-            $this->Title = $this->Bundle()->Title . "\n";
+        if (!$this->Order()->exists()) {
+            return;
+        }
 
-            foreach ($this->Bundle()->Variants() as $variant) {
-                $this->Title .= "- $variant->Title x 1\n";
-            }
+        if ($this->Order()->Status == 'Pending') {
+            if ($this->Bundle()->exists()) {
+                $this->Quantity = 1;
+                $this->Title = $this->Bundle()->Title . "\n";
 
-            $this->Title = trim($this->Title);
+                foreach ($this->Bundle()->Variants() as $variant) {
+                    $this->Title .= "- $variant->Title x 1\n";
+                }
 
-            $this->isDigital = $this->Bundle()->isDigital;
-            $this->isExempt = $this->Bundle()->isExempt;
-            $this->GSTIncluded = $this->Bundle()->GSTIncluded;
-            $this->NoDiscount = $this->Bundle()->NoDiscount;
-            $this->Subtotal = $this->Quantity * $this->Bundle()->BundledPrice;
-            $this->Subweight = $this->Bundle()->UnitWeight;
+                $this->Title = trim($this->Title);
 
-        } elseif ($this->Variant()->exists()) {
-            $this->Title = $this->Variant()->Title;
-            $this->isDigital    =   $this->Variant()->isDigital;
-            $this->isExempt     =   $this->Variant()->isExempt;
-            $this->GSTIncluded  =   $this->Variant()->GSTIncluded;
-            $this->NoDiscount   =   $this->Variant()->NoDiscount;
-            $this->Subtotal  =   $this->Quantity * $this->Variant()->SortingPrice;
-            if (!$this->Variant()->isDigital) {
-                $this->Subweight    =   $this->Quantity * $this->Variant()->UnitWeight;
+                $this->isDigital = $this->Bundle()->isDigital;
+                $this->isExempt = $this->Bundle()->isExempt;
+                $this->GSTIncluded = $this->Bundle()->GSTIncluded;
+                $this->NoDiscount = $this->Bundle()->NoDiscount;
+                $this->Subtotal = $this->Quantity * $this->Bundle()->BundledPrice;
+                $this->Subweight = $this->Bundle()->UnitWeight;
+
+            } elseif ($this->Variant()->exists()) {
+                $this->Title = $this->Variant()->Title;
+                $this->isDigital    =   $this->Variant()->isDigital;
+                $this->isExempt     =   $this->Variant()->isExempt;
+                $this->GSTIncluded  =   $this->Variant()->GSTIncluded;
+                $this->NoDiscount   =   $this->Variant()->NoDiscount;
+                $this->Subtotal  =   $this->Quantity * $this->Variant()->SortingPrice;
+                if (!$this->Variant()->isDigital) {
+                    $this->Subweight    =   $this->Quantity * $this->Variant()->UnitWeight;
+                }
             }
         }
     }
