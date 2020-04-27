@@ -114,7 +114,7 @@ class OrderItem extends DataObject
             'subtotal'      =>  $this->Subtotal,
             'subweight'     =>  $this->Subweight,
             'discountable'  =>  !$this->NoDiscount,
-            'taxable'       =>  !$this->isExempt
+            'taxable'       =>  !$this->isExempt,
             'product'       =>  $this->get_product_details()
         ];
 
