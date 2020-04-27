@@ -474,6 +474,10 @@ class Order extends DataObject
 
         $this->write();
 
+        foreach ($this->Items() as $item) {
+            $item->FreezePrice();
+        }
+
         if ($this->Status == 'Payment Received') {
             if ($this->Discount()->exists()) {
                 $discount   =   $this->Discount();

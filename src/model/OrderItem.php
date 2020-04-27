@@ -28,7 +28,7 @@ class OrderItem extends DataObject
         'Subtotal'      =>  'Currency', // this is the product price x qty
         'Subweight'     =>  'Decimal',
         'isRefunded'    =>  'Boolean',
-        'UnitPirceUponPayment' => 'Currency',
+        'UnitPriceUponPayment' => 'Currency',
     ];
 
     /**
@@ -93,10 +93,11 @@ class OrderItem extends DataObject
         return '$' . number_format($this->UnitPrice, 2);
     }
 
-    public function getUnitPirce()
+    public function getUnitPrice()
     {
-        if (!empty($this->UnitPirceUponPayment)) {
-            return $this->UnitPirceUponPayment;
+        // \Leochenftw\Debugger::inspect($this->UnitPriceUponPayment);
+        if (!empty($this->UnitPriceUponPayment)) {
+            return $this->UnitPriceUponPayment;
         }
 
         if ($this->Bundle()->exists()) {
@@ -104,6 +105,12 @@ class OrderItem extends DataObject
         }
 
         return  $this->Variant()->exists() ? $this->Variant()->Price : 0;
+    }
+
+    public function FreezePrice()
+    {
+        $this->UnitPriceUponPayment = $this->UnitPrice;
+        $this->write();
     }
 
     public function getData()
