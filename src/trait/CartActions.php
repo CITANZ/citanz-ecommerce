@@ -201,8 +201,8 @@ trait CartActions
                                         (Member::currentUser() ? Member::currentUser()->Email : null),
                 'amount'            =>  (float) $cart->TotalAmount,
                 'amounts'           =>  [
-                                            'discoutable_taxable'           =>  $cart->DiscountableTaxable,
-                                            'discoutable_nontaxable'        =>  $cart->DiscountableNonTaxalbe,
+                                            'discountable_taxable'           =>  $cart->DiscountableTaxable,
+                                            'discountable_nontaxable'        =>  $cart->DiscountableNonTaxalbe,
                                             'nondiscountable_taxable'       =>  $cart->NonDiscountableTaxable,
                                             'nondiscountable_nontaxable'    =>  $cart->NonDiscountableNonTaxable
                                         ],

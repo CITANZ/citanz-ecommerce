@@ -188,7 +188,7 @@ class Variant extends DataObject
             )->displayIf('isDigital')->isNotChecked()->end(),
             CheckboxField::create(
                 'NoDiscount',
-                'This product does not accept any discout'
+                'This product does not accept any discount'
             ),
             CheckboxField::create(
                 'GSTIncluded',

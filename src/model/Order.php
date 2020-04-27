@@ -702,8 +702,8 @@ class Order extends DataObject
             'items'         =>  $this->Items()->sort(['Created' => 'DESC'])->getData(),
             'amount'        =>  $amount,
             'amounts'       =>  [
-                'discoutable_taxable'           =>  $this->DiscountableTaxable,
-                'discoutable_nontaxable'        =>  $this->DiscountableNonTaxable,
+                'discountable_taxable'           =>  $this->DiscountableTaxable,
+                'discountable_nontaxable'        =>  $this->DiscountableNonTaxable,
                 'nondiscountable_taxable'       =>  $this->NonDiscountableTaxable,
                 'nondiscountable_nontaxable'    =>  $this->NonDiscountableNonTaxable,
                 'gst_included_amount'           =>  $this->TaxIncludedTotal
