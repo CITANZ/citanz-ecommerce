@@ -28,6 +28,7 @@ class OrderItem extends DataObject
         'Subtotal'      =>  'Currency', // this is the product price x qty
         'Subweight'     =>  'Decimal',
         'isRefunded'    =>  'Boolean',
+        'UnitPirceUponPayment' => 'Currency',
     ];
 
     /**
