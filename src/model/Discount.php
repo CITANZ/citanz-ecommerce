@@ -39,8 +39,9 @@ class Discount extends DataObject
         'Title'         =>  'Varchar(128)',
         'DiscountBy'    =>  'Enum("ByPercentage,ByValue")',
         'DiscountRate'  =>  'Decimal',
-        'Type'          =>  'Enum("Member Type,Coupon")',
+        'Type'          =>  'Enum("Member Type,Coupon,Item Count")',
         'CouponCode'    =>  'Varchar(128)',
+        'NumItemsToMeetCondition' => 'Int',
         'NumCopies'     =>  'Int',
         'Used'          =>  'Boolean',
         'InfiniteUse'   =>  'Boolean',
@@ -168,6 +169,51 @@ class Discount extends DataObject
     public function getDescription()
     {
         return $this->DiscountBy == 'ByPercentage' ? (((float) $this->DiscountRate) . '% off') : ('-$' . $this->DiscountRate);
+    }
+
+    public function isValid()
+    {
+        if ($this->Used) {
+            return false;
+        }
+
+        $valid_from = strtotime($coupon->ValidFrom);
+        $valid_until = strtotime($coupon->ValidUntil);
+
+        if (!empty($valid_from) && $valid_from > time()) {
+            return false;
+        }
+
+        if (!empty($valid_until) && $valid_until < time()) {
+            return false;
+        }
+
+        if (!$this->InfiniteUse && $this->LifePoint <= 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function validate()
+    {
+        $result = parent::validate();
+        if ($discount = Discount::get()->filter(['Type' => 'Item Count'])->first()) {
+            if ($discount->ID != $this->ID) {
+                $result->addError("You already have one 'Item count' type of discount!");
+            }
+        }
+
+        return $result;
+    }
+
+    public function CheckOrder(&$order)
+    {
+        if ($this->NumItemsToMeetCondition >= $order->ItemCount()) {
+            return true;
+        }
+
+        return false;
     }
 
     public static function check_valid($promo_code)

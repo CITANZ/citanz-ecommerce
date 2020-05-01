@@ -678,7 +678,19 @@ class Order extends DataObject
         $this->UpdateAmountWeight();
 
         // check bundle
-        Bundle::MatchBundle($this);
+        $bundle = Bundle::MatchBundle($this);
+
+        // bundle and discount item count type cannot be used together!
+        if ($bundle) {
+            return;
+        }
+        
+        if ($discount = Discount::get()->filter(['Type' => 'Item Count'])->first()) {
+            if ($discount->CheckOrder($this)) {
+                $this->DiscountID = $discount->ID;
+                $this->UpdateAmountWeight();
+            }
+        }
     }
 
     public function Log($message, $admin = false)

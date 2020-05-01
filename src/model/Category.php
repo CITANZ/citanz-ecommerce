@@ -159,7 +159,7 @@ class Category extends DataObject
     {
         if ($include_sub) {
             $list   =   $this->Children()->getData();
-            Util::exclude_empty_category($list);
+            $this->ExcludeEmptyCategory($list);
         }
 
         $data   =   [
@@ -172,5 +172,17 @@ class Category extends DataObject
         ];
 
         return $data;
+    }
+
+    private function ExcludeEmptyCategory(&$array)
+    {
+        $list    =   [];
+        foreach ($array as $item) {
+            if ($item['count'] != 0) {
+                $list[]  =   $item;
+            }
+        }
+
+        $array   =   $list;
     }
 }

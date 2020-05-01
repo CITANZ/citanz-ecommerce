@@ -156,6 +156,8 @@ class Bundle extends Page
         $order->Log("<p>We found a bundle deal for you! Bundle: <strong>$this->Title</strong> now covers {$covered}</p>");
 
         $order->UpdateAmountWeight();
+
+        return $this;
     }
 
     public function getMiniData()
