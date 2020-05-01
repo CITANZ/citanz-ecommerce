@@ -6,6 +6,7 @@ use SilverStripe\Forms\CurrencyField;
 use SilverStripe\Forms\TextField;
 use Leochenftw\Grid;
 use Cita\eCommerce\Extension\ProductOrderItemCommonFields;
+use SilverStripe\Forms\ReadonlyField;
 
 /**
  * Description
@@ -54,6 +55,16 @@ class Bundle extends Page
     ];
 
     /**
+     * Defines Database fields for the Many_many bridging table
+     * @var array
+     */
+    private static $many_many_extraFields = [
+        'Variants' => [
+            'Count' => 'Int'
+        ]
+    ];
+
+    /**
      * CMS Fields
      * @return FieldList
      */
@@ -70,10 +81,19 @@ class Bundle extends Page
             'Content'
         );
 
-        $fields->addFieldToTab(
-            'Root.BundledItems',
-            Grid::make('Variants', 'Variants', $this->Variants(), false, 'GridFieldConfig_RelationEditor', true)
-        );
+        $field_config = [
+            'Title' => [
+                'title' => 'Title',
+                'field' => ReadonlyField::class,
+            ],
+            'Count' => [
+                'title' => 'Count',
+                'field' => TextField::class,
+            ],
+        ];
+
+        $fields->addFieldToTab('Root.BundledItems', Grid::manyExtraSortable('Variants', 'Variants', $this->Variants(), Variant::class, $field_config));
+
         return $fields;
     }
 
