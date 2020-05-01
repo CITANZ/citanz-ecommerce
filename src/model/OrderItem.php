@@ -112,6 +112,16 @@ class OrderItem extends DataObject
         $this->write();
     }
 
+    public function reduce($count)
+    {
+        $this->Quantity -= $count;
+        if ($this->Quantity > 0) {
+            $this->write();
+        } else {
+            $this->delete();
+        }
+    }
+
     public function getData()
     {
         $data = [
@@ -155,21 +165,23 @@ class OrderItem extends DataObject
 
         if ($this->Order()->Status == 'Pending') {
             if ($this->Bundle()->exists()) {
+                $bundle = $this->Bundle();
                 $this->Quantity = 1;
-                $this->Title = $this->Bundle()->Title . "\n";
+                $this->Title = $bundle->Title . "\n";
 
-                foreach ($this->Bundle()->Variants() as $variant) {
-                    $this->Title .= "- $variant->Title x 1\n";
+                foreach ($bundle->Variants() as $variant) {
+                    $bundle_variant_count = $bundle->Variants()->byID($variant->ID)->Count;
+                    $this->Title .= "- $variant->Title x $bundle_variant_count\n";
                 }
 
                 $this->Title = trim($this->Title);
 
-                $this->isDigital = $this->Bundle()->isDigital;
-                $this->isExempt = $this->Bundle()->isExempt;
-                $this->GSTIncluded = $this->Bundle()->GSTIncluded;
-                $this->NoDiscount = $this->Bundle()->NoDiscount;
-                $this->Subtotal = $this->Quantity * $this->Bundle()->BundledPrice;
-                $this->Subweight = $this->Bundle()->UnitWeight;
+                $this->isDigital = $bundle->isDigital;
+                $this->isExempt = $bundle->isExempt;
+                $this->GSTIncluded = $bundle->GSTIncluded;
+                $this->NoDiscount = $bundle->NoDiscount;
+                $this->Subtotal = $this->Quantity * $bundle->BundledPrice;
+                $this->Subweight = $bundle->UnitWeight;
 
             } elseif ($this->Variant()->exists()) {
                 $this->Title = $this->Variant()->Title;

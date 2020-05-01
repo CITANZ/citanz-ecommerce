@@ -138,7 +138,19 @@ class Bundle extends Page
             sort($result);
 
             if ($my_variants == $result) {
-                return $bundle->InjectToCart($order);
+                $condition_met = true;
+                foreach ($result as $vid) {
+                    $bundle_variant_requirement = $bundle->Variants()->byID($vid)->Count;
+                    $order_item_count = $order->Items()->filter(['VariantID' => $vid])->first()->Quantity;
+                    if ($order_item_count < $bundle_variant_requirement) {
+                        $condition_met = false;
+                        break;
+                    }
+                }
+
+                if ($condition_met) {
+                    return $bundle->InjectToCart($order);
+                }
             }
         }
 
@@ -156,24 +168,31 @@ class Bundle extends Page
         $new_item->write();
         $covered = [];
 
-        $togo = $items->filter(['Quantity' => 1]);
-        foreach ($togo as $item) {
-            if ($item->Quantity <= 1) {
-                $covered[] = "<strong>$item->Title</strong>";
-                $item->delete();
+        foreach ($this->Variants() as $variant) {
+            if ($order_item = $order->Items()->filter(['VariantID' => $variant->ID])->first()) {
+                $order_item->reduce($variant->Count);
+                $covered[] = $variant->Title;
             }
         }
 
-        $tokeep = $items->filter(['Quantity:GreaterThan' => 1]);
-        foreach ($tokeep as $item) {
-            $covered[] = "<strong>$item->Title</strong>";
-            $item->Quantity -= 1;
-            $item->write();
+        $covered_string = '';
+        $len = count($covered);
+
+        for ($i = 0; $i < $len; $i++) {
+            if ($i == $len - 1) {
+                $covered_string .= 'and ';
+            }
+
+            $covered_string .= "<strong>{$covered[$i]}</strong>";
+
+            if ($i < $len - 1 && $i != $len - 2) {
+                $covered_string .= ', ';
+            } elseif ($i == $len - 2) {
+                $covered_string .= ' ';
+            }
         }
 
-        $covered = implode(', ', $covered);
-
-        $order->Log("<p>We found a bundle deal for you! Bundle: <strong>$this->Title</strong> now covers {$covered}</p>");
+        $order->Log("<p>We found a bundle deal for you! Bundle: <strong>$this->Title</strong> now covers {$covered_string}</p>");
 
         $order->UpdateAmountWeight();
 
@@ -182,6 +201,17 @@ class Bundle extends Page
 
     public function getMiniData()
     {
+        $variants = [];
+
+        foreach ($this->Variants() as $variant) {
+            $variants[] = [
+                'id' => $variant->ID,
+                'title' => $variant->Title,
+                'price' => $variant->Price,
+                'count' => $variant->Count
+            ];
+        }
+
         return [
             'id' => $this->ID,
             'sku' => $this->SKU,
@@ -191,7 +221,7 @@ class Bundle extends Page
             'image' => null,
             'link' => $this->Link(),
             'title' => $this->Title,
-            'variants' => $this->Variants()->getMiniData()
+            'variants' => $variants
         ];
     }
 }
