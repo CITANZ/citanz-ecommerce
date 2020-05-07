@@ -143,7 +143,7 @@ trait ProductListGenerator
         if ($top_sellers = $this->get_top_sellers()) {
             $data['top_sellers']    =   $top_sellers;
         }
-        
+
         $data['related_categories'] =   $this->get_related_categories($cslug);
 
         return $data;
@@ -151,13 +151,15 @@ trait ProductListGenerator
 
     public function get_related_categories($category)
     {
-        $key    =   'page.' . $this->ID . '.page-categories' . '.' . (!empty($category) ? $category : 'all-categories');
-        $data   =   CacheHandler::read($key, 'PageData');
+        $key = 'page.' . $this->ID . '.page-categories' . '.' . (!empty($category) ? $category : 'all-categories');
+        $data = CacheHandler::read($key, 'PageData');
 
         if (empty($data)) {
 
-            if ($citem = $this->get_category($category)) {
-                $list = $citem->Children()->getData();
+            if ($category) {
+                if ($citem = $this->get_category($category)) {
+                    $list = $citem->Children()->getData();
+                }
             }
 
             if (!empty($list)) {
