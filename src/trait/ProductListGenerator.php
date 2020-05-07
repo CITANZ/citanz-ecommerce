@@ -66,7 +66,7 @@ trait ProductListGenerator
         return PaginatedList::create($result, $request)->setPageLength($this->PageSize);
     }
 
-    public function getData()
+    public function getCatalogData()
     {
         $key        =   $this->ID;
         $request    =   Injector::inst()->get(HTTPRequest::class);
@@ -83,7 +83,7 @@ trait ProductListGenerator
         $data       =   CacheHandler::read('page.' . $key, 'PageData');
 
         if (empty($data)) {
-            $data       =   parent::getData();
+            $data       =   [];
             $result     =   $this->get_products($category, $brand);
             if (empty($result)) {
                 $data['result'] =   [
@@ -149,31 +149,16 @@ trait ProductListGenerator
         return $data;
     }
 
-    private function get_related_categories($category = null)
+    private function get_related_categories($category)
     {
-        $key    =   'page.' . $this->ID . '.page-categories' . '.' . (!empty($category) ? $category : 'all-categories');
-        $data   =   CacheHandler::read($key, 'PageData');
+        $key = 'page.' . $this->ID . '.page-categories' . '.' . (!empty($category) ? $category : 'all-categories');
+        $data = CacheHandler::read($key, 'PageData');
 
         if (empty($data)) {
 
             if ($category) {
                 if ($citem = $this->get_category($category)) {
-                    $list   =   $citem->Children()->getData();
-                }
-            } else {
-                if ($this->hasMethod('Products')) {
-                    $children_ids   =   $this->Products()->column('ID');
-                } else {
-                    $children_ids   =   $this->AllChildren()->column('ID');
-                }
-
-                $cids       =   [];
-                foreach ($children_ids as $id) {
-                    $cids   =   array_merge($cids, DB::query('SELECT "Cita_eCommerce_CategoryID" FROM "Cita_eCommerce_Category_Products" WHERE "Cita_eCommerce_ProductID" = ' . $id)->column('Cita_eCommerce_CategoryID'));
-                }
-
-                if (!empty($cids)) {
-                    $list   =   Category::get()->filter(['ID' => array_unique($cids), 'ParentID' => 0])->getData();
+                    $list = $citem->Children()->getData();
                 }
             }
 
