@@ -4,3 +4,5 @@ en:
     PayPal_Express: "PayPal"
     Poli: "POLi"
     Paystation_Hosted: 'Paystation'
+  Cita\eCommerce\Controller\Cart:
+    TITLE: 'Cart'

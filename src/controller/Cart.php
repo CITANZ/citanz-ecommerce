@@ -104,7 +104,7 @@ class Cart extends PageController
         return '/cart/';
     }
 
-    public function Title()
+    public function getTitle()
     {
         if ($this->request) {
             if ($action = $this->request->param('action')) {
@@ -122,7 +122,7 @@ class Cart extends PageController
             }
         }
 
-        return 'Cart';
+        return _t(__CLASS__ . '.TITLE', 'Cart');
     }
 
 }
