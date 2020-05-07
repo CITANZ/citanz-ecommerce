@@ -161,7 +161,7 @@ trait ProductListGenerator
             }
 
             if (!empty($list)) {
-                Util::exclude_empty_category($list);
+                $this->ExcludeEmptyCategory($list);
             }
 
             $data   =   [
@@ -175,6 +175,18 @@ trait ProductListGenerator
         }
 
         return $data;
+    }
+
+    private function ExcludeEmptyCategory(&$array)
+    {
+        $list    =   [];
+        foreach ($array as $item) {
+            if ($item['count'] != 0) {
+                $list[]  =   $item;
+            }
+        }
+
+        $array   =   $list;
     }
 
     private function key_cutter($key, $category, $brand, $price_from = null, $price_to = null, $sort_by = null, $order_by = null, $page = null)

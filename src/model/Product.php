@@ -239,9 +239,12 @@ class Product extends Page
             $variant = $this->Variants()->first();
             $n = (float) $variant->SpecialPrice;
             $price = (float) $variant->Price;
-            return ceil(($price - $n) / $price * -100);
+
+            if (!empty($price)) {
+                return ceil(($price - $n) / $price * -100);
+            }
         }
 
-        return null;
+        return 0;
     }
 }
