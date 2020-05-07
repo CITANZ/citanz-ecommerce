@@ -149,7 +149,7 @@ trait ProductListGenerator
         return $data;
     }
 
-    private function get_related_categories($category)
+    public function get_related_categories($category)
     {
         $key = 'page.' . $this->ID . '.page-categories' . '.' . (!empty($category) ? $category : 'all-categories');
         $data = CacheHandler::read($key, 'PageData');
@@ -211,9 +211,9 @@ trait ProductListGenerator
     {
         if (!empty($category) && !empty($brand)) {
             if (($category = $this->get_category($category)) && ($brand = $this->get_brand($brand))) {
-                $cids   =   $category->Products()->column('ID');
-                $bids   =   $brand->Products()->column('ID');
-                $ids    =   array_intersect($cids, $bids);
+                $cids = $category->Products()->column('ID');
+                $bids = $brand->Products()->column('ID');
+                $ids = array_intersect($cids, $bids);
                 return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => $ids]);
             }
 
