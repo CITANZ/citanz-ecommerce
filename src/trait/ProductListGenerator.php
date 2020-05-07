@@ -143,7 +143,7 @@ trait ProductListGenerator
         if ($top_sellers = $this->get_top_sellers()) {
             $data['top_sellers']    =   $top_sellers;
         }
-        //
+        
         $data['related_categories'] =   $this->get_related_categories($cslug);
 
         return $data;
