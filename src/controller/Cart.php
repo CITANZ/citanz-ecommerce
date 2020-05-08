@@ -117,7 +117,7 @@ class Cart extends PageController
                 }
 
                 if ($action == 'checkout') {
-                    return 'Checkout';
+                    return _t(__CLASS__ . '.CHECKOUT_TITLE', 'Checkout');
                 }
             }
         }
