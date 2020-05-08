@@ -228,7 +228,7 @@ trait CartActions
         $data                       =   Page::create()->getData();
         $data['id']                 =   !empty($cart) ? $cart->ID : 0;
         $data['pagetype']           =   'CheckoutPage';
-        $data['title']              =   'Checkout';
+        $data['title']              =   $this->Title;
         $data['countries']          =   eCommerce::get_all_countries();
         $data['freight_options']    =   eCommerce::get_freight_options()->getData();
         $data['payment_methods']    =   eCommerce::get_available_payment_methods();
