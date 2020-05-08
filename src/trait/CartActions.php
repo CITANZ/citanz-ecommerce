@@ -234,7 +234,6 @@ trait CartActions
         $data['payment_methods']    =   eCommerce::get_available_payment_methods();
         $data['gst_rate']           =   SiteConfig::current_site_config()->GSTRate;
         $data['checkout']           =   !empty($checkout) ? $checkout : null;
-
         if (in_array('Stripe', eCommerce::get_available_payment_methods())) {
             if ($config = Environment::getEnv('Stripe')) {
                 $config = json_decode($config);
@@ -243,7 +242,7 @@ trait CartActions
         }
 
         $data['session_oid']        =   $this->request->getSession()->get('cart_id');
-
+        \SilverStripe\i18n\i18n::get_locale();
         return $data;
     }
 
