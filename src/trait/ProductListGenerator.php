@@ -151,7 +151,8 @@ trait ProductListGenerator
 
     public function get_related_categories($category)
     {
-        $key = 'page.' . $this->ID . '.page-categories' . '.' . (!empty($category) ? $category : 'all-categories');
+        $locale = \SilverStripe\i18n\i18n::get_locale();
+        $key = 'page.' . $this->ID . ".$locale" . '.page-categories' . '.' . (!empty($category) ? $category : 'all-categories');
         $data = CacheHandler::read($key, 'PageData');
 
         if (empty($data)) {
@@ -193,11 +194,12 @@ trait ProductListGenerator
 
     private function key_cutter($key, $category, $brand, $price_from = null, $price_to = null, $sort_by = null, $order_by = null, $page = null)
     {
+        $locale = \SilverStripe\i18n\i18n::get_locale();
         if (empty($sort_by) && empty($order_by) && empty($page)) {
-            return strtolower($key . '.' . (!empty($category) ? $category : 'all-cateogry') . '.' . (!empty($brand) ? $brand : 'all-brand'));
+            return strtolower($key . ".$locale." . (!empty($category) ? $category : 'all-cateogry') . '.' . (!empty($brand) ? $brand : 'all-brand'));
         }
         return strtolower(
-            $key . '.' .
+            $key . ".$locale." .
             (!empty($category) ? $category : 'all-cateogry') . '.' .
             (!empty($brand) ? $brand : 'all-brand') . '.' .
             (!empty($price_from) ? $price_from : 'no-bottom') . '.' .
