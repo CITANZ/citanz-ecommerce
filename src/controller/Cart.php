@@ -85,7 +85,7 @@ class Cart extends PageController
             return json_encode(array_merge($this->{'get_' . $action . '_data'}(), [
                 'session' => array_merge([
                     'csrf' => SecurityToken::inst()->getSecurityID()
-                ], $this->Locales()->exists() ? [
+                ], $this->hasMethod('Locales') && $this->Locales()->exists() ? [
                     'locale' => $this->PreferredLang,
                     'locales' => $this->Locales()->map('Locale', 'Title')->toArray()
                 ] : [])
