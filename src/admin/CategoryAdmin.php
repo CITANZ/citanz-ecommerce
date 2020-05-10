@@ -40,7 +40,7 @@ class CategoryAdmin extends ModelAdmin
         $list   =   parent::getList();
 
         if ($this->modelClass == Category::class) {
-            return $list->filter(['ParentID' => 0]);
+            return $list->filter(['ParentID' => 0])->sort(['Title' => 'ASC']);
         }
 
         return $list;

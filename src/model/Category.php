@@ -2,9 +2,15 @@
 
 namespace Cita\eCommerce\Model;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\Forms\HTMLEditor\HtmlEditorField;
+use SilverStripe\Forms\TextField;
+use SilverStripe\Forms\FieldList;
 use SilverStripe\Assets\Image;
 use Leochenftw\Extension\SlugifyExtension;
 use Leochenftw\Util;
+use Leochenftw\Grid;
+use SilverStripe\CMS\Forms\SiteTreeURLSegmentField;
+
 /**
  * Description
  *
@@ -54,12 +60,6 @@ class Category extends DataObject
     ];
 
     /**
-     * Default sort ordering
-     * @var array
-     */
-    private static $default_sort = ['Title' => 'ASC'];
-
-    /**
      * Has_many relationship
      * @var array
      */
@@ -93,22 +93,32 @@ class Category extends DataObject
         return implode(', ', $titles);
     }
 
+
     /**
      * CMS Fields
      * @return FieldList
      */
     public function getCMSFields()
     {
-        $fields =   parent::getCMSFields();
-        $field  =   $fields->fieldByName('Root.Children.Children');
-        if (!empty($field)) {
-            $field->setTitle('Sub Categories');
-            $fields->removeByName([
-                'Children'
-            ]);
-            $fields->addFieldToTab(
-                'Root.Main',
-                $field
+        $catalog = Catalog::get()->first();
+        $link = trim($catalog ? $catalog->Link() : '', '/');
+        $fields = FieldList::create(
+            TextField::create(
+                'Title',
+                'Title'
+            ),
+            $slug = SiteTreeURLSegmentField::create('Slug', 'Slug', $this->owner->Slug)->setURLPrefix("/$link?="),
+            HtmlEditorField::create(
+                'Content',
+                'Content'
+            )
+        );
+
+        // \Leochenftw\Debugger::inspect($slug->getAttributes());
+
+        if ($this->exists()) {
+            $fields->push(
+                Grid::make('Children', 'Children', $this->Children(), false)
             );
         }
 
