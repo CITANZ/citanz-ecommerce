@@ -178,7 +178,7 @@ trait CartActions
 
         $data               =   Page::create()->getData();
         $data['pagetype']   =   'PaymentResult';
-        $data['title']      =   $this->Title($cart);
+        $data['title']      =   $this->Title;
         $data['catalog']    =   eCommerce::get_catalog_url();
         $data['payment']    =   $cart->Payments()->first() ? $cart->Payments()->first()->getData() : null;
         $data['cart']       =   $cart->getData();
