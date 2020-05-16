@@ -172,11 +172,13 @@ class Category extends DataObject
             $this->ExcludeEmptyCategory($list);
         }
 
+        $catalog = Catalog::get()->first();
+
         $data   =   [
             'title'     =>  $this->Title,
             'slug'      =>  $this->Slug,
             'active'    =>  false,
-            'url'       =>  null,
+            'url'       =>  $catalog ? "{$catalog->Link()}?category=$this->Slug" : null,
             'sub'       =>  $include_sub ? $list : [],
             'count'     =>  $this->get_total_product_count()
         ];

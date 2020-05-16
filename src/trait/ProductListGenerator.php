@@ -47,13 +47,6 @@ trait ProductListGenerator
 
         $result     =   $this->get_products($category, $brand);
 
-        if (empty($price_ranges)) {
-            $price_ranges   =   $this->get_price_ranges($result);
-            CacheHandler::save('page.' . $this->key_cutter($this->ID, $category, $brand) . '.price_ranges', $price_ranges, 'PageData');
-        }
-
-        $data['price_ranges']   =   $price_ranges;
-
         if (!is_null($price_from) && !is_null($price_to)) {
             $result =   $result->filter([
                 'SortingPrice:GreaterThanOrEqual'   =>  $price_from,
@@ -85,6 +78,7 @@ trait ProductListGenerator
         if (empty($data)) {
             $data       =   [];
             $result     =   $this->get_products($category, $brand);
+            
             if (empty($result)) {
                 $data['result'] =   [
                     'list'  =>  [],
@@ -92,19 +86,10 @@ trait ProductListGenerator
                     'total' =>  0
                 ];
             } else {
-                $price_ranges   =   CacheHandler::read('page.' . $this->key_cutter($this->ID, $category, $brand) . '.price_ranges', 'PageData');
-
-                if (empty($price_ranges)) {
-                    $price_ranges   =   $this->get_price_ranges($result);
-                    CacheHandler::save('page.' . $this->key_cutter($this->ID, $category, $brand) . '.price_ranges', $price_ranges, 'PageData');
-                }
-
-                $data['price_ranges']   =   $price_ranges;
-
                 if (!is_null($price_from) && !is_null($price_to)) {
                     $result =   $result->filter([
-                        'SortingPrice:GreaterThanOrEqual'   =>  $price_from,
-                        'SortingPrice:LessThanOrEqual'  =>  $price_to
+                        'SortingPrice:GreaterThanOrEqual' => $price_from,
+                        'SortingPrice:LessThanOrEqual' => $price_to
                     ]);
                 }
 
@@ -241,14 +226,14 @@ trait ProductListGenerator
         if ($this->hasMethod('Products')) {
             $children_ids   =   $this->Products()->column('ID');
         } else {
-            $children_ids   =   $this->AllChildren()->column('ID');
+            $children_ids   =   $this->Children()->column('ID');
         }
 
         if (empty($children_ids)) {
             return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => -1]);
         }
 
-        $variants = Variant::get()->where("ProductID IN (" . implode(',', $children_ids) . ") AND ((OutOfStock = 1 AND StockCount > 0) OR (InfiniteStock = 1)) ");
+        $variants = Variant::get()->where("ProductID IN (" . implode(',', $children_ids) . ") AND ((OutOfStock = 0 AND StockCount > 0) OR (InfiniteStock = 1)) ");
 
         $eligibles = $variants->column('ProductID');
 

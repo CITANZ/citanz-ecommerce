@@ -86,7 +86,8 @@ class Product extends Page
      * @var array
      */
     private static $many_many = [
-        'Related' => Product::class
+        'Related' => Product::class,
+        'Tags'  =>  Tag::class
     ];
 
     /**

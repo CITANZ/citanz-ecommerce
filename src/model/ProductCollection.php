@@ -15,7 +15,7 @@ use Cita\eCommerce\Traits\ProductListGenerator;
  */
 class ProductCollection extends Page
 {
-    use ProductPriceRangeGenerator, ProductListGenerator;
+    use ProductListGenerator;
     /**
      * Defines the database table name
      * @var string
