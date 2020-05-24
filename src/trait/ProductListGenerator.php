@@ -78,7 +78,7 @@ trait ProductListGenerator
         if (empty($data)) {
             $data       =   [];
             $result     =   $this->get_products($category, $brand);
-            
+
             if (empty($result)) {
                 $data['result'] =   [
                     'list'  =>  [],

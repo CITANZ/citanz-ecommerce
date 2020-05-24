@@ -107,7 +107,7 @@ class Category extends DataObject
                 'Title',
                 'Title'
             ),
-            $slug = SiteTreeURLSegmentField::create('Slug', 'Slug', $this->owner->Slug)->setURLPrefix("/$link?="),
+            $slug = SiteTreeURLSegmentField::create('Slug', 'Slug', $this->owner->Slug)->setURLPrefix("/$link?category="),
             HtmlEditorField::create(
                 'Content',
                 'Content'
