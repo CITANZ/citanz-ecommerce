@@ -114,8 +114,6 @@ class Category extends DataObject
             )
         );
 
-        // \Leochenftw\Debugger::inspect($slug->getAttributes());
-
         if ($this->exists()) {
             $fields->push(
                 Grid::make('Children', 'Children', $this->Children(), false)
