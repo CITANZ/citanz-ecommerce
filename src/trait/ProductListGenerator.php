@@ -1,6 +1,7 @@
 <?php
 namespace Cita\eCommerce\Traits;
 
+use Cocur\Slugify\Slugify;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Control\Controller;
 use SilverStripe\Core\Injector\Injector;
@@ -38,21 +39,14 @@ trait ProductListGenerator
         $category   =   !empty($request->getVar('category')) ? $request->getVar('category') : null;
         $cslug      =   $category;
         $brand      =   !empty($request->getVar('brand')) ? $request->getVar('brand') : null;
-        $price_from =   !is_null($request->getVar('price_from')) ? ( (int) $request->getVar('price_from') ) : null;
-        $price_to   =   !is_null($request->getVar('price_to')) ? ( (int) $request->getVar('price_to') ) : null;
+        $price_from =   !is_null($request->getVar('price_from')) ? ((int) $request->getVar('price_from')) : null;
+        $price_to   =   !is_null($request->getVar('price_to')) ? ((int) $request->getVar('price_to')) : null;
         $sort_by    =   !empty($request->getVar('sort')) ? $request->getVar('sort') : 'Title';
         $order_by   =   !empty($request->getVar('order')) ? $request->getVar('order') : 'ASC';
         $page       =   !empty($request->getVar('page')) ? $request->getVar('page') : 0;
         $sort_by    =   $sort_by == 'Price' ? 'SortingPrice' : $sort_by;
 
         $result     =   $this->get_products($category, $brand);
-
-        if (empty($price_ranges)) {
-            $price_ranges   =   $this->get_price_ranges($result);
-            CacheHandler::save('page.' . $this->key_cutter($this->ID, $category, $brand) . '.price_ranges', $price_ranges, 'PageData');
-        }
-
-        $data['price_ranges']   =   $price_ranges;
 
         if (!is_null($price_from) && !is_null($price_to)) {
             $result =   $result->filter([
@@ -68,23 +62,21 @@ trait ProductListGenerator
 
     public function getData()
     {
-        $key        =   $this->ID;
         $request    =   Injector::inst()->get(HTTPRequest::class);
+        $query      =   $request->getVars();
         $category   =   !empty($request->getVar('category')) ? $request->getVar('category') : null;
         $cslug      =   $category;
         $brand      =   !empty($request->getVar('brand')) ? $request->getVar('brand') : null;
-        $price_from =   !is_null($request->getVar('price_from')) ? ( (int) $request->getVar('price_from') ) : null;
-        $price_to   =   !is_null($request->getVar('price_to')) ? ( (int) $request->getVar('price_to') ) : null;
-        $sort_by    =   !empty($request->getVar('sort')) ? $request->getVar('sort') : 'Title';
         $order_by   =   !empty($request->getVar('order')) ? $request->getVar('order') : 'ASC';
         $page       =   !empty($request->getVar('page')) ? $request->getVar('page') : 0;
-        $sort_by    =   $sort_by == 'Price' ? 'SortingPrice' : $sort_by;
-        $key        =   $this->key_cutter($key, $category, $brand, $price_from, $price_to, $sort_by, $order_by, $page);
-        $data       =   CacheHandler::read('page.' . $key, 'PageData');
+        $key        =   $this->getKey($query);
+        $key        =   'page.' . $key . ($request->getVar('mini') ? 'mini' : '');
+        $data       =   CacheHandler::read($key, 'PageData');
 
         if (empty($data)) {
-            $data       =   parent::getData();
+            $data       =   $request->getVar('mini') ? [] : parent::getData();
             $result     =   $this->get_products($category, $brand);
+
             if (empty($result)) {
                 $data['result'] =   [
                     'list'  =>  [],
@@ -92,23 +84,6 @@ trait ProductListGenerator
                     'total' =>  0
                 ];
             } else {
-                $price_ranges   =   CacheHandler::read('page.' . $this->key_cutter($this->ID, $category, $brand) . '.price_ranges', 'PageData');
-
-                if (empty($price_ranges)) {
-                    $price_ranges   =   $this->get_price_ranges($result);
-                    CacheHandler::save('page.' . $this->key_cutter($this->ID, $category, $brand) . '.price_ranges', $price_ranges, 'PageData');
-                }
-
-                $data['price_ranges']   =   $price_ranges;
-
-                if (!is_null($price_from) && !is_null($price_to)) {
-                    $result =   $result->filter([
-                        'SortingPrice:GreaterThanOrEqual'   =>  $price_from,
-                        'SortingPrice:LessThanOrEqual'  =>  $price_to
-                    ]);
-                }
-
-                $result     =   $result->sort([$sort_by => $order_by]);
                 $total      =   $result->count();
                 $pages      =   ceil($total / $this->PageSize);
                 $result     =   $result->limit($this->PageSize, $page * $this->PageSize);
@@ -133,47 +108,34 @@ trait ProductListGenerator
                 }
             }
 
-            CacheHandler::save('page.' . $key, $data, 'PageData');
+            CacheHandler::save($key, $data, 'PageData');
         }
 
-        if ($new_offer = $this->get_new_offer()) {
-            $data['new_offer']  =   $new_offer;
-        }
+        if (!$request->getVar('mini')) {
+            if ($new_offer = $this->get_new_offer()) {
+                $data['new_offer']  =   $new_offer;
+            }
 
-        if ($top_sellers = $this->get_top_sellers()) {
-            $data['top_sellers']    =   $top_sellers;
-        }
+            if ($top_sellers = $this->get_top_sellers()) {
+                $data['top_sellers']    =   $top_sellers;
+            }
 
-        $data['related_categories'] =   $this->get_related_categories($cslug);
+            $data['related_categories'] =   $this->get_related_categories($cslug);
+        }
 
         return $data;
     }
 
-    private function get_related_categories($category = null)
+    public function get_related_categories($category)
     {
-        $key    =   'page.' . $this->ID . '.page-categories' . '.' . (!empty($category) ? $category : 'all-categories');
-        $data   =   CacheHandler::read($key, 'PageData');
+        $locale = \SilverStripe\i18n\i18n::get_locale();
+        $key = 'page.' . $this->ID . ".$locale" . '.page-categories' . '.' . (!empty($category) ? $category : 'all-categories');
+        $data = CacheHandler::read($key, 'PageData');
 
         if (empty($data)) {
-
             if ($category) {
                 if ($citem = $this->get_category($category)) {
-                    $list   =   $citem->Children()->getData();
-                }
-            } else {
-                if ($this->hasMethod('Products')) {
-                    $children_ids   =   $this->Products()->column('ID');
-                } else {
-                    $children_ids   =   $this->AllChildren()->column('ID');
-                }
-
-                $cids       =   [];
-                foreach ($children_ids as $id) {
-                    $cids   =   array_merge($cids, DB::query('SELECT "Cita_eCommerce_CategoryID" FROM "Cita_eCommerce_Category_Products" WHERE "Cita_eCommerce_ProductID" = ' . $id)->column('Cita_eCommerce_CategoryID'));
-                }
-
-                if (!empty($cids)) {
-                    $list   =   Category::get()->filter(['ID' => array_unique($cids), 'ParentID' => 0])->getData();
+                    $list = $citem->Children()->getData();
                 }
             }
 
@@ -206,71 +168,205 @@ trait ProductListGenerator
         $array   =   $list;
     }
 
-    private function key_cutter($key, $category, $brand, $price_from = null, $price_to = null, $sort_by = null, $order_by = null, $page = null)
+    private function getKey(&$query)
     {
-        if (empty($sort_by) && empty($order_by) && empty($page)) {
-            return strtolower($key . '.' . (!empty($category) ? $category : 'all-cateogry') . '.' . (!empty($brand) ? $brand : 'all-brand'));
+        $locale = \SilverStripe\i18n\i18n::get_locale();
+        $keystring = "$locale.{$this->ID}.";
+
+        $slugify = new Slugify();
+        foreach ($query as $key => $value) {
+            $key = $slugify->slugify($key, '_');
+            $value = $slugify->slugify($value, '_');
+            $keystring .= "$key.{$value}_";
         }
-        return strtolower(
-            $key . '.' .
-            (!empty($category) ? $category : 'all-cateogry') . '.' .
-            (!empty($brand) ? $brand : 'all-brand') . '.' .
-            (!empty($price_from) ? $price_from : 'no-bottom') . '.' .
-            (!empty($price_to) ? $price_to : 'no-top') . '.' .
-            $sort_by . '.' .
-            $order_by . '.' .
-            $page);
+
+        return rtrim($keystring, '_');
     }
 
     private function get_products($category = null, $brand = null)
     {
-        if (!empty($category) && !empty($brand)) {
-            if (($category = $this->get_category($category)) && ($brand = $this->get_brand($brand))) {
-                $cids   =   $category->Products()->column('ID');
-                $bids   =   $brand->Products()->column('ID');
-                $ids    =   array_intersect($cids, $bids);
-                return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => $ids]);
-            }
+        $request = Injector::inst()->get(HTTPRequest::class);
+        $orderedby = $request->getVar('ordered_by');
+        $sort = $request->getVar('sort');
+        $from = $request->getVar('from');
+        $to = $request->getVar('to');
 
-            return null;
+        if (empty($sort)) {
+            $sort = 'Sort';
         }
 
-        if (!empty($category) && empty($brand)) {
-            if ($category = $this->get_category($category)) {
-                return $category->Products();
-            }
-
-            return Controller::curr()->httpError(404, 'There is no such Category!');
+        if (empty($orderedby)) {
+            $orderedby = 'ASC';
         }
 
-        if (empty($category) && !empty($brand)) {
-            if ($brand = $this->get_brand($brand)) {
-                return $brand->Products();
+        $sortby = [$sort => $orderedby];
+
+        if (!empty($category)) {
+            if ($category_obj = Category::get()->filter(['Slug' => $category])->first()) {
+                $product_ids = $category_obj->Products()->column('ID');
+                if (!empty($product_ids)) {
+                    $products = Product::get()->filter(['ID' => $product_ids]);
+                } else {
+                    return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => -1]);
+                }
+            } else {
+                return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => -1]);
             }
-
-            return Controller::curr()->httpError(404, 'There is no such Brand!');
-        }
-
-        if ($this->hasMethod('Products')) {
-            $children_ids   =   $this->Products()->column('ID');
         } else {
-            $children_ids   =   $this->AllChildren()->column('ID');
+            $products = $this->hasMethod('Products') ? $this->Products() : Product::get();
         }
 
-        if (empty($children_ids)) {
-            return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => -1]);
+        $join_condition = '"Cita_eCommerce_Product"."ID" = "Cita_eCommerce_Variant"."ProductID" AND (("Cita_eCommerce_Variant"."OutOfStock" = 0 AND "Cita_eCommerce_Variant"."StockCount" > 0) OR ("Cita_eCommerce_Variant"."InfiniteStock" = 1))';
+
+        if (!is_null($from) || !is_null($to)) {
+            $extra = '';
+
+            if (!is_null($from)) {
+                $from = (int) $from;
+                $extra .= ' AND ("Cita_eCommerce_Variant"."SortingPrice" >= ' . $from . ')';
+            }
+
+            if (!is_null($to)) {
+                $to = (int) $to;
+                $extra .= ' AND ("Cita_eCommerce_Variant"."SortingPrice" <= ' . $to . ')';
+            }
+
+            $join_condition .= $extra;
         }
 
-        $variants = Variant::get()->where("ProductID IN (" . implode(',', $children_ids) . ") AND ((OutOfStock = 1 AND StockCount > 0) OR (InfiniteStock = 1)) ");
+        $result = $products->innerJoin(
+            'Cita_eCommerce_Variant',
+            $join_condition
+        )->sort($sortby);
 
-        $eligibles = $variants->column('ProductID');
-
-        if (empty($eligibles)) {
-            $eligibles = -1;
-        }
-
-        return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => $eligibles]);
+        return $result;
     }
+
+    // public function getCatalogData()
+    // {
+    //     $request    =   Injector::inst()->get(HTTPRequest::class);
+    //     $query      =   $request->getVars();
+    //     $category   =   !empty($request->getVar('category')) ? $request->getVar('category') : null;
+    //     $cslug      =   $category;
+    //     $brand      =   !empty($request->getVar('brand')) ? $request->getVar('brand') : null;
+    //     $price_from =   !is_null($request->getVar('price_from')) ? ((int) $request->getVar('price_from')) : null;
+    //     $price_to   =   !is_null($request->getVar('price_to')) ? ((int) $request->getVar('price_to')) : null;
+    //     $sort_by    =   !empty($request->getVar('sort')) ? $request->getVar('sort') : 'Title';
+    //     $order_by   =   !empty($request->getVar('order')) ? $request->getVar('order') : 'ASC';
+    //     $page       =   !empty($request->getVar('page')) ? $request->getVar('page') : 0;
+    //     $sort_by    =   $sort_by == 'Price' ? 'SortingPrice' : $sort_by;
+    //     $key        =   $this->getKey($query);
+    //     //$this->key_cutter($key, $category, $brand, $price_from, $price_to, $sort_by, $order_by, $page);
+    //     $data       =   CacheHandler::read('page.' . $key, 'PageData');
+    //
+    //     if (empty($data)) {
+    //         $data       =   [];
+    //         $result     =   $this->get_products($category, $brand);
+    //
+    //         if (empty($result)) {
+    //             $data['result'] =   [
+    //                 'list'  =>  [],
+    //                 'pages' =>  0,
+    //                 'total' =>  0
+    //             ];
+    //         } else {
+    //             if (!is_null($price_from) && !is_null($price_to)) {
+    //                 $result =   $result->filter([
+    //                     'SortingPrice:GreaterThanOrEqual' => $price_from,
+    //                     'SortingPrice:LessThanOrEqual' => $price_to
+    //                 ]);
+    //             }
+    //
+    //             $result     =   $result->sort([$sort_by => $order_by]);
+    //             $total      =   $result->count();
+    //             $pages      =   ceil($total / $this->PageSize);
+    //             $result     =   $result->limit($this->PageSize, $page * $this->PageSize);
+    //
+    //             $data['result'] =   [
+    //                 'list'  =>  $result->getTileData(),
+    //                 'pages' =>  $pages,
+    //                 'total' =>  $total
+    //             ];
+    //         }
+    //
+    //         if (!empty($category)) {
+    //             if ($category = $this->get_category($category)) {
+    //                 $data['title']      =   $category->Title;
+    //                 $data['content']    =   Util::preprocess_content($category->Content);
+    //                 $data['ancestors']  =   $category->get_ancestors($this);
+    //             }
+    //         } elseif (!empty($brand)) {
+    //             if ($brand = $this->get_brand($brand)) {
+    //                 $data['title']      =   $brand->Title;
+    //                 $data['content']    =   Util::preprocess_content($brand->Content);
+    //             }
+    //         }
+    //
+    //         CacheHandler::save('page.' . $key, $data, 'PageData');
+    //     }
+    //
+    //     if ($new_offer = $this->get_new_offer()) {
+    //         $data['new_offer']  =   $new_offer;
+    //     }
+    //
+    //     if ($top_sellers = $this->get_top_sellers()) {
+    //         $data['top_sellers']    =   $top_sellers;
+    //     }
+    //
+    //     $data['related_categories'] =   $this->get_related_categories($cslug);
+    //
+    //     return $data;
+    // }
+
+    // private function get_products($category = null, $brand = null)
+    // {
+    //     if (!empty($category) && !empty($brand)) {
+    //         if (($category = $this->get_category($category)) && ($brand = $this->get_brand($brand))) {
+    //             $cids = $category->Products()->column('ID');
+    //             $bids = $brand->Products()->column('ID');
+    //             $ids = array_intersect($cids, $bids);
+    //             return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => $ids]);
+    //         }
+    //
+    //         return null;
+    //     }
+    //
+    //     if (!empty($category) && empty($brand)) {
+    //         if ($category = $this->get_category($category)) {
+    //             return $category->Products();
+    //         }
+    //
+    //         return Controller::curr()->httpError(404, 'There is no such Category!');
+    //     }
+    //
+    //     if (empty($category) && !empty($brand)) {
+    //         if ($brand = $this->get_brand($brand)) {
+    //             return $brand->Products();
+    //         }
+    //
+    //         return Controller::curr()->httpError(404, 'There is no such Brand!');
+    //     }
+    //
+    //     if ($this->hasMethod('Products')) {
+    //         $children_ids   =   $this->Products()->column('ID');
+    //     } else {
+    //         $children_ids   =   $this->Children()->column('ID');
+    //     }
+    //
+    //     if (empty($children_ids)) {
+    //         return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => -1]);
+    //     }
+    //
+    //     $variants = Variant::get()->where("ProductID IN (" . implode(',', $children_ids) . ") AND ((OutOfStock = 0 AND StockCount > 0) OR (InfiniteStock = 1)) ");
+    //
+    //     $eligibles = $variants->column('ProductID');
+    //
+    //     if (empty($eligibles)) {
+    //         $eligibles = -1;
+    //     }
+    //
+    //     return Versioned::get_by_stage(Product::class, 'Live')->filter(['ID' => $eligibles]);
+    // }
 
     private function get_category($slug)
     {

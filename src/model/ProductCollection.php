@@ -6,6 +6,8 @@ use SilverStripe\Forms\CheckboxField;
 use Leochenftw\Grid;
 use Cita\eCommerce\Traits\ProductPriceRangeGenerator;
 use Cita\eCommerce\Traits\ProductListGenerator;
+use Cita\eCommerce\Forms\GridField\ExistingProductAdder;
+use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 
 /**
  * Description
@@ -15,7 +17,7 @@ use Cita\eCommerce\Traits\ProductListGenerator;
  */
 class ProductCollection extends Page
 {
-    use ProductPriceRangeGenerator, ProductListGenerator;
+    use ProductListGenerator;
     /**
      * Defines the database table name
      * @var string
@@ -77,7 +79,7 @@ class ProductCollection extends Page
 
         $fields->addFieldToTab(
             'Root.Products',
-            Grid::make(
+            $grid = Grid::make(
                 'Products',
                 'Products',
                 $this->Products(),
@@ -86,6 +88,11 @@ class ProductCollection extends Page
                 true
             )
         );
+
+        $config = $grid->getConfig();
+        $config->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
+        $comps = $config->getComponents();
+        $config->addComponent(new ExistingProductAdder());
 
         $this->add_pagesize_field($fields);
 

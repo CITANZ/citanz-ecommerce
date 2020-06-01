@@ -178,7 +178,7 @@ trait CartActions
 
         $data               =   Page::create()->getData();
         $data['pagetype']   =   'PaymentResult';
-        $data['title']      =   $this->Title($cart);
+        $data['title']      =   $this->Title;
         $data['catalog']    =   eCommerce::get_catalog_url();
         $data['payment']    =   $cart->Payments()->first() ? $cart->Payments()->first()->getData() : null;
         $data['cart']       =   $cart->getData();
@@ -228,13 +228,12 @@ trait CartActions
         $data                       =   Page::create()->getData();
         $data['id']                 =   !empty($cart) ? $cart->ID : 0;
         $data['pagetype']           =   'CheckoutPage';
-        $data['title']              =   'Checkout';
+        $data['title']              =   $this->Title;
         $data['countries']          =   eCommerce::get_all_countries();
         $data['freight_options']    =   eCommerce::get_freight_options()->getData();
         $data['payment_methods']    =   eCommerce::get_available_payment_methods();
         $data['gst_rate']           =   SiteConfig::current_site_config()->GSTRate;
         $data['checkout']           =   !empty($checkout) ? $checkout : null;
-
         if (in_array('Stripe', eCommerce::get_available_payment_methods())) {
             if ($config = Environment::getEnv('Stripe')) {
                 $config = json_decode($config);
@@ -243,7 +242,7 @@ trait CartActions
         }
 
         $data['session_oid']        =   $this->request->getSession()->get('cart_id');
-
+        \SilverStripe\i18n\i18n::get_locale();
         return $data;
     }
 

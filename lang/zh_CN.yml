@@ -1,0 +1,4 @@
+zh_CN:
+  Cita\eCommerce\Controller\Cart:
+    TITLE: '购物车'
+    CHECKOUT_TITLE: '结账'

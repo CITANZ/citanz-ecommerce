@@ -83,7 +83,12 @@ class Cart extends PageController
             }
 
             return json_encode(array_merge($this->{'get_' . $action . '_data'}(), [
-                'session' => ['csrf' => SecurityToken::inst()->getSecurityID()]
+                'session' => array_merge([
+                    'csrf' => SecurityToken::inst()->getSecurityID()
+                ], $this->hasMethod('Locales') && $this->Locales()->exists() ? [
+                    'locale' => $this->PreferredLang,
+                    'locales' => $this->Locales()->map('Locale', 'Title')->toArray()
+                ] : [])
             ]));
         }
 
@@ -104,7 +109,7 @@ class Cart extends PageController
         return '/cart/';
     }
 
-    public function Title()
+    public function getTitle()
     {
         if ($this->request) {
             if ($action = $this->request->param('action')) {
@@ -117,12 +122,12 @@ class Cart extends PageController
                 }
 
                 if ($action == 'checkout') {
-                    return 'Checkout';
+                    return _t(__CLASS__ . '.CHECKOUT_TITLE', 'Checkout');
                 }
             }
         }
 
-        return 'Cart';
+        return _t(__CLASS__ . '.TITLE', 'Cart');
     }
 
 }
