@@ -23,6 +23,7 @@ use Leochenftw\Grid;
 use Dynamic\CountryDropdownField\Fields\CountryDropdownField;
 use SilverStripe\Omnipay\Model\Payment;
 use Cita\eCommerce\Model\Bundle;
+use Leochenftw\Debugger;
 
 /**
  * Description
@@ -187,7 +188,7 @@ class Order extends DataObject
     public function getCMSFields()
     {
         $fields =   parent::getCMSFields();
-
+        
         if ($this->exists()) {
             $items  =   $fields->fieldByName('Root.Items.Items');
 
@@ -684,7 +685,7 @@ class Order extends DataObject
         if ($bundle) {
             return;
         }
-        
+
         if ($discount = Discount::get()->filter(['Type' => 'Item Count'])->first()) {
             if ($discount->CheckOrder($this)) {
                 $this->DiscountID = $discount->ID;
@@ -718,11 +719,12 @@ class Order extends DataObject
             'items'         =>  $this->Items()->sort(['Created' => 'DESC'])->getData(),
             'amount'        =>  $amount,
             'amounts'       =>  [
-                'discountable_taxable'           =>  $this->DiscountableTaxable,
-                'discountable_nontaxable'        =>  $this->DiscountableNonTaxable,
-                'nondiscountable_taxable'       =>  $this->NonDiscountableTaxable,
-                'nondiscountable_nontaxable'    =>  $this->NonDiscountableNonTaxable,
-                'gst_included_amount'           =>  $this->TaxIncludedTotal
+                'wtf' => 123,
+                'discountable_taxable' => $this->DiscountableTaxable,
+                'discountable_nontaxable' => $this->DiscountableNonTaxable,
+                'nondiscountable_taxable' => $this->NonDiscountableTaxable,
+                'nondiscountable_nontaxable' => $this->NonDiscountableNonTaxable,
+                'gst_included_amount' => $this->TaxIncludedTotal
             ],
             'gst'           =>  $gst,
             'gst_included'  =>  $this->IncludedGST,

@@ -2,6 +2,7 @@
 
 namespace Cita\eCommerce\Extension;
 
+use SilverStripe\Forms\HTMLEditor\HtmlEditorField;
 use Dynamic\CountryDropdownField\Fields\CountryDropdownField;
 use SilverStripe\Forms\EmailField;
 use SilverStripe\Assets\Image;
@@ -26,7 +27,8 @@ class SiteconfigExtension extends DataExtension
         'ContactNumber'     =>  'Varchar(16)',
         'ContactEmail'      =>  'Varchar(256)',
         'InvoiceBccEmail'   =>  'Varchar(256)',
-        'OrderEmail'        =>  'Text'
+        'OrderEmail'        =>  'Text',
+        'ShippingReminder'  =>  'HTMLText'
     ];
 
     /**
@@ -75,7 +77,11 @@ class SiteconfigExtension extends DataExtension
                 TextField::create('InvoiceBccEmail', 'Invoice Bcc Email')->setDescription('If you wish to receive a copy when an invoice is sent to the customer...'),
                 TextareaField::create('StoreLocation', 'Store Location'),
                 CountryDropdownField::create('StoreCountry')->setEmptyString('- select one -'),
-                TextField::create('GSTRate', 'GST Rate')->setDescription('e.g. 0.15')
+                TextField::create('GSTRate', 'GST Rate')->setDescription('e.g. 0.15'),
+                HtmlEditorField::create(
+                    'ShippingReminder',
+                    'ShippingReminder'
+                )
             ]
         );
         return $fields;

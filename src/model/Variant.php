@@ -299,7 +299,7 @@ class Variant extends DataObject
     public function onAfterWrite()
     {
         parent::onAfterWrite();
-        
+
         if ($this->Product()->exists()) {
             $this->Product()->SortingPrice = $this->SortingPrice;
             $this->Product()->UpdatePrices();
@@ -322,7 +322,7 @@ class Variant extends DataObject
     public function getBaseData()
     {
         $special_price = $this->get_special_price();
-        return [
+        $data = [
             'id'            =>  $this->ID,
             'sku'           =>  $this->SKU,
             'price'         =>  $this->Price,
@@ -333,6 +333,10 @@ class Variant extends DataObject
             'image'         =>  $this->Image()->exists() ?
                                 $this->Image()->getAbsoluteURL() : null
         ];
+
+        $this->extend('getBaseData', $data);
+
+        return $data;
     }
 
     public function get_special_price()

@@ -13,6 +13,7 @@ use SilverStripe\Core\Environment;
 use Cita\eCommerce\API\Stripe;
 use Cita\eCommerce\Service\PaymentService;
 use Page;
+use Leochenftw\Util;
 
 trait CartActions
 {
@@ -30,6 +31,7 @@ trait CartActions
         $data['title']      =   $this->Title;
         $data['gst_rate']   =   SiteConfig::current_site_config()->GSTRate;
         $data['cart']       =   $cart && $cart->Items()->exists() ? $cart->getData() : null;
+        $data['shipping_reminder'] = Util::preprocess_content(SiteConfig::current_site_config()->ShippingReminder);
 
         return $data;
     }
@@ -155,7 +157,7 @@ trait CartActions
             }
 
             return [
-                'url'   =>  PaymentService::initiate($method, $cart, !empty($data->stripe_token) ? $data->stripe_token : null)
+                'url' => PaymentService::initiate($method, $cart, !empty($data->stripe_token) ? $data->stripe_token : null)
             ];
         }
 
@@ -201,10 +203,11 @@ trait CartActions
                                         (Member::currentUser() ? Member::currentUser()->Email : null),
                 'amount'            =>  (float) $cart->TotalAmount,
                 'amounts'           =>  [
-                                            'discountable_taxable'           =>  $cart->DiscountableTaxable,
-                                            'discountable_nontaxable'        =>  $cart->DiscountableNonTaxalbe,
-                                            'nondiscountable_taxable'       =>  $cart->NonDiscountableTaxable,
-                                            'nondiscountable_nontaxable'    =>  $cart->NonDiscountableNonTaxable
+                                            'discountable_taxable' => $cart->DiscountableTaxable,
+                                            'discountable_nontaxable' => $cart->DiscountableNonTaxable,
+                                            'nondiscountable_taxable' => $cart->NonDiscountableTaxable,
+                                            'nondiscountable_nontaxable' => $cart->NonDiscountableNonTaxable,
+                                            'gst_included_amount' => $cart->TaxIncludedTotal
                                         ],
                 'grand_total'       =>  $cart->PayableTotal,
                 'weight'            =>  $cart->TotalWeight,
@@ -234,6 +237,9 @@ trait CartActions
         $data['payment_methods']    =   eCommerce::get_available_payment_methods();
         $data['gst_rate']           =   SiteConfig::current_site_config()->GSTRate;
         $data['checkout']           =   !empty($checkout) ? $checkout : null;
+        $data['cart']               =   [
+            'items' => $cart ? $cart->getData()['items'] : null
+        ];
         if (in_array('Stripe', eCommerce::get_available_payment_methods())) {
             if ($config = Environment::getEnv('Stripe')) {
                 $config = json_decode($config);
@@ -249,69 +255,62 @@ trait CartActions
     private function validate_fields(&$data, $check_billing)
     {
         if (empty($data->email)) {
-            if ($this->request->isAjax()) {
+            if (!$this->request->isAjax()) {
                 throw new \Exception('Missing email address!');
             }
             return $this->httpError(400, 'Missing email address!');
         }
 
         if (empty($data->shipping)) {
-            if ($this->request->isAjax()) {
+            if (!$this->request->isAjax()) {
                 throw new \Exception('Shipping section is missing');
             }
             return $this->httpError(400, 'Shipping section is missing');
         }
 
         if (empty($data->shipping->firstname)) {
-            if ($this->request->isAjax()) {
+            if (!$this->request->isAjax()) {
                 throw new \Exception('Shipping: First name is missing');
             }
             return $this->httpError(400, 'Shipping: First name is missing');
         }
 
         if (empty($data->shipping->surname)) {
-            if ($this->request->isAjax()) {
+            if (!$this->request->isAjax()) {
                 throw new \Exception('Shipping: Surname is missing');
             }
             return $this->httpError(400, 'Shipping: Surname is missing');
         }
 
         if (empty($data->shipping->address)) {
-            if ($this->request->isAjax()) {
+            if (!$this->request->isAjax()) {
                 throw new \Exception('Shipping: Address is missing');
             }
             return $this->httpError(400, 'Shipping: Address is missing');
         }
 
-        if (empty($data->shipping->suburb)) {
-            if ($this->request->isAjax()) {
-                throw new \Exception('Shipping: Suburb is missing');
-            }
-            return $this->httpError(400, 'Shipping: Suburb is missing');
-        }
-
         if (empty($data->shipping->town)) {
-            if ($this->request->isAjax()) {
+            if (!$this->request->isAjax()) {
                 throw new \Exception('Shipping: City is missing');
             }
             return $this->httpError(400, 'Shipping: City is missing');
         }
 
         if (empty($data->shipping->region)) {
-            if ($this->request->isAjax()) {
+            if (!$this->request->isAjax()) {
                 throw new \Exception('Shipping: Region/State is missing');
             }
             return $this->httpError(400, 'Shipping: Region/State is missing');
         }
 
         if (empty($data->shipping->country)) {
-            if ($this->request->isAjax()) {
+            if (!$this->request->isAjax()) {
                 throw new \Exception('Shipping: Country is missing');
             }
             return $this->httpError(400, 'Shipping: Country is missing');
         } else {
             if (empty(eCommerce::get_all_countries()[$data->shipping->country])) {
-                if ($this->request->isAjax()) {
+                if (!$this->request->isAjax()) {
                     throw new \Exception('Shipping: Country: ' . $data->shipping->country . ' is not allowed!');
                 }
                 return $this->httpError(400, 'Shipping: Country: ' . $data->shipping->country . ' is not allowed!');
@@ -319,77 +318,63 @@ trait CartActions
         }
 
         if (empty($data->shipping->postcode)) {
-            if ($this->request->isAjax()) {
+            if (!$this->request->isAjax()) {
                 throw new \Exception('Shipping: Postcode/ZIP is missing');
             }
             return $this->httpError(400, 'Shipping: Postcode/ZIP is missing');
         }
 
-        if (empty($data->shipping->phone)) {
-            if ($this->request->isAjax()) {
-                throw new \Exception('Shipping: Phone is missing');
-            }
-            return $this->httpError(400, 'Shipping: Phone is missing');
-        }
-
         if ($check_billing) {
             if (empty($data->billing)) {
-                if ($this->request->isAjax()) {
+                if (!$this->request->isAjax()) {
                     throw new \Exception('Billing section is missing');
                 }
                 return $this->httpError(400, 'Billing section is missing');
             }
 
             if (empty($data->billing->firstname)) {
-                if ($this->request->isAjax()) {
+                if (!$this->request->isAjax()) {
                     throw new \Exception('Billing: First name is missing');
                 }
                 return $this->httpError(400, 'Billing: First name is missing');
             }
 
             if (empty($data->billing->surname)) {
-                if ($this->request->isAjax()) {
+                if (!$this->request->isAjax()) {
                     throw new \Exception('Billing: Surname is missing');
                 }
                 return $this->httpError(400, 'Billing: Surname is missing');
             }
 
             if (empty($data->billing->address)) {
-                if ($this->request->isAjax()) {
+                if (!$this->request->isAjax()) {
                     throw new \Exception('Billing: Address is missing');
                 }
                 return $this->httpError(400, 'Billing: Address is missing');
             }
 
-            if (empty($data->billing->suburb)) {
-                if ($this->request->isAjax()) {
-                    throw new \Exception('Billing: Suburb is missing');
-                }
-                return $this->httpError(400, 'Billing: Suburb is missing');
-            }
-
             if (empty($data->billing->town)) {
-                if ($this->request->isAjax()) {
+                if (!$this->request->isAjax()) {
                     throw new \Exception('Billing: City is missing');
                 }
                 return $this->httpError(400, 'Billing: City is missing');
             }
 
             if (empty($data->billing->region)) {
-                if ($this->request->isAjax()) {
+                if (!$this->request->isAjax()) {
                     throw new \Exception('Billing: Region/State is missing');
                 }
                 return $this->httpError(400, 'Billing: Region/State is missing');
             }
 
             if (empty($data->billing->country)) {
-                if ($this->request->isAjax()) {
+                if (!$this->request->isAjax()) {
                     throw new \Exception('Billing: Country is missing');
                 }
                 return $this->httpError(400, 'Billing: Country is missing');
             } else {
                 if (empty(eCommerce::get_all_countries()[$data->billing->country])) {
-                    if ($this->request->isAjax()) {
+                    if (!$this->request->isAjax()) {
                         throw new \Exception('Billing: Country "' . $data->billing->country . '" is not allowed!');
                     }
                     return $this->httpError(400, 'Billing: Country "' . $data->billing->country . '" is not allowed!');
@@ -397,17 +382,10 @@ trait CartActions
             }
 
             if (empty($data->billing->postcode)) {
-                if ($this->request->isAjax()) {
+                if (!$this->request->isAjax()) {
                     throw new \Exception('Billing: Postcode/ZIP is missing');
                 }
                 return $this->httpError(400, 'Billing: Postcode/ZIP is missing');
-            }
-
-            if (empty($data->billing->phone)) {
-                if ($this->request->isAjax()) {
-                    throw new \Exception('Billing: Phone is missing');
-                }
-                return $this->httpError(400, 'Billing: Phone is missing');
             }
         }
     }

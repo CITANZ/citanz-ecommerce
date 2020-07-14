@@ -149,6 +149,6 @@ class eCommerce
 
     public static function get_freight_options()
     {
-        return Freight::get();
+        return Freight::get()->exclude(['Disabled' => true]);
     }
 }
