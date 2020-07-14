@@ -55,12 +55,6 @@ class Brand extends DataObject
     ];
 
     /**
-     * Default sort ordering
-     * @var array
-     */
-    private static $default_sort = ['Title' => 'ASC'];
-
-    /**
      * Has_many relationship
      * @var array
      */

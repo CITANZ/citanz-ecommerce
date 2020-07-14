@@ -4,6 +4,7 @@ namespace App\Web\Admin;
 use SilverStripe\Admin\ModelAdmin;
 use Cita\eCommerce\Model\Category;
 use Cita\eCommerce\Model\Brand;
+use Cita\eCommerce\Model\Tag;
 
 /**
  * Description
@@ -19,7 +20,8 @@ class CategoryAdmin extends ModelAdmin
      */
     private static $managed_models = [
         Brand::class,
-        Category::class
+        Category::class,
+        Tag::class
     ];
 
     /**

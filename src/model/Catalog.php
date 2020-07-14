@@ -2,11 +2,12 @@
 
 namespace Cita\eCommerce\Model;
 use Leochenftw\Extension\SingletonExtension;
+use SilverStripe\Dev\Debug;
 use Leochenftw\Extension\LumberjackExtension;
 use SilverStripe\Lumberjack\Model\Lumberjack;
-use Cita\eCommerce\Traits\ProductPriceRangeGenerator;
 use Cita\eCommerce\Traits\ProductListGenerator;
 use Page;
+use Cita\eCommerce\Model\Product;
 
 /**
  * Description
@@ -16,7 +17,7 @@ use Page;
  */
 class Catalog extends Page
 {
-    use ProductPriceRangeGenerator, ProductListGenerator;
+    use ProductListGenerator;
     /**
      * Defines the database table name
      * @var string
@@ -68,5 +69,28 @@ class Catalog extends Page
         $fields = parent::getCMSFields();
         $this->add_pagesize_field($fields);
         return $fields;
+    }
+
+    public function getPriceRanges()
+    {
+        $range = array_map('round', array_unique(Product::get()->column('SortingPrice')));
+        $range = array_unique($range);
+
+        asort($range);
+
+        $divider = count($range) / 10;
+        $divider = $divider > 10 ? 10 : $divider;
+        $ranges = array_chunk($range, ceil(count($range) / $divider));
+
+        $refined = [];
+
+        foreach ($ranges as $chunk) {
+            $refined[] = [
+                'from' => floor(min($chunk)),
+                'to' => ceil(max($chunk))
+            ];
+        }
+
+        return $refined;
     }
 }

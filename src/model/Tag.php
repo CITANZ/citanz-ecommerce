@@ -38,17 +38,12 @@ class Tag extends DataObject
     ];
 
     /**
-     * Default sort ordering
-     * @var array
-     */
-    private static $default_sort = ['Title' => 'ASC'];
-
-    /**
      * Belongs_many_many relationship
      * @var array
      */
     private static $belongs_many_many = [
-        'Products'  =>  Product::class
+        'Products'  =>  Product::class,
+        'Variants'  =>  Variant::class
     ];
 
     /**

@@ -14,6 +14,7 @@ use Cita\eCommerce\Traits\TopSellerGenerator;
 use Leochenftw\Grid;
 use Leochenftw\Util;
 use SilverStripe\TagField\TagField;
+use SilverStripe\ORM\Search\SearchContext;
 
 /**
  * Description
@@ -86,7 +87,8 @@ class Product extends Page
      * @var array
      */
     private static $many_many = [
-        'Related' => Product::class
+        'Related' => Product::class,
+        'Tags'  =>  Tag::class
     ];
 
     /**
@@ -133,6 +135,17 @@ class Product extends Page
         );
 
         return $fields;
+    }
+
+    public function defaultSearchFilters()
+    {
+        $result = parent::defaultSearchFilters();
+
+        // \Leochenftw\Debugger::inspect($result);
+
+        return $result;
+        
+        return SearchContext::create();
     }
 
     public function UpdatePrices($do_write = false)

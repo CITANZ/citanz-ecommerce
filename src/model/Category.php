@@ -107,14 +107,12 @@ class Category extends DataObject
                 'Title',
                 'Title'
             ),
-            $slug = SiteTreeURLSegmentField::create('Slug', 'Slug', $this->owner->Slug)->setURLPrefix("/$link?="),
+            $slug = SiteTreeURLSegmentField::create('Slug', 'Slug', $this->owner->Slug)->setURLPrefix("/$link?category="),
             HtmlEditorField::create(
                 'Content',
                 'Content'
             )
         );
-
-        // \Leochenftw\Debugger::inspect($slug->getAttributes());
 
         if ($this->exists()) {
             $fields->push(
@@ -172,11 +170,13 @@ class Category extends DataObject
             $this->ExcludeEmptyCategory($list);
         }
 
+        $catalog = Catalog::get()->first();
+
         $data   =   [
             'title'     =>  $this->Title,
             'slug'      =>  $this->Slug,
             'active'    =>  false,
-            'url'       =>  null,
+            'url'       =>  $catalog ? "{$catalog->Link()}?category=$this->Slug" : null,
             'sub'       =>  $include_sub ? $list : [],
             'count'     =>  $this->get_total_product_count()
         ];
