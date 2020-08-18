@@ -125,3 +125,10 @@ SilverStripe\Omnipay\Model\Payment:
 SilverStripe\Omnipay\Service\PurchaseService:
   extensions:
     - Cita\eCommerce\Extension\PurchaseServiceExtension
+SilverStripe\Admin\LeftAndMain:
+  extra_requirements_css:
+    - resources/vendor/cita/ecommerce/client/css/cms.css
+  extra_requirements_javascript:
+    - https://cdn.jsdelivr.net/npm/vue/dist/vue.js
+    - https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js
+    - resources/vendor/cita/ecommerce/client/js/vue.js

@@ -33,6 +33,7 @@
     "extra": {
         "expose": [
             "client/img",
+            "client/css",
             "client/js"
         ]
     }

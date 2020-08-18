@@ -1,11 +1,16 @@
 <?php
 
 namespace Cita\eCommerce\Model;
+use SilverStripe\View\Requirements;
+use SilverStripe\Forms\HeaderField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Security\Group;
+use Cita\eCommerce\Model\Product;
+use Cita\eCommerce\Model\Variant;
+use SilverStripe\View\ViewableData;
 
 /**
  * Description
@@ -39,7 +44,7 @@ class Discount extends DataObject
         'Title'         =>  'Varchar(128)',
         'DiscountBy'    =>  'Enum("ByPercentage,ByValue")',
         'DiscountRate'  =>  'Decimal',
-        'Type'          =>  'Enum("Member Type,Coupon,Item Count")',
+        'Type'          =>  'Enum("Member Type,Coupon,Item Count,Product")',
         'CouponCode'    =>  'Varchar(128)',
         'NumItemsToMeetCondition' => 'Int',
         'NumCopies'     =>  'Int',
@@ -76,6 +81,11 @@ class Discount extends DataObject
         'Group' =>  Group::class
     ];
 
+    private static $many_many = [
+        'Products' => Product::class,
+        'Variants' => Variant::class
+    ];
+
 
     public function populateDefaults()
     {
@@ -92,6 +102,7 @@ class Discount extends DataObject
     {
         $fields =   parent::getCMSFields();
         $coupon =   $fields->fieldByName('Root.Main.CouponCode');
+
         $fields->removeByName([
             'CouponCode'
         ]);
@@ -136,6 +147,30 @@ class Discount extends DataObject
 
         if ($lp = $fields->fieldByName('Root.Main.LifePoint')) {
             $lp->setTitle('How many times this discount coupon can be used?');
+        }
+
+        $fields->removeByName([
+            'Products',
+            'Variants'
+        ]);
+
+        if ($this->exists()) {
+            $fields->addFieldsToTab(
+                'Root.Products&Variants',
+                [
+                    HeaderField::create(
+                        'PVHeading',
+                        'Apply this discount to products and their vairants'
+                    ),
+                    LiteralField::create(
+                        'PSF',
+                        ViewableData::create()->customise([
+                            'DiscountID' => $this->ID,
+                            'Existings' => json_encode($this->Products()->map()->toArray())
+                        ])->renderWith("{$this->ClassName}_Vue")
+                    )
+                ]
+            );
         }
 
         return $fields;

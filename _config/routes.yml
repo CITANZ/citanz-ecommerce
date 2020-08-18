@@ -11,3 +11,4 @@ SilverStripe\Control\Director:
     'cita-ecommerce/paypal-complete': 'Cita\eCommerce\Controller\PaypalController'
     'cita-ecommerce/complete/$ID!': 'Cita\eCommerce\Controller\eCommerceController'
     'cart//$action/$id': Cita\eCommerce\Controller\Cart
+    'admin/cita-ecom/api/discount//$action': Cita\eCommerce\API\CMSDiscountAPI
