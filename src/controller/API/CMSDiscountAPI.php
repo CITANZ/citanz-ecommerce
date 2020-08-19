@@ -4,6 +4,7 @@ namespace Cita\eCommerce\API;
 
 use SilverStripe\Control\Controller;
 use Cita\eCommerce\Model\Product;
+use Cita\eCommerce\Model\Variant;
 use SilverStripe\Versioned\Versioned;
 use Cita\eCommerce\Model\Discount;
 
@@ -14,7 +15,9 @@ class CMSDiscountAPI extends Controller
     private static $allowed_actions = [
         'search_product',
         'add_product',
-        'remove_product'
+        'remove_product',
+        'add_variant',
+        'remove_variant'
     ];
 
     protected function handleAction($request, $action)
@@ -97,7 +100,8 @@ class CMSDiscountAPI extends Controller
 
         return [
             'id' => $product->ID,
-            'title' => $product->Title
+            'title' => $product->Title,
+            'variants' => $product->Variants()->Data
         ];
     }
 
@@ -121,7 +125,63 @@ class CMSDiscountAPI extends Controller
             return $this->httpError(404, 'discount or product not found');
         }
 
+        $variants = $product->Variants();
+
+        foreach ($variants as $variant) {
+            $discount->Variants()->remove($variant);
+        }
+
         $discount->Products()->remove($product);
+
+        return true;
+    }
+
+    public function add_variant(&$request)
+    {
+        if (!$request->isPost()) {
+            return $this->httpError(400, 'Wrong method');
+        }
+
+        $discount_id = $request->postVar('discount_id');
+        $variant_id = $request->postVar('variant_id');
+
+        if (empty($discount_id) || empty($variant_id)) {
+            return $this->httpError(400, 'missing parameters');
+        }
+
+        $discount = Discount::get_by_id($discount_id);
+        $variant = Variant::get()->byID($variant_id);
+
+        if (empty($discount) || empty($variant)) {
+            return $this->httpError(404, 'discount or product not found');
+        }
+
+        $discount->Variants()->add($variant);
+
+        return true;
+    }
+
+    public function remove_variant(&$request)
+    {
+        if (!$request->isPost()) {
+            return $this->httpError(400, 'Wrong method');
+        }
+
+        $discount_id = $request->postVar('discount_id');
+        $variant_id = $request->postVar('variant_id');
+
+        if (empty($discount_id) || empty($variant_id)) {
+            return $this->httpError(400, 'missing parameters');
+        }
+
+        $discount = Discount::get_by_id($discount_id);
+        $variant = Variant::get()->byID($variant_id);
+
+        if (empty($discount) || empty($variant)) {
+            return $this->httpError(404, 'discount or product not found');
+        }
+
+        $discount->Variants()->remove($variant);
 
         return true;
     }

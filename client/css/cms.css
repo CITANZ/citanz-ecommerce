@@ -1,3 +1,35 @@
-html {
-    display: none;
+#cita-ecom-discount .candidates {
+    padding: 0 0 0.5rem;
+    border: 1px solid #d7d7d7;
+    border-top: 0;
+    position: absolute;
+    width: calc(100% - 1.5385rem * 2);
+    left: 1.5385rem;
+    z-index: 1;
+    background-color: white;
+    border-radius: 0 0 4px 4px;
+}
+
+#cita-ecom-discount table ul li,
+#cita-ecom-discount .candidates li {
+    list-style: none;
+}
+
+#cita-ecom-discount .candidates li a {
+    padding: 0.5rem 1rem;
+    display: block;
+    text-decoration: none;
+    transition: all ease-out .3s;
+    background-color: rgba(86,107,141, 0);
+}
+
+#cita-ecom-discount .candidates li a:hover,
+#cita-ecom-discount .candidates li a:focus {
+    color: white;
+    background-color: rgba(86,107,141, 0.6);
+}
+
+#cita-ecom-discount table ul {
+    padding: 0;
+    margin-top: 1rem;
 }

@@ -1,6 +1,7 @@
 <?php
 
 namespace Cita\eCommerce\Model;
+use SilverStripe\Dev\Debug;
 use SilverStripe\View\Requirements;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\ORM\DataObject;
@@ -166,7 +167,8 @@ class Discount extends DataObject
                         'PSF',
                         ViewableData::create()->customise([
                             'DiscountID' => $this->ID,
-                            'Existings' => json_encode($this->Products()->map()->toArray())
+                            'Existings' => $this->getBoundProductData(),
+                            'Variants' => json_encode($this->Variants()->column('ID'))
                         ])->renderWith("{$this->ClassName}_Vue")
                     )
                 ]
@@ -174,6 +176,21 @@ class Discount extends DataObject
         }
 
         return $fields;
+    }
+
+    private function getBoundProductData()
+    {
+        $products = $this->Products();
+        $data = [];
+        foreach ($products as $product) {
+            $data[] = [
+                'id' => $product->ID,
+                'title' => $product->Title,
+                'variants' => $product->Variants()->Data
+            ];
+        }
+
+        return json_encode($data);
     }
 
     public function calc_discount($amount)

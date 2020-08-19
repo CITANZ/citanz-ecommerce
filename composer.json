@@ -12,6 +12,7 @@
         }
     ],
     "require": {
+        "silverstripe/framework": "^4.6",
         "guzzlehttp/guzzle": "^6.3",
         "silvershop/silverstripe-hasonefield": "^3.0.1",
         "unclecheese/display-logic": "^2.0",

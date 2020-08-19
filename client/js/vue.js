@@ -23,24 +23,24 @@ function initDiscountInferface () {
             candidates: [],
             products: [],
             discount_id: null,
-            existings: []
+            existings: [],
+            variants: []
         },
         mounted () {
             this.discount_id = this.$refs.discount_id.value
-            const dict = JSON.parse(this.$refs.existings.value)
-
-            for (let key in dict) {
-                this.existings.push({
-                    id: key,
-                    title: dict[key]
-                })
-            }
+            this.existings = JSON.parse(this.$refs.existings.value)
+            this.variants = JSON.parse(this.$refs.variants.value)
+            console.log(this.variants);
         },
         watch: {
             products(nv, ov) {
                 console.log(this.products);
             },
             search_term(nv, ov) {
+                if (!nv) {
+                    return false;
+                }
+
                 if (this.ticker) {
                     clearTimeout(this.ticker);
                     this.ticker = null;
@@ -60,8 +60,47 @@ function initDiscountInferface () {
             }
         },
         methods: {
+            keydownHandler(e) {
+                if (e.key == 'Enter') {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    e.stopPropagation();
+                    return false;
+                }
+            },
+            hasVariant(id) {
+                return this.variants.indexOf(id) >= 0;
+            },
+            checkVariant(e) {
+                const id = e.target.value;
+                if (e.target.checked) {
+                    this.addVariant(id);
+                } else {
+                    this.removeVariant(id);
+                }
+            },
+            addVariant(id) {
+                const data = new FormData()
+                data.append('variant_id', id)
+                data.append('discount_id', this.discount_id)
+                axios.post(
+                    '/admin/cita-ecom/api/discount/add_variant',
+                    data
+                )
+            },
+            removeVariant(id) {
+                this.variants = this.variants.filter( o => o.id != id)
+                const data = new FormData()
+                data.append('variant_id', id)
+                data.append('discount_id', this.discount_id)
+                axios.post(
+                    '/admin/cita-ecom/api/discount/remove_variant',
+                    data
+                )
+            },
             addProduct(id) {
                 this.candidates = []
+                this.search_term = null
                 this.products.push(id)
                 const data = new FormData()
                 data.append('product_id', id)
