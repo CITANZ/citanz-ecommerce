@@ -30,7 +30,6 @@ function initDiscountInferface () {
             this.discount_id = this.$refs.discount_id.value
             this.existings = JSON.parse(this.$refs.existings.value)
             this.variants = JSON.parse(this.$refs.variants.value)
-            console.log(this.variants);
         },
         watch: {
             products(nv, ov) {
@@ -38,6 +37,7 @@ function initDiscountInferface () {
             },
             search_term(nv, ov) {
                 if (!nv) {
+                    this.candidates = [];
                     return false;
                 }
 
@@ -66,6 +66,25 @@ function initDiscountInferface () {
                     e.stopImmediatePropagation();
                     e.stopPropagation();
                     return false;
+                } else if (e.key == 'ArrowDown') {
+                    if ( document.getElementsByClassName('product-candidate').length) {
+                        const first = document.getElementsByClassName('product-candidate')[0]
+                        first.focus()
+                    }
+                } else if (e.key == 'ArrowUp') {
+                    if ( document.getElementsByClassName('product-candidate').length) {
+                        const last = document.getElementsByClassName('product-candidate')[document.getElementsByClassName('product-candidate').length -1]
+                        last.focus()
+                    }
+                }
+            },
+            moveSelection(e) {
+                if (e.key == 'ArrowDown') {
+                    const next = e.target.parentNode.nextSibling ? e.target.parentNode.nextSibling : e.target.parentNode.parentNode.firstChild
+                    next.firstChild.focus()
+                } else if (e.key == 'ArrowUp') {
+                    const next = e.target.parentNode.previousSibling ? e.target.parentNode.previousSibling : e.target.parentNode.parentNode.lastChild
+                    next.firstChild.focus()
                 }
             },
             hasVariant(id) {

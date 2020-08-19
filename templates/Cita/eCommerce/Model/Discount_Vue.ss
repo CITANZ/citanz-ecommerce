@@ -6,10 +6,10 @@
         <div class="form-group field text">
             <label for="cita-ecom-discount--search" class="form__field-label">Search product</label>
             <div class="form__field-holder">
-                <input type="text" @keydown="keydownHandler" v-model="search_term" class="text" id="cita-ecom-discount--search" />
+                <input type="text" ref="term_input" @keydown="keydownHandler" v-model="search_term" class="text" id="cita-ecom-discount--search" />
                 <ul class="candidates" v-if="candidates && candidates.length > 0">
                     <li v-for="candidate in candidates">
-                        <a href="#" @click.prevent="addProduct(candidate.id)">{{ candidate.title }}</a>
+                        <a class="product-candidate" href="#" @click.prevent="addProduct(candidate.id)" @keydown="moveSelection">{{ candidate.title }}</a>
                     </li>
                 </ul>
                 <p v-if="!existings || !existings.length" style="font-size: 12px; margin-top: 0.5em;">Search and add product(s)</p>
