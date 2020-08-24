@@ -96,6 +96,8 @@ class ProductCollection extends Page
 
         $this->add_pagesize_field($fields);
 
+        $this->extend('updateCMSFields', $fields);
+
         return $fields;
     }
 }

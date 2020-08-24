@@ -130,4 +130,21 @@ class Cart extends PageController
         return _t(__CLASS__ . '.TITLE', 'Cart');
     }
 
+    public function getInitialPageData()
+    {
+        if ($action = $this->request->Param('action')) {
+            return json_encode(array_merge($this->{'get_' . $action . '_data'}(), [
+                    'session' => array_merge([
+                        'csrf' => SecurityToken::inst()->getSecurityID()
+                    ])
+                ]));
+        }
+
+        return json_encode(array_merge($this->Data, [
+                'session' => array_merge([
+                    'csrf' => SecurityToken::inst()->getSecurityID()
+                ])
+            ]));
+    }
+
 }

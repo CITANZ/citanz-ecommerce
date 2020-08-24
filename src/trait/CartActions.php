@@ -131,7 +131,8 @@ trait CartActions
     {
         if ($code = $this->request->postVar('coupon')) {
             if ($coupon = Discount::check_valid($code)) {
-                return $coupon->getData();
+                $order = eCommerce::get_cart();
+                return array_merge($coupon->Data, $coupon->calc_discount(0, $order));
             }
         }
 
@@ -218,7 +219,7 @@ trait CartActions
                                         eCommerce::get_freight_options()->first()->ID : null),
                 'freight_data'      =>  $cart->get_freight_data(),
                 'comment'           =>  $cart->Comment,
-                'discount'          =>  $cart->Discount()->getData(),
+                'discount'          =>  array_merge($cart->Discount()->Data, $cart->Discount()->calc_discount(0, $cart)),
                 'shipping'          =>  $cart->getShippingData(false),
                 'same_addr'         =>  $cart->SameBilling ? 1 : 0,
                 'billing'           =>  $cart->getBillingData(false),

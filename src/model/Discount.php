@@ -45,7 +45,7 @@ class Discount extends DataObject
         'Title'         =>  'Varchar(128)',
         'DiscountBy'    =>  'Enum("ByPercentage,ByValue")',
         'DiscountRate'  =>  'Decimal',
-        'Type'          =>  'Enum("Member Type,Coupon,Item Count,Product")',
+        'Type'          =>  'Varchar(128)',
         'CouponCode'    =>  'Varchar(128)',
         'NumItemsToMeetCondition' => 'Int',
         'NumCopies'     =>  'Int',
@@ -54,6 +54,13 @@ class Discount extends DataObject
         'ValidFrom'     =>  'Datetime',
         'ValidUntil'    =>  'Datetime',
         'LifePoint'     =>  'Int'
+    ];
+
+    private static $types = [
+        'Member Type' => 'Member Type',
+        'Coupon' => 'Coupon',
+        'Item Count' => 'Item Count',
+        'Product' => 'Product',
     ];
 
     private static $indexes = [
@@ -105,14 +112,22 @@ class Discount extends DataObject
         $coupon =   $fields->fieldByName('Root.Main.CouponCode');
 
         $fields->removeByName([
-            'CouponCode'
+            'Type'
         ]);
 
         $fields->fieldByName('Root.Main.DiscountRate')->setDescription('If "Discount By" is set to "By Percentage", it will be x% off; if set to "By Value", it will be $x off.');
-        $type   =   $fields->fieldByName('Root.Main.Type');
-        if ($type) {
-            $type->setEmptyString('- select one -');
-        }
+
+        $type = DropdownField::create(
+            'Type',
+            'Type',
+            $this->config()->types
+        )->setEmptyString('- select one -');
+
+        $fields->addFieldToTab(
+            'Root.Main',
+            $type,
+            'NumItemsToMeetCondition'
+        );
 
         if ($this->Type == 'Coupon') {
             $fields->addFieldToTab(
@@ -156,6 +171,18 @@ class Discount extends DataObject
         ]);
 
         if ($this->exists()) {
+            if ($this->Type != 'Product') {
+                $fields->addFieldsToTab(
+                    'Root.Products&Variants',
+                    [
+                        HeaderField::create(
+                            'ProductDiscountWarning',
+                            'Because the discount type is set to "' . $this->Type . '", the products (and their variants) selected in this tab will not get invovled in the discount calculation.'
+                        )
+                    ]
+                );
+            }
+
             $fields->addFieldsToTab(
                 'Root.Products&Variants',
                 [
@@ -193,8 +220,12 @@ class Discount extends DataObject
         return json_encode($data);
     }
 
-    public function calc_discount($amount)
+    public function calc_discount($amount, $order = null)
     {
+        if ($this->hasMethod('ExtendedDiscountCalculator')) {
+            return $this->ExtendedDiscountCalculator($amount, $order);
+        }
+
         if ($this->DiscountBy == 'ByPercentage') {
             return $amount * $this->DiscountRate * 0.01;
         }
@@ -327,5 +358,36 @@ class Discount extends DataObject
             $this->NumCopies    =   0;
             $this->write();
         }
+    }
+
+    public function doProductDiscount($order)
+    {
+        $eligible_variants = $this->Variants()->column('ID');
+        $list = ['discounted_items' => []];
+
+        foreach ($this->Products() as $product) {
+            $product_variants = $product->Variants()->column('ID');
+            if (empty(array_intersect($eligible_variants, $product_variants))) {
+                $eligible_variants = array_merge($eligible_variants, $product_variants);
+            }
+        }
+
+        foreach ($order->Items() as $item) {
+            if (in_array($item->VariantID, $eligible_variants)) {
+                $amount = $item->Subtotal;
+                if ($this->owner->DiscountBy == 'ByPercentage') {
+                    $amount = $amount * $this->owner->DiscountRate * 0.01;
+                } else {
+                    $amount = ($amount - $this->owner->DiscountRate >= 0) ? $amount - $this->owner->DiscountRate : 0;
+                }
+
+                $list['discounted_items'][] = array_merge(
+                    $item->Data,
+                    ['DiscountedAmount' => number_format($amount, 2)]
+                );
+            }
+        }
+
+        return $list;
     }
 }
