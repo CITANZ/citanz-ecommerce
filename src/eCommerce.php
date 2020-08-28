@@ -1,6 +1,7 @@
 <?php
 
 namespace Cita\eCommerce;
+use SilverStripe\Dev\Debug;
 use SilverStripe\Security\Security;
 use SilverStripe\Control\Session;
 use Cita\eCommerce\Model\Customer;
@@ -59,6 +60,7 @@ class eCommerce
     public static function get_last_processed_cart($order_id = null)
     {
         $cart   =   static::get_cart($order_id);
+
         if (!$cart) return null;
 
         if ($customer = Member::currentUser()) {

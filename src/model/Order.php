@@ -45,7 +45,7 @@ class Order extends DataObject
     private static $db = [
         'MerchantReference'         =>  'Varchar(64)',
         'CustomerReference'         =>  'Varchar(8)',
-        'Status'                    =>  'Enum("Pending,Invoice Pending,Debit Pending,Payment Received,Shipped,Cancelled,Refunded,CardCreated,Completed")',
+        'Status'                    =>  'Enum("Pending,Invoice Pending,Debit Pending,Payment Received,Shipped,Cancelled,Refunded,CardCreated,Completed,Free Order")',
         'AnonymousCustomer'         =>  'Varchar(128)',
         'TotalAmount'               =>  'Currency',
         'DiscountableTaxable'       =>  'Currency',
@@ -188,7 +188,7 @@ class Order extends DataObject
     public function getCMSFields()
     {
         $fields =   parent::getCMSFields();
-        
+
         if ($this->exists()) {
             $items  =   $fields->fieldByName('Root.Items.Items');
 
@@ -465,7 +465,7 @@ class Order extends DataObject
     public function completePayment($status)
     {
         if ($this->Status == 'Payment Received' || $this->Status == 'Shipped' || $this->Status == 'Cancelled' || $this->Status == 'Refunded' || $this->Status == 'Completed') return false;
-        if ($status != 'CardCreated' && $status != 'Captured' && $status != 'Invoice Pending' && $status != 'Debit Pending') return false;
+        if ($status != 'CardCreated' && $status != 'Captured' && $status != 'Invoice Pending' && $status != 'Debit Pending' && $status != 'Free Order') return false;
 
         if ($status == 'Success' || $status == 'Captured') {
             $this->Status   =   'Payment Received';

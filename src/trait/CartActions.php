@@ -154,7 +154,11 @@ trait CartActions
             $cart->digest($data);
 
             if ($cart->PayableTotal == 0) {
-                return $this->httpError(500, 'There is nothing to pay!');
+                if (!$cart->Discount()->exists()) {
+                    return $this->httpError(500, 'There is nothing to pay!');
+                }
+
+                return $this->ProcessFreeOrder($cart);
             }
 
             return [
@@ -163,6 +167,15 @@ trait CartActions
         }
 
         return $this->httpError(500, 'Something went wrong');
+    }
+
+    private function ProcessFreeOrder(&$cart)
+    {
+        $cart->completePayment('Free Order');
+
+        return [
+            'url' => "/cart/complete/$cart->ID"
+        ];
     }
 
     private function get_complete_data()
@@ -183,6 +196,7 @@ trait CartActions
         $data['pagetype']   =   'PaymentResult';
         $data['title']      =   $this->Title;
         $data['catalog']    =   eCommerce::get_catalog_url();
+        $data['status']     =   $cart->Status;
         $data['payment']    =   $cart->Payments()->first() ? $cart->Payments()->first()->getData() : null;
         $data['cart']       =   $cart->getData();
         $data['shipping']   =   $cart->getShippingData();
@@ -190,6 +204,7 @@ trait CartActions
         $data['email']      =   $cart->Email;
         $data['freight']    =   $cart->Freight()->getData();
         $data['freight']['price']   =   $cart->ShippingCost;
+
         return $data;
     }
 
@@ -219,7 +234,7 @@ trait CartActions
                                         eCommerce::get_freight_options()->first()->ID : null),
                 'freight_data'      =>  $cart->get_freight_data(),
                 'comment'           =>  $cart->Comment,
-                'discount'          =>  array_merge($cart->Discount()->Data, $cart->Discount()->calc_discount(0, $cart)),
+                'discount'          =>  $cart->Discount()->exists() ? array_merge($cart->Discount()->Data, $cart->Discount()->calc_discount(0, $cart)) : null,
                 'shipping'          =>  $cart->getShippingData(false),
                 'same_addr'         =>  $cart->SameBilling ? 1 : 0,
                 'billing'           =>  $cart->getBillingData(false),
