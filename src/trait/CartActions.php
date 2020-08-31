@@ -234,7 +234,7 @@ trait CartActions
                                         eCommerce::get_freight_options()->first()->ID : null),
                 'freight_data'      =>  $cart->get_freight_data(),
                 'comment'           =>  $cart->Comment,
-                'discount'          =>  $cart->Discount()->exists() ? array_merge($cart->Discount()->Data, $cart->Discount()->calc_discount(0, $cart)) : null,
+                'discount'          =>  $this->getDiscountData($cart),
                 'shipping'          =>  $cart->getShippingData(false),
                 'same_addr'         =>  $cart->SameBilling ? 1 : 0,
                 'billing'           =>  $cart->getBillingData(false),
@@ -266,6 +266,21 @@ trait CartActions
         $data['session_oid']        =   $this->request->getSession()->get('cart_id');
         \SilverStripe\i18n\i18n::get_locale();
         return $data;
+    }
+
+    private function getDiscountData(&$cart)
+    {
+        if ($cart->Discount()->exists()) {
+            $discount_result = $cart->Discount()->calc_discount($cart->DiscountableTaxable + $cart->DiscountableNonTaxable, $cart);
+
+            if (is_array($discount_result)) {
+                return array_merge($cart->Discount()->Data, $discount_data);
+            }
+
+            return $cart->Discount()->Data;
+        }
+
+        return null;
     }
 
     private function validate_fields(&$data, $check_billing)

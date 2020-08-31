@@ -127,12 +127,15 @@ class Variant extends DataObject
     {
         $fields = parent::getCMSFields();
 
-        $fields->fieldByName('Root.Main.VariantTitle')->setDescription('Leave empty if you wish to use the same name as the product title');
+        if ($variant_title = $fields->fieldByName('Root.Main.VariantTitle')) {
+            $variant_title->setDescription('Leave empty if you wish to use the same name as the product title');
+        }
 
         $fields->removeByName([
             'Title',
             'ProductID',
             'Tags',
+            'OrderItems',
             'UnitWeight'
         ]);
 
@@ -238,6 +241,8 @@ class Variant extends DataObject
                 )
             ]
         );
+
+        $this->extend('updateCMSFields', $fields);
 
         return $fields;
     }

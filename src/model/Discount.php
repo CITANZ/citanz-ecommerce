@@ -126,7 +126,7 @@ class Discount extends DataObject
         $fields->addFieldToTab(
             'Root.Main',
             $type,
-            'NumItemsToMeetCondition'
+            'CouponCode'
         );
 
         if ($this->Type == 'Coupon') {
@@ -202,6 +202,13 @@ class Discount extends DataObject
             );
         }
 
+        $fields->fieldByName('Root.Main.NumItemsToMeetCondition')->displayIf('Type')->isEqualTo('Item Count')->end();
+        $fields->fieldByName('Root.Main.CouponCode')->hideIf('Type')->isEqualTo('Item Count')->end();
+        $fields->fieldByName('Root.Main.InfiniteUse')->hideIf('Type')->isEqualTo('Item Count')->end();
+        $fields->fieldByName('Root.Main.NumCopies')->hideIf('Type')->isEqualTo('Item Count')->end();
+        $fields->fieldByName('Root.Main.LifePoint')->hideIf('Type')->isEqualTo('Item Count')->orIf('InfiniteUse')->isChecked()->end();
+        $fields->fieldByName('Root.Main.Used')->hideIf('Type')->isEqualTo('Item Count')->orIf('InfiniteUse')->isChecked()->end();
+
         return $fields;
     }
 
@@ -226,11 +233,15 @@ class Discount extends DataObject
             return $this->ExtendedDiscountCalculator($amount, $order);
         }
 
+        if ($order && empty($amount)) {
+            $amount = $order->TotalAmount;
+        }
+
         if ($this->DiscountBy == 'ByPercentage') {
             return $amount * $this->DiscountRate * 0.01;
         }
 
-        return ($amount - $this->DiscountRate >= 0) ? $amount - $this->DiscountRate : 0;
+        return $this->DiscountRate;
     }
 
     public function getData()
@@ -241,7 +252,8 @@ class Discount extends DataObject
             'by'    =>  $this->DiscountBy == 'ByPercentage' ? '%' : '-',
             'rate'  =>  (float) $this->DiscountRate,
             'code'  =>  $this->CouponCode,
-            'desc'  =>  $this->getDescription()
+            'desc'  =>  $this->getDescription(),
+            'cancellable' => $this->Type != 'Item Count'
         ];
 
         $this->extend('CustomGetData', $data);
@@ -292,7 +304,7 @@ class Discount extends DataObject
 
     public function CheckOrder(&$order)
     {
-        if ($this->NumItemsToMeetCondition >= $order->ItemCount()) {
+        if ($this->NumItemsToMeetCondition <= $order->ItemCount()) {
             return true;
         }
 
@@ -330,12 +342,18 @@ class Discount extends DataObject
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        if ($this->InfiniteUse && $this->Used) {
-            $this->Used =   false;
-        }
 
-        if (!$this->InfiniteUse && $this->LifePoint <= 0) {
-            $this->Used =   true;
+        if ($this->Type == 'Item Count') {
+            $this->InfiniteUse = true;
+            $this->Used =   false;
+        } else {
+            if ($this->InfiniteUse && $this->Used) {
+                $this->Used =   false;
+            }
+
+            if (!$this->InfiniteUse && $this->LifePoint <= 0) {
+                $this->Used =   true;
+            }
         }
     }
 

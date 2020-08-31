@@ -1,6 +1,7 @@
 <?php
 
 namespace Cita\eCommerce\Model;
+
 use Cita\eCommerce\eCommerce;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\ORM\DataObject;
@@ -689,8 +690,11 @@ class Order extends DataObject
         if ($discount = Discount::get()->filter(['Type' => 'Item Count'])->first()) {
             if ($discount->CheckOrder($this)) {
                 $this->DiscountID = $discount->ID;
-                $this->UpdateAmountWeight();
+            } else {
+                $this->DiscountID = 0;
             }
+
+            $this->UpdateAmountWeight();
         }
     }
 
@@ -719,7 +723,6 @@ class Order extends DataObject
             'items'         =>  $this->Items()->sort(['Created' => 'DESC'])->getData(),
             'amount'        =>  $amount,
             'amounts'       =>  [
-                'wtf' => 123,
                 'discountable_taxable' => $this->DiscountableTaxable,
                 'discountable_nontaxable' => $this->DiscountableNonTaxable,
                 'nondiscountable_taxable' => $this->NonDiscountableTaxable,
