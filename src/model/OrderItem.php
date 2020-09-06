@@ -58,10 +58,21 @@ class OrderItem extends DataObject
         'Order'     =>  Order::class
     ];
 
+
     public function populateDefaults()
     {
         $this->Quantity =   1;
     }
+
+    private static $many_many = [
+        'BundledVariants' => Variant::class
+    ];
+
+    private static $many_many_extraFields = [
+        'BundledVariants' => [
+            'Quantity' => 'Int'
+        ]
+    ];
 
     /**
      * Defines summary fields commonly used in table columns
@@ -74,6 +85,15 @@ class OrderItem extends DataObject
         'Quantity' => 'Quantity',
         'Subtotal' => 'Subtotal'
     ];
+
+    public function getCMSFields()
+    {
+        $fields = parent::getCMSFields();
+        $fields->removeByName([
+            'BundledVariants'
+        ]);
+        return $fields;
+    }
 
     public function getSKU()
     {
@@ -145,11 +165,33 @@ class OrderItem extends DataObject
 
     private function get_product_details()
     {
+        if ($this->hasMethod('getProductList')) {
+            return $this->ProductList;
+        }
+
         if ($this->Bundle()->exists()) {
-            return $this->Bundle()->getMiniData();
+            $bundle_data = $this->Bundle()->MiniData;
+            if (empty($bundle_data['variants'])) {
+                $bundle_data['variants'] = [];
+                foreach ($this->BundledVariants() as $variant) {
+                    $bundle_data['variants'][] = [
+                        'id' => $variant->ID,
+                        'title' => $variant->Title,
+                        'price' => $variant->Price,
+                        'count' => $variant->Count
+                    ];
+                }
+            }
+            return $bundle_data;
         }
 
         return $this->Variant()->exists() ? $this->Variant()->getData() : null;
+    }
+
+    public function onBeforeDelete()
+    {
+        parent::onBeforeDelete();
+        $this->BundledVariants()->removeAll();
     }
 
     /**
@@ -169,8 +211,10 @@ class OrderItem extends DataObject
                 $this->Quantity = 1;
                 $this->Title = $bundle->Title . "\n";
 
-                foreach ($bundle->Variants() as $variant) {
-                    $bundle_variant_count = $bundle->Variants()->byID($variant->ID)->Count;
+                $variants = $this->BundledVariants()->exists() ? $this->BundledVariants() : $bundle->Variants();
+
+                foreach ($variants as $variant) {
+                    $bundle_variant_count = $variant->Quantity ?: $variant->Count;
                     $this->Title .= "- $variant->Title x $bundle_variant_count\n";
                 }
 

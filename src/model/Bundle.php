@@ -1,6 +1,7 @@
 <?php
 
 namespace Cita\eCommerce\Model;
+use SilverStripe\Dev\Debug;
 use Page;
 use SilverStripe\Forms\CurrencyField;
 use SilverStripe\Forms\TextField;
@@ -130,26 +131,37 @@ class Bundle extends Page
 
         $bundles = Bundle::get()->sort(['BundledPrice' => 'DESC']);
         foreach ($bundles as $bundle) {
-            $my_variants = $bundle->Variants()->column('ID');
-            sort($my_variants);
-
-            $result = array_intersect($order_variants, $my_variants);
-
-            sort($result);
-
-            if ($my_variants == $result) {
-                $condition_met = true;
-                foreach ($result as $vid) {
-                    $bundle_variant_requirement = $bundle->Variants()->byID($vid)->Count;
-                    $order_item_count = $order->Items()->filter(['VariantID' => $vid])->first()->Quantity;
-                    if ($order_item_count < $bundle_variant_requirement) {
-                        $condition_met = false;
-                        break;
-                    }
-                }
-
+            if ($bundle->hasMethod('CustomMatchCheck')) {
+                $condition_met = $bundle->CustomMatchCheck($order);
                 if ($condition_met) {
                     return $bundle->InjectToCart($order);
+                }
+            } else {
+                $my_variants = $bundle->Variants()->column('ID');
+                sort($my_variants);
+
+                $result = array_intersect($order_variants, $my_variants);
+
+                sort($result);
+
+                if (empty($result)) {
+                    return null;
+                }
+
+                if ($my_variants == $result) {
+                    $condition_met = true;
+                    foreach ($result as $vid) {
+                        $bundle_variant_requirement = $bundle->Variants()->byID($vid)->Count;
+                        $order_item_count = $order->Items()->filter(['VariantID' => $vid])->first()->Quantity;
+                        if ($order_item_count < $bundle_variant_requirement) {
+                            $condition_met = false;
+                            break;
+                        }
+                    }
+
+                    if ($condition_met) {
+                        return $bundle->InjectToCart($order);
+                    }
                 }
             }
         }
@@ -157,20 +169,21 @@ class Bundle extends Page
         return null;
     }
 
-    public function InjectToCart(&$order)
+    public function InjectToCart(&$order, $variants = [])
     {
-        $ids = $this->Variants()->column('ID');
-        $items = $order->Items()->filter(['VariantID' => $ids]);
-
         $new_item = OrderItem::create();
         $new_item->BundleID = $this->ID;
         $new_item->OrderID = $order->ID;
         $new_item->write();
         $covered = [];
 
-        foreach ($this->Variants() as $variant) {
+        $given_variants = !empty($variants);
+        $variants = !empty($variants) ? $variants : $this->Variants();
+
+        foreach ($variants as $variant) {
             if ($order_item = $order->Items()->filter(['VariantID' => $variant->ID])->first()) {
                 $order_item->reduce($variant->Count);
+                $new_item->BundledVariants()->add($variant, ['Quantity' => $variant->Count]);
                 $covered[] = $variant->Title;
             }
         }

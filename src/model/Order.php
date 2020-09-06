@@ -2,6 +2,7 @@
 
 namespace Cita\eCommerce\Model;
 
+use SilverStripe\Dev\Debug;
 use Cita\eCommerce\eCommerce;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\ORM\DataObject;
@@ -173,6 +174,35 @@ class Order extends DataObject
         'Messages'  =>  OrderMessage::class
     ];
 
+    private static $many_many = [
+        'Variants' => Variant::class
+    ];
+
+    private static $many_many_extraFields = [
+        'Variants' => [
+            'Quantity' => 'Int'
+        ]
+    ];
+
+    public function onAfterWrite()
+    {
+        parent::onAfterWrite();
+        $inCartVariants = [];
+        foreach ($this->Items() as $item) {
+            if ($item->Variant()->exists()) {
+                $variant = $item->Variant();
+                $inCartVariants[] = $variant->ID;
+                $this->Variants()->add($variant, ['Quantity' => $item->Quantity]);
+            }
+        }
+
+        $to_remove = array_diff($this->Variants()->column('ID'), $inCartVariants);
+
+        foreach ($to_remove as $id) {
+            $this->Variants()->removeByID($id);
+        }
+    }
+
     public function getSuccessPayment()
     {
         if ($this->exists() && $this->Payments()->exists()) {
@@ -191,8 +221,6 @@ class Order extends DataObject
         $fields =   parent::getCMSFields();
 
         if ($this->exists()) {
-            $items  =   $fields->fieldByName('Root.Items.Items');
-
             $fields->removeByName([
                 'Items'
             ]);

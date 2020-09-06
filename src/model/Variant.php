@@ -136,7 +136,10 @@ class Variant extends DataObject
             'ProductID',
             'Tags',
             'OrderItems',
-            'UnitWeight'
+            'UnitWeight',
+            'Width',
+            'Height',
+            'Depth'
         ]);
 
         $fields->addFieldToTab(
@@ -149,14 +152,6 @@ class Variant extends DataObject
             )->setShouldLazyLoad(true)->setCanCreate(true),
             'ShortDesc'
         );
-
-        if ($this->isDigital) {
-            $fields->removeByName([
-                'Width',
-                'Height',
-                'Depth'
-            ]);
-        }
 
         if ($this->InfiniteStock) {
             $fields->removeByName([
@@ -179,13 +174,15 @@ class Variant extends DataObject
 
         $product_detail_fields = [
             CurrencyField::create('Price'),
-            TextField::create('Width'),
-            TextField::create('Height'),
-            TextField::create('Depth'),
             CheckboxField::create(
                 'isDigital',
                 'is Digital Product'
             )->setDescription('means no freight required'),
+            Wrapper::create(
+                TextField::create('Width'),
+                TextField::create('Height'),
+                TextField::create('Depth')
+            )->displayIf('isDigital')->isNotChecked()->end(),
             Wrapper::create(
                 TextField::create('UnitWeight')->setDescription('in KG. If you are not charging the freight cost on weight, leave it 0.00')
             )->displayIf('isDigital')->isNotChecked()->end(),

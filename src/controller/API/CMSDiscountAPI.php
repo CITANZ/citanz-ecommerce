@@ -2,6 +2,7 @@
 
 namespace Cita\eCommerce\API;
 
+use SilverStripe\Security\Member;
 use SilverStripe\Control\Controller;
 use Cita\eCommerce\Model\Product;
 use Cita\eCommerce\Model\Variant;
@@ -22,6 +23,12 @@ class CMSDiscountAPI extends Controller
 
     protected function handleAction($request, $action)
     {
+        $member = Member::currentUser();
+
+        if (!$member || !$member->inGroup('administrators')) {
+            return $this->httpError(403, 'You do not have permission!');
+        }
+
         $header = $this->getResponse();
 
         if (!$request->isAjax()) {

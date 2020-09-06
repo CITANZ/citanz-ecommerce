@@ -26,6 +26,12 @@ class OrderMessage extends DataObject
         'Displayed' => 'Boolean'
     ];
 
+    private static $summary_fields = [
+        'ID' => 'ID',
+        'Message' => 'Message',
+        'AdminUse' => 'AdminUse'
+    ];
+
     /**
      * Default sort ordering
      * @var array
@@ -42,7 +48,7 @@ class OrderMessage extends DataObject
 
     public function getTitle()
     {
-        return subtr($this->Message, 0, 50);
+        return substr($this->Message, 0, 50);
     }
 
     public function getData()
