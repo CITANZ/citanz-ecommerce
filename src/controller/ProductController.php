@@ -66,7 +66,7 @@ class ProductController extends PageController
             $cart   =   Order::create();
         }
 
-        $cart->add_to_cart($data['ID'], $data['Quantity'], $data['Class']);
+        $cart->AddToCart($data['ID'], $data['Quantity']);
         $form->sessionMessage('Variant has been added to cart', 'good');
         return $this->redirectBack();
     }

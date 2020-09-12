@@ -390,9 +390,9 @@ class Discount extends DataObject
             }
         }
 
-        foreach ($order->Items() as $item) {
-            if (in_array($item->VariantID, $eligible_variants)) {
-                $amount = $item->Subtotal;
+        foreach ($order->Variants() as $item) {
+            if (in_array($item->ID, $eligible_variants)) {
+                $amount = $item->Quantity * $item->UnitPrice;
                 if ($this->owner->DiscountBy == 'ByPercentage') {
                     $amount = $amount * $this->owner->DiscountRate * 0.01;
                 } else {

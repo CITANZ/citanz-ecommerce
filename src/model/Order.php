@@ -92,7 +92,6 @@ class Order extends DataObject
     ];
 
     private static $cascade_deletes = [
-        'Items',
         'Payments'
     ];
 
@@ -169,7 +168,6 @@ class Order extends DataObject
      * @var array
      */
     private static $has_many = [
-        'Items'     =>  OrderItem::class,
         'Payments'  =>  Payment::class,
         'Messages'  =>  OrderMessage::class
     ];
@@ -180,28 +178,18 @@ class Order extends DataObject
 
     private static $many_many_extraFields = [
         'Variants' => [
-            'Quantity' => 'Int'
+            'Quantity' => 'Decimal',
+            'isRefunded' => 'Boolean',
+            'Delivered' => 'Boolean',
+            'StoredTitle' => 'Varchar(128)',
+            'StoredUnitWeight' => 'Decimal',
+            'StoredUnitPrice' => 'Currency',
+            'StoredisDigital' => 'Boolean',
+            'StoredisExempt' => 'Boolean',
+            'StoredGSTIncluded' => 'Boolean',
+            'StoredNoDiscount' => 'Boolean',
         ]
     ];
-
-    public function onAfterWrite()
-    {
-        parent::onAfterWrite();
-        $inCartVariants = [];
-        foreach ($this->Items() as $item) {
-            if ($item->Variant()->exists()) {
-                $variant = $item->Variant();
-                $inCartVariants[] = $variant->ID;
-                $this->Variants()->add($variant, ['Quantity' => $item->Quantity]);
-            }
-        }
-
-        $to_remove = array_diff($this->Variants()->column('ID'), $inCartVariants);
-
-        foreach ($to_remove as $id) {
-            $this->Variants()->removeByID($id);
-        }
-    }
 
     public function getSuccessPayment()
     {
@@ -219,17 +207,6 @@ class Order extends DataObject
     public function getCMSFields()
     {
         $fields =   parent::getCMSFields();
-
-        if ($this->exists()) {
-            $fields->removeByName([
-                'Items'
-            ]);
-
-            $fields->addFieldToTab(
-                'Root.OrderItems',
-                Grid::make('Items', 'Order Items', $this->Items(), false, 'GridFieldConfig_RecordViewer')
-            );
-        }
 
         $fields->addFieldsToTab(
             'Root.Shipping',
@@ -426,66 +403,57 @@ class Order extends DataObject
 
     public function ItemCount()
     {
-        $items  =   $this->Items();
-        $n      =   0;
-        foreach ($items as $item) {
-            $n  +=  $item->Quantity;
-        }
-        return $n;
+        return $this->Variants()->sum('Quantity');
     }
 
     public function ShippableItemCount()
     {
-        $items  =   $this->Items()->filter(['isDigital' => false]);
-        $n      =   0;
-        foreach ($items as $item) {
-            $n  +=  $item->Quantity;
-        }
-        return $n;
+        return $this->Variants()->filter(['isDigital' => false])->sum('Quantity');
     }
 
     public function UpdateAmountWeight()
     {
-        $amount         =   0;
-        $weight         =   0;
-        $distax         =   0;
-        $nondistax      =   0;
-        $disnontax      =   0;
-        $nondisnontax   =   0;
-        $taxincluded    =   0;
+        $amount = 0;
+        $weight = 0;
+        $distax = 0;
+        $nondistax = 0;
+        $disnontax = 0;
+        $nondisnontax = 0;
+        $taxincluded = 0;
 
-        foreach ($this->Items() as $item) {
-            $amount     +=  $item->Subtotal;
-            $weight     +=  $item->Subweight;
+        foreach ($this->Variants() as $item) {
+            $subtotal = $item->Price * $item->Quantity;
+            $amount += $subtotal;
+            $weight += $item->UnitWeight * $item->Quantity;
 
             if ($item->NoDiscount) {
                 if ($item->isExempt || $item->GSTIncluded) {
-                    $nondisnontax   +=  $item->Subtotal;
+                    $nondisnontax += $subtotal;
                 } else {
-                    $nondistax      +=  $item->Subtotal;
+                    $nondistax += $subtotal;
                 }
             } else {
                 if ($item->isExempt || $item->GSTIncluded) {
-                    $disnontax      +=  $item->Subtotal;
+                    $disnontax += $subtotal;
                 } else {
-                    $distax         +=  $item->Subtotal;
+                    $distax += $subtotal;
                 }
             }
 
             if ($item->GSTIncluded) {
-                $taxincluded += $item->Subtotal;
+                $taxincluded += $subtotal;
             }
         }
 
-        $this->TotalAmount                  =   $amount;
-        $this->TotalWeight                  =   $weight;
-        $this->DiscountableTaxable          =   $distax;
-        $this->DiscountableNonTaxable       =   $disnontax;
-        $this->NonDiscountableTaxable       =   $nondistax;
-        $this->NonDiscountableNonTaxable    =   $nondisnontax;
-        $this->TaxIncludedTotal             =   $taxincluded;
+        $this->TotalAmount = $amount;
+        $this->TotalWeight = $weight;
+        $this->DiscountableTaxable = $distax;
+        $this->DiscountableNonTaxable = $disnontax;
+        $this->NonDiscountableTaxable = $nondistax;
+        $this->NonDiscountableNonTaxable = $nondisnontax;
+        $this->TaxIncludedTotal = $taxincluded;
 
-        $this->PayableTotal                 =   $this->CalculatePayableTotal();
+        $this->PayableTotal = $this->CalculatePayableTotal();
 
         $this->extend('updateOrderFields', $this);
         $this->write();
@@ -504,13 +472,21 @@ class Order extends DataObject
 
         $this->write();
 
-        foreach ($this->Items() as $item) {
-            $item->FreezePrice();
+        foreach ($this->Variants() as $item) {
+            $this->Variants()->add($item->ID, [
+                'StoredTitle' => $item->Title,
+                'StoredUnitWeight' => $item->UnitWeight,
+                'StoredUnitPrice' => $item->UnitPrice,
+                'StoredisDigital' => $item->isDigital,
+                'StoredisExempt' => $item->isExempt,
+                'StoredGSTIncluded' => $item->GSTIncluded,
+                'StoredNoDiscount' => $item->NoDiscount,
+            ]);
         }
 
         if ($this->Status == 'Payment Received') {
             if ($this->Discount()->exists()) {
-                $discount   =   $this->Discount();
+                $discount = $this->Discount();
 
                 if (!$discount->InfiniteUse) {
                     $discount->LifePoint--;
@@ -537,7 +513,7 @@ class Order extends DataObject
 
         if (!$this->Customer()->exists() && Member::currentUser()) {
             if (Member::currentUser()->ClassName == Customer::class) {
-                $this->CustomerID           =   Member::currentUser()->ID;
+                $this->CustomerID = Member::currentUser()->ID;
             }
         }
 
@@ -648,72 +624,56 @@ class Order extends DataObject
 
     public function is_freeshipping()
     {
-        if ($this->Items()->count() == 0) {
+        if ($this->Variants()->count() == 0) {
             return true;
         }
 
         $n  =   0;
-        foreach ($this->Items() as $item) {
-            if ($item->isDigital) {
-                $n++;
-            }
-        }
 
-        return $n == $this->Items()->count();
+        return $this->Variants()->filter(['isDigital' => true])->count() == $this->Variants()->count();
     }
 
-    public function add_to_cart($id, $qty)
+    public function AddToCart($vid, $qty)
     {
-        $existing_item = $this->Items()->filter(['VariantID' => $id])->first();
+        if ($variant = Variant::get()->byID($vid)) {
+            if (empty($qty) || $qty <= 0) {
+                $this->Variants()->removeByID($vid);
+            } else {
+                $this->Variants()->add($vid, [
+                    'Quantity' => $qty,
+                    'StoredTitle' => $variant->Title,
+                    'StoredUnitWeight' => $variant->UnitWeight,
+                    'StoredUnitPrice' => $variant->Price,
+                    'StoredisDigital' => $variant->isDigital,
+                    'StoredisExempt' => $variant->isExempt,
+                    'StoredGSTIncluded' => $variant->GSTIncluded,
+                    'StoredNoDiscount' => $variant->NoDiscount
+                ]);
+            }
 
-        if (!empty($existing_item)) {
-            $existing_item->Quantity    +=  $qty;
-            $existing_item->write();
-        } else {
-            $item = OrderItem::create();
-            $item->VariantID = $id;
-            $item->Quantity = $qty;
-            $item->OrderID = $this->ID;
-            $item->write();
+            if ($this->Discount()->exists()) {
+                $this->DiscountID = 0;
+            }
+
+            $this->UpdateAmountWeight();
         }
-
-        $this->UpdateAmountWeight();
 
         return $this->getData();
     }
 
     public function CheckOrderRoutine()
     {
-        // scan the order items, just in case the product has been deleted
-        $count = $this->Items()->count();
-        $iterator = $this->Items()->getIterator();
-        $removed = [];
-
-        foreach ($iterator as $item) {
-            $goods = $item->Bundle()->exists() ? $item->Bundle() : $item->Variant();
-
-            if (!$goods->exists() || $goods->isSoldout) {
-                $removed[] = "<strong>$item->Title</strong>";
-                $item->delete();
-            } else {
-                $item->write();
-            }
-        }
-
-        if (!empty($removed)) {
-            $removed = implode(', ', $removed);
-            $this->Log("<p>The following item(s) has removed due to out-of-stock: $removed</p>");
-        }
-
-        $this->UpdateAmountWeight();
-
         // check bundle
         $bundle = Bundle::MatchBundle($this);
 
-        // bundle and discount item count type cannot be used together!
-        if ($bundle) {
-            return;
+        while ($bundle) {
+            $bundle = Bundle::MatchBundle($this);
         }
+
+        // // bundle and discount item count type cannot be used together!
+        // if ($this->Items()->filter(['BundleID:not' => 0])->exists()) {
+        //     return;
+        // }
 
         if ($discount = Discount::get()->filter(['Type' => 'Item Count'])->first()) {
             if ($discount->CheckOrder($this)) {
@@ -741,40 +701,56 @@ class Order extends DataObject
             $this->CheckOrderRoutine();
         }
 
-        $amount = $this->TotalAmount;
+        $amount = round($this->TotalAmount * 100) * 0.01;
         $gst = $this->GST;
         $data   =   [
-            'id'    =>  $this->ID,
-            'ref'   =>  $this->CustomerReference,
-            'count'         =>  $this->ItemCount(),
-            'messages'      =>  $this->Messages()->filter(['Displayed' => false, 'AdminUse' => false])->getData(),
-            'items'         =>  $this->Items()->sort(['Created' => 'DESC'])->getData(),
-            'amount'        =>  $amount,
-            'amounts'       =>  [
+            'id' => $this->ID,
+            'ref' => $this->CustomerReference,
+            'count' => $this->ItemCount(),
+            'messages' => $this->Messages()->filter(['Displayed' => false, 'AdminUse' => false])->getData(),
+            'items' => $this->Items,
+            'amount' => $amount,
+            'amounts' => [
                 'discountable_taxable' => $this->DiscountableTaxable,
                 'discountable_nontaxable' => $this->DiscountableNonTaxable,
                 'nondiscountable_taxable' => $this->NonDiscountableTaxable,
                 'nondiscountable_nontaxable' => $this->NonDiscountableNonTaxable,
                 'gst_included_amount' => $this->TaxIncludedTotal
             ],
-            'gst'           =>  $gst,
-            'gst_included'  =>  $this->IncludedGST,
-            'grand_total'   =>  $gst + $amount,
-            'weight'        =>  $this->TotalWeight,
-            'comment'       =>  $this->Comment,
-            'discount'      =>  $this->Discount()->getData(),
-            'shipping_cost' =>  $this->ShippingCost
+            'gst' => $gst,
+            'gst_included' => $this->IncludedGST,
+            'grand_total' => $gst + $amount,
+            'weight' => $this->TotalWeight,
+            'comment' => $this->Comment,
+            'discount' => $this->Discount()->getData(),
+            'shipping_cost' => $this->ShippingCost
         ];
 
         if ($this->Discount()->exists()) {
-            $dt     =   $this->DiscountableTaxable;
-            $dnt    =   $this->DiscountableNonTaxable;
-            $data['discount']['amount'] =   $this->getDiscounted();
+            $dt = $this->DiscountableTaxable;
+            $dnt = $this->DiscountableNonTaxable;
+            $data['discount']['amount'] = $this->getDiscounted();
         }
 
         $this->extend('getData', $data);
 
         return $data;
+    }
+
+    public function getItems()
+    {
+        $items = $this->Variants()->sort(['ID' => 'ASC']);
+        $list = [];
+        foreach ($items as $item) {
+            $list[] = array_merge(
+                $item->Data,
+                [
+                    'quantity' => $item->Quantity
+                ]
+            );
+        }
+
+        return $list;
     }
 
     public function digest(&$data, $cal_freight = true)
@@ -907,6 +883,45 @@ class Order extends DataObject
                             $this->BillingCountry,
             'postcode'  =>  $this->BillingPostcode,
             'phone'     =>  $this->BillingPhone
+        ];
+    }
+
+    public function getCartItemList()
+    {
+        if ($this->hasMethod('CustomCartItemList')) {
+            return $this->CustomCartItemList();
+        }
+
+        $list = '';
+
+        foreach ($this->Variants() as $v) {
+            $list .= "<li>$v->Title x $v->Quantity</li>";
+        }
+        if (!empty($list)) {
+            return "<ul style='padding-left: 1.5em; margin: 0;'>$list</ul>";
+        }
+
+        return null;
+    }
+
+    public function getPaidat()
+    {
+        if ($payment = $this->SuccessPayment) {
+            return $payment->LastEdited;
+        }
+
+        return null;
+    }
+
+    public function getListData()
+    {
+        return [
+            'Ref' => $this->CustomerReference,
+            'Items' => $this->ItemCount(),
+            'Details' => $this->CartItemList,
+            'Amount' => $this->PayableTotal,
+            'Status' => $this->Status,
+            'PaidAt' => $this->Paidat,
         ];
     }
 }

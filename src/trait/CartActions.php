@@ -1,5 +1,6 @@
 <?php
 namespace Cita\eCommerce\Traits;
+use SilverStripe\Dev\Debug;
 use Cita\eCommerce\eCommerce;
 use SilverStripe\SiteConfig\SiteConfig;
 use Cita\eCommerce\Model\Order;
@@ -13,13 +14,26 @@ use SilverStripe\Core\Environment;
 use Cita\eCommerce\API\Stripe;
 use Cita\eCommerce\Service\PaymentService;
 use Page;
+use Cita\eCommerce\Model\Variant;
 use Leochenftw\Util;
+use SilverStripe\Core\Convert;
 
 trait CartActions
 {
     public function getData()
     {
         $cart   =   eCommerce::get_cart();
+
+        // if (!$cart->Variants()->exists()) {
+        //     $list = [1157,66,2,15,279,981,988];
+        //     foreach ($list as $item) {
+        //         $variant = Variant::get()->byID($item);
+        //         Debug::dump($variant->Book()->BookCategories()->column('Title'));
+        //         // $cart->AddToCart($item, 1);
+        //     }
+        // }
+        //
+        // die;
 
         if ($this->request->getVar('mini')) {
             if (!$cart) return $cart;
@@ -30,7 +44,7 @@ trait CartActions
         $data['pagetype']   =   'CartPage';
         $data['title']      =   $this->Title;
         $data['gst_rate']   =   SiteConfig::current_site_config()->GSTRate;
-        $data['cart']       =   $cart && $cart->Items()->exists() ? $cart->getData() : null;
+        $data['cart']       =   $cart && $cart->Variants()->exists() ? $cart->getData() : null;
         $data['shipping_reminder'] = Util::preprocess_content(SiteConfig::current_site_config()->ShippingReminder);
 
         return $data;
@@ -62,7 +76,10 @@ trait CartActions
             $session->set('cart_id', $cart->ID);
         }
 
-        $cart->add_to_cart($this->request->postVar('id'), $this->request->postVar('qty'));
+        $vid = Convert::raw2sql($this->request->postVar('id'));
+        $qty = Convert::raw2sql($this->request->postVar('qty'));
+
+        $cart->AddToCart($vid, $qty);
 
         return $cart->getData();
     }
@@ -70,14 +87,10 @@ trait CartActions
     private function do_update()
     {
         if ($cart = eCommerce::get_cart()) {
-            $item   =   $cart->Items()->byID($this->request->postVar('id'));
+            $vid = Convert::raw2sql($this->request->postVar('id'));
+            $qty = Convert::raw2sql($this->request->postVar('qty'));
 
-            if ($this->request->postVar('qty') <= 0) {
-                $item->delete();
-            } elseif ($item->Quantity != $this->request->postVar('qty')) {
-                $item->Quantity =   $this->request->postVar('qty');
-                $item->write();
-            }
+            $cart->AddToCart($vid, $qty);
 
             $cart->UpdateAmountWeight();
 
@@ -90,8 +103,12 @@ trait CartActions
     private function do_delete()
     {
         if ($cart = eCommerce::get_cart()) {
-            if ($item = $cart->Items()->byID($this->request->postVar('id'))) {
-                $item->delete();
+            $vid = Convert::raw2sql($this->request->postVar('id'));
+
+            $cart->Variants()->removeByID($vid);
+
+            if ($cart->Discount()->exists()) {
+                $cart->DiscountID = 0;
             }
 
             $cart->UpdateAmountWeight();
@@ -253,9 +270,11 @@ trait CartActions
         $data['payment_methods']    =   eCommerce::get_available_payment_methods();
         $data['gst_rate']           =   SiteConfig::current_site_config()->GSTRate;
         $data['checkout']           =   !empty($checkout) ? $checkout : null;
+
         $data['cart']               =   [
             'items' => $cart ? $cart->getData()['items'] : null
         ];
+
         if (in_array('Stripe', eCommerce::get_available_payment_methods())) {
             if ($config = Environment::getEnv('Stripe')) {
                 $config = json_decode($config);

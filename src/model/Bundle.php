@@ -1,6 +1,7 @@
 <?php
 
 namespace Cita\eCommerce\Model;
+use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Dev\Debug;
 use Page;
 use SilverStripe\Forms\CurrencyField;
@@ -65,6 +66,11 @@ class Bundle extends Page
         ]
     ];
 
+    private static $defaults = [
+        'NoDiscount' => true,
+        'isDigital' => true
+    ];
+
     /**
      * CMS Fields
      * @return FieldList
@@ -94,6 +100,28 @@ class Bundle extends Page
         ];
 
         $fields->addFieldToTab('Root.BundledItems', Grid::manyExtraSortable('Variants', 'Variants', $this->Variants(), Variant::class, $field_config));
+
+        $fields->addFieldsToTab(
+            'Root.BundleSettings',
+            [
+                CheckboxField::create(
+                    'isDigital',
+                    'is Digital Product'
+                )->setDescription('means no freight required'),
+                CheckboxField::create(
+                    'NoDiscount',
+                    'This product does not accept discount'
+                ),
+                CheckboxField::create(
+                    'isExempt',
+                    'This product is not subject to GST'
+                ),
+                CheckboxField::create(
+                    'GSTIncluded',
+                    'This price has already included GST'
+                )
+            ]
+        );
 
         return $fields;
     }
@@ -127,14 +155,14 @@ class Bundle extends Page
 
     public static function MatchBundle(&$order)
     {
+        return null;
         $order_variants = $order->Items()->column('VariantID');
-
         $bundles = Bundle::get()->sort(['BundledPrice' => 'DESC']);
+
         foreach ($bundles as $bundle) {
             if ($bundle->hasMethod('CustomMatchCheck')) {
-                $condition_met = $bundle->CustomMatchCheck($order);
-                if ($condition_met) {
-                    return $bundle->InjectToCart($order);
+                if ($found = $bundle->CustomMatchCheck($order)) {
+                    return $found;
                 }
             } else {
                 $my_variants = $bundle->Variants()->column('ID');
@@ -179,6 +207,36 @@ class Bundle extends Page
 
         $given_variants = !empty($variants);
         $variants = !empty($variants) ? $variants : $this->Variants();
+
+        foreach ($order->Items()->filter(['BundleID:not' => 0, 'ID:not' => $new_item->ID]) as $item) {
+
+            if ($this->hasMethod('Supersede') && !$new_item->Bundle()->Supersede($item->Bundle())) {
+                continue;
+            }
+
+            $founds = [];
+
+            foreach ($variants as $variant) {
+                if ($found = $item->BundledVariants()->byID($variant->ID)) {
+                    $founds[] = [
+                        'variant' => $found,
+                        'outnumbered' => $found->Quantity <= $variant->Count
+                    ];
+                }
+            }
+
+            $simplified = array_unique(array_column($founds, 'outnumbered'));
+            if (count($simplified) == 1 && $simplified[0] == true) {
+                foreach ($founds as $found) {
+                    $item->BundledVariants()->remove($found['variant']);
+                    $new_item->BundledVariants()->add($found['variant'], ['Quantity' => $found['variant']->Quantity]);
+                }
+            }
+
+            if (!$item->BundledVariants()->exists()) {
+                $item->delete();
+            }
+        }
 
         foreach ($variants as $variant) {
             if ($order_item = $order->Items()->filter(['VariantID' => $variant->ID])->first()) {

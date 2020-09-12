@@ -1,6 +1,7 @@
 <?php
 
 namespace Cita\eCommerce\Controller;
+use SilverStripe\Dev\Debug;
 use PageController;
 use SilverStripe\SiteConfig\SiteConfig;
 use Cita\eCommerce\eCommerce;
@@ -57,7 +58,6 @@ class Cart extends PageController
         }
 
         if (!$this->request->isAjax()) {
-
             if (($this->request->Param('action') == 'complete') && empty(eCommerce::get_last_processed_cart($this->request->param('id')))) {
                 return $this->httpError(404);
             }

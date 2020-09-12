@@ -11,6 +11,7 @@ use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\RequiredFields;
 use SilverStripe\View\ArrayData;
+use Cita\eCommerce\Model\Variant;
 use Cita\eCommerce\eCommerce;
 use Cita\eCommerce\Model\Freight;
 use Cita\eCommerce\API\DirectDebit;
@@ -83,15 +84,15 @@ trait CartTemplateActions
     public function HandleCartUpdate(&$data, &$cart)
     {
         $i  =   0;
-        foreach ($data['ItemID'] as $ItemID) {
-            if ($item = $cart->Items()->byID($ItemID)) {
-                $qty            =   $data['Quantity'][$i];
-                if (empty($qty)) {
-                    $item->delete();
-                } else {
-                    $item->Quantity =   $qty;
-                    $item->write();
-                }
+
+        foreach ($data['VariantID'] as $vid) {
+            $qty = $data['Quantity'][$i];
+            if (empty($qty)) {
+                $cart->Variants()->removeByID($vid);
+            } elseif ($variant = Variant::get()->byID($vid)) {
+                $cart->Variants()->add($variant, [
+                    'Quantity' => $qty
+                ]);
             }
             $i++;
         }
@@ -174,8 +175,8 @@ trait CartTemplateActions
     public function DeleteCartItem($data, Form $form)
     {
         if (($cart = eCommerce::get_cart()) && ($id = $data['action_DeleteCartItem'])) {
-            if ($item = $cart->Items()->byID($id)) {
-                $item->delete();
+            if ($item = $cart->Variants()->byID($id)) {
+                $cart->Variants()->removeByID($id);
                 $cart->UpdateAmountWeight();
                 $form->sessionMessage('Item removed', 'good');
                 return $this->redirectBack();

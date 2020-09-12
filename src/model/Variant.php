@@ -14,6 +14,7 @@ use SilverStripe\TagField\TagField;
 use SilverStripe\Forms\CheckboxField;
 use UncleCheese\DisplayLogic\Forms\Wrapper;
 use SilverStripe\ORM\ArrayList;
+use Cita\eCommerce\Model\Order;
 
 /**
  * Description
@@ -116,6 +117,7 @@ class Variant extends DataObject
      * @var array
      */
     private static $belongs_many_many = [
+        'Orders' => Order::class,
         'Bundles' => Bundle::class
     ];
 
