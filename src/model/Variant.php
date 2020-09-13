@@ -141,7 +141,10 @@ class Variant extends DataObject
             'UnitWeight',
             'Width',
             'Height',
-            'Depth'
+            'Depth',
+            'isExempt',
+            'isDigital',
+            'GSTIncluded'
         ]);
 
         $fields->addFieldToTab(
@@ -160,12 +163,6 @@ class Variant extends DataObject
                 'OutOfStock'
             ]);
         }
-
-        $fields->removeByName([
-            'isExempt',
-            'isDigital',
-            'GSTIncluded'
-        ]);
 
         $fields->addFieldsToTab(
             'Root.ProductDetails',

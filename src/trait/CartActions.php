@@ -44,7 +44,7 @@ trait CartActions
         $data['pagetype']   =   'CartPage';
         $data['title']      =   $this->Title;
         $data['gst_rate']   =   SiteConfig::current_site_config()->GSTRate;
-        $data['cart']       =   $cart && $cart->Variants()->exists() ? $cart->getData() : null;
+        $data['cart']       =   ($cart && ($cart->Variants()->exists() || $cart->Bundles()->exists())) ? $cart->getData() : null;
         $data['shipping_reminder'] = Util::preprocess_content(SiteConfig::current_site_config()->ShippingReminder);
 
         return $data;

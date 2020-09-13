@@ -168,6 +168,7 @@ class Order extends DataObject
      * @var array
      */
     private static $has_many = [
+        'Bundles' => BundleEntry::class,
         'Payments'  =>  Payment::class,
         'Messages'  =>  OrderMessage::class
     ];
@@ -403,7 +404,15 @@ class Order extends DataObject
 
     public function ItemCount()
     {
-        return $this->Variants()->sum('Quantity');
+        $bundled_items = 0;
+
+        if ($this->Bundles()->exists()) {
+            foreach ($this->Bundles() as $bundle) {
+                $bundled_items += $bundle->Variants()->sum('Quantity');
+            }
+        }
+
+        return $this->Variants()->sum('Quantity') + $bundled_items;
     }
 
     public function ShippableItemCount()
@@ -748,6 +757,12 @@ class Order extends DataObject
                     'quantity' => $item->Quantity
                 ]
             );
+        }
+
+        $bundles = $this->Bundles();
+
+        foreach ($bundles as $bundled) {
+            $list[] = $bundled->Data;
         }
 
         return $list;

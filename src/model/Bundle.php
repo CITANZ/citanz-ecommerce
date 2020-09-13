@@ -155,8 +155,7 @@ class Bundle extends Page
 
     public static function MatchBundle(&$order)
     {
-        return null;
-        $order_variants = $order->Items()->column('VariantID');
+        $order_variants = $order->Variants()->column('ID');
         $bundles = Bundle::get()->sort(['BundledPrice' => 'DESC']);
 
         foreach ($bundles as $bundle) {
@@ -173,14 +172,14 @@ class Bundle extends Page
                 sort($result);
 
                 if (empty($result)) {
-                    return null;
+                    continue;
                 }
 
                 if ($my_variants == $result) {
                     $condition_met = true;
                     foreach ($result as $vid) {
                         $bundle_variant_requirement = $bundle->Variants()->byID($vid)->Count;
-                        $order_item_count = $order->Items()->filter(['VariantID' => $vid])->first()->Quantity;
+                        $order_item_count = $order->Variants()->byID($vid)->Quantity;
                         if ($order_item_count < $bundle_variant_requirement) {
                             $condition_met = false;
                             break;
@@ -188,7 +187,7 @@ class Bundle extends Page
                     }
 
                     if ($condition_met) {
-                        return $bundle->InjectToCart($order);
+                        return $bundle->InjectToCart($order, $result);
                     }
                 }
             }
@@ -197,53 +196,31 @@ class Bundle extends Page
         return null;
     }
 
-    public function InjectToCart(&$order, $variants = [])
+    public function InjectToCart(&$order, &$variants)
     {
-        $new_item = OrderItem::create();
-        $new_item->BundleID = $this->ID;
-        $new_item->OrderID = $order->ID;
-        $new_item->write();
         $covered = [];
 
-        $given_variants = !empty($variants);
-        $variants = !empty($variants) ? $variants : $this->Variants();
+        foreach ($variants as $vid) {
+            $variant = $order->Variants()->byID($vid);
+            $required_count = $this->Variants()->byID($vid)->Count;
 
-        foreach ($order->Items()->filter(['BundleID:not' => 0, 'ID:not' => $new_item->ID]) as $item) {
-
-            if ($this->hasMethod('Supersede') && !$new_item->Bundle()->Supersede($item->Bundle())) {
-                continue;
+            if ($variant->Quantity - $required_count <= 0) {
+                $order->Variants()->removeByID($vid);
+            } else {
+                $order->Variants()->add($vid, ['Quantity' => $variant->Quantity - $required_count]);
             }
 
-            $founds = [];
+            $bundled = BundleEntry::create([
+                'Title' => $this->Title,
+                'Price' => $this->BundledPrice,
+                'BundleID' => $this->ID,
+                'OrderID' => $order->ID,
+            ]);
 
-            foreach ($variants as $variant) {
-                if ($found = $item->BundledVariants()->byID($variant->ID)) {
-                    $founds[] = [
-                        'variant' => $found,
-                        'outnumbered' => $found->Quantity <= $variant->Count
-                    ];
-                }
-            }
+            $bundled->write();
+            $bundled->Variants()->add($vid, ['Quantity' => 1]);
 
-            $simplified = array_unique(array_column($founds, 'outnumbered'));
-            if (count($simplified) == 1 && $simplified[0] == true) {
-                foreach ($founds as $found) {
-                    $item->BundledVariants()->remove($found['variant']);
-                    $new_item->BundledVariants()->add($found['variant'], ['Quantity' => $found['variant']->Quantity]);
-                }
-            }
-
-            if (!$item->BundledVariants()->exists()) {
-                $item->delete();
-            }
-        }
-
-        foreach ($variants as $variant) {
-            if ($order_item = $order->Items()->filter(['VariantID' => $variant->ID])->first()) {
-                $order_item->reduce($variant->Count);
-                $new_item->BundledVariants()->add($variant, ['Quantity' => $variant->Count]);
-                $covered[] = $variant->Title;
-            }
+            $covered[] = $variant->Title;
         }
 
         $covered_string = '';
