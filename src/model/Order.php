@@ -454,6 +454,30 @@ class Order extends DataObject
             }
         }
 
+        foreach ($this->Bundles() as $item) {
+            $subtotal = $item->Price * $item->Quantity;
+            $amount += $subtotal;
+            $weight += $item->UnitWeight * $item->Quantity;
+
+            if ($item->Bundle()->NoDiscount) {
+                if ($item->Bundle()->isExempt || $item->Bundle()->GSTIncluded) {
+                    $nondisnontax += $subtotal;
+                } else {
+                    $nondistax += $subtotal;
+                }
+            } else {
+                if ($item->Bundle()->isExempt || $item->Bundle()->GSTIncluded) {
+                    $disnontax += $subtotal;
+                } else {
+                    $distax += $subtotal;
+                }
+            }
+
+            if ($item->Bundle()->GSTIncluded) {
+                $taxincluded += $subtotal;
+            }
+        }
+
         $this->TotalAmount = $amount;
         $this->TotalWeight = $weight;
         $this->DiscountableTaxable = $distax;
@@ -680,9 +704,9 @@ class Order extends DataObject
         }
 
         // // bundle and discount item count type cannot be used together!
-        // if ($this->Items()->filter(['BundleID:not' => 0])->exists()) {
-        //     return;
-        // }
+        if ($this->Bundles()->exists()) {
+            return;
+        }
 
         if ($discount = Discount::get()->filter(['Type' => 'Item Count'])->first()) {
             if ($discount->CheckOrder($this)) {

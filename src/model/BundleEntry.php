@@ -39,6 +39,11 @@ class BundleEntry extends DataObject
         ]
     ];
 
+    public function getUnitWeight()
+    {
+        return $this->Variants()->sum('UnitWeight');
+    }
+
     public function getData()
     {
         return [
@@ -58,5 +63,11 @@ class BundleEntry extends DataObject
                 );
             }, $this->Variants()->toArray())
         ];
+    }
+
+    public function onBeforeDelete()
+    {
+        parent::onBeforeDelete();
+        $this->Variants()->removeAll();
     }
 }
