@@ -47,6 +47,7 @@ class BundleEntry extends DataObject
     public function getData()
     {
         return [
+            'id' => $this->ID,
             'is_bundle' => true,
             'title' => $this->Title,
             'price' => $this->Price,

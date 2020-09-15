@@ -29,11 +29,9 @@ trait CartActions
         //     foreach ($list as $item) {
         //         $variant = Variant::get()->byID($item);
         //         Debug::dump($variant->Book()->BookCategories()->column('Title'));
-        //         // $cart->AddToCart($item, 1);
+        //         $cart->AddToCart($item, 1);
         //     }
         // }
-        //
-        // die;
 
         if ($this->request->getVar('mini')) {
             if (!$cart) return $cart;
@@ -90,7 +88,7 @@ trait CartActions
             $vid = Convert::raw2sql($this->request->postVar('id'));
             $qty = Convert::raw2sql($this->request->postVar('qty'));
 
-            $cart->AddToCart($vid, $qty);
+            $cart->AddToCart($vid, $qty, true);
 
             $cart->UpdateAmountWeight();
 
@@ -104,8 +102,15 @@ trait CartActions
     {
         if ($cart = eCommerce::get_cart()) {
             $vid = Convert::raw2sql($this->request->postVar('id'));
+            $type = Convert::raw2sql($this->request->postVar('type'));
 
-            $cart->Variants()->removeByID($vid);
+            if (!empty($type) && $type == 'bundle') {
+                if ($entry = $cart->Bundles()->byID($vid)) {
+                    $entry->delete();
+                }
+            } else {
+                $cart->Variants()->removeByID($vid);
+            }
 
             if ($cart->Discount()->exists()) {
                 $cart->DiscountID = 0;

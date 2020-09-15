@@ -666,14 +666,22 @@ class Order extends DataObject
         return $this->Variants()->filter(['isDigital' => true])->count() == $this->Variants()->count();
     }
 
-    public function AddToCart($vid, $qty)
+    public function AddToCart($vid, $qty, $isupdate = false)
     {
         if ($variant = Variant::get()->byID($vid)) {
             if (empty($qty) || $qty <= 0) {
                 $this->Variants()->removeByID($vid);
             } else {
+                $count = $qty;
+
+                if (!$isupdate) {
+                    if ($existing = $this->Variants()->byID($vid)) {
+                        $count += $existing->Quantity;
+                    }
+                }
+
                 $this->Variants()->add($vid, [
-                    'Quantity' => $qty,
+                    'Quantity' => $count,
                     'StoredTitle' => $variant->Title,
                     'StoredUnitWeight' => $variant->UnitWeight,
                     'StoredUnitPrice' => $variant->Price,
