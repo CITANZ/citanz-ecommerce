@@ -417,7 +417,25 @@ class Order extends DataObject
 
     public function ShippableItemCount()
     {
-        return $this->Variants()->filter(['isDigital' => false])->sum('Quantity');
+        $count = 0;
+        foreach ($this->owner->Variants() as $v) {
+            if ($v->isDigital) {
+                continue;
+            }
+            $count++;
+        }
+
+        foreach ($this->owner->Bundles() as $bundle) {
+            foreach ($bundle->Variants() as $v) {
+                if ($v->isDigital) {
+                    continue;
+                }
+
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
     public function UpdateAmountWeight()
@@ -933,6 +951,156 @@ class Order extends DataObject
         ];
     }
 
+    public function getAllVariants()
+    {
+        $variants = [];
+        foreach ($this->owner->Variants() as $v) {
+            $variants[] = $v;
+        }
+
+        foreach ($this->owner->Bundles() as $bundle) {
+            foreach ($bundle->Variants() as $v) {
+                $variants[] = $v;
+            }
+        }
+
+        return $variants;
+    }
+
+    public function getAllVariantsStacked()
+    {
+        $variants = [];
+        foreach ($this->owner->Variants() as $v) {
+            if (empty($variants[$v->ID])) {
+                $variants[$v->ID] = $v;
+            } else {
+                $variants[$v->ID]->Quantity += $v->Quantity;
+            }
+        }
+
+        foreach ($this->owner->Bundles() as $bundle) {
+            foreach ($bundle->Variants() as $v) {
+                if (empty($variants[$v->ID])) {
+                    $variants[$v->ID] = $v;
+                } else {
+                    $variants[$v->ID]->Quantity += $v->Quantity;
+                }
+            }
+        }
+
+        return $variants;
+    }
+
+    public function getDigitalVariants()
+    {
+        $variants = [];
+        foreach ($this->owner->Variants() as $v) {
+            if (!$v->isDigital) {
+                continue;
+            }
+            $variants[] = $v;
+        }
+
+        foreach ($this->owner->Bundles() as $bundle) {
+            foreach ($bundle->Variants() as $v) {
+                if (!$v->isDigital) {
+                    continue;
+                }
+
+                $variants[] = $v;
+            }
+        }
+
+        return $variants;
+    }
+
+    public function getDigitalVariantsStacked()
+    {
+        $variants = [];
+        foreach ($this->owner->Variants() as $v) {
+            if (!$v->isDigital) {
+                continue;
+            }
+
+            if (empty($variants[$v->ID])) {
+                $variants[$v->ID] = $v;
+            } else {
+                $variants[$v->ID]->Quantity += $v->Quantity;
+            }
+        }
+
+        foreach ($this->owner->Bundles() as $bundle) {
+            foreach ($bundle->Variants() as $v) {
+                if (!$v->isDigital) {
+                    continue;
+                }
+
+                if (empty($variants[$v->ID])) {
+                    $variants[$v->ID] = $v;
+                } else {
+                    $variants[$v->ID]->Quantity += $v->Quantity;
+                }
+            }
+        }
+
+        return $variants;
+    }
+
+    public function getShippableVariants()
+    {
+        $variants = [];
+        foreach ($this->owner->Variants() as $v) {
+            if ($v->isDigital) {
+                continue;
+            }
+            $variants[] = $v;
+        }
+
+        foreach ($this->owner->Bundles() as $bundle) {
+            foreach ($bundle->Variants() as $v) {
+                if ($v->isDigital) {
+                    continue;
+                }
+
+                $variants[] = $v;
+            }
+        }
+
+        return $variants;
+    }
+
+    public function getShippableVariantsStacked()
+    {
+        $variants = [];
+        foreach ($this->owner->Variants() as $v) {
+            if ($v->isDigital) {
+                continue;
+            }
+
+            if (empty($variants[$v->ID])) {
+                $variants[$v->ID] = $v;
+            } else {
+                $variants[$v->ID]->Quantity += $v->Quantity;
+            }
+        }
+
+        foreach ($this->owner->Bundles() as $bundle) {
+            foreach ($bundle->Variants() as $v) {
+                if ($v->isDigital) {
+                    continue;
+                }
+
+                if (empty($variants[$v->ID])) {
+                    $variants[$v->ID] = $v;
+                } else {
+                    $variants[$v->ID]->Quantity += $v->Quantity;
+                }
+            }
+        }
+
+        return $variants;
+    }
+
     public function getCartItemList()
     {
         if ($this->hasMethod('CustomCartItemList')) {
@@ -941,9 +1109,10 @@ class Order extends DataObject
 
         $list = '';
 
-        foreach ($this->Variants() as $v) {
+        foreach ($this->AllVariantsStacked as $vid => $variant) {
             $list .= "<li>$v->Title x $v->Quantity</li>";
         }
+
         if (!empty($list)) {
             return "<ul style='padding-left: 1.5em; margin: 0;'>$list</ul>";
         }
