@@ -189,6 +189,7 @@ class Order extends DataObject
             'StoredisExempt' => 'Boolean',
             'StoredGSTIncluded' => 'Boolean',
             'StoredNoDiscount' => 'Boolean',
+            'Delivered' => 'Boolean'
         ]
     ];
 
@@ -582,6 +583,10 @@ class Order extends DataObject
                 $this->BillingPostcode     =   $this->ShippingPostcode;
                 $this->BillingPhone        =   $this->ShippingPhone;
             }
+        } elseif ($this->Status == 'Payment Received') {
+            if ($this->isAllShipped()) {
+                $this->Status = 'Shipped';
+            }
         }
     }
 
@@ -864,12 +869,15 @@ class Order extends DataObject
         if ($cal_freight) {
             if ($freight = $this->get_freight_data()) {
                 if (is_array($freight)) {
-                    $this->ShippingCost         =   $freight['cost'];
+                    $this->ShippingCost = $freight['cost'];
+                    $this->ShippingServiceName = $freight['title'];
                 }
             } else {
-                $this->ShippingCost         =   0;
+                $this->ShippingCost = 0;
             }
         }
+
+        $this->extend('ExtraDigest', $data);
 
         $this->UpdateAmountWeight();
     }
@@ -1139,5 +1147,24 @@ class Order extends DataObject
             'Status' => $this->Status,
             'PaidAt' => $this->Paidat,
         ];
+    }
+
+    public function isAllShipped()
+    {
+        foreach ($this->owner->Variants() as $v) {
+            if (!$v->isDigital && !$v->Delivered) {
+                return false;
+            }
+        }
+
+        foreach ($this->owner->Bundles() as $bundle) {
+            foreach ($bundle->Variants() as $v) {
+                if (!$v->isDigital && !$v->Delivered) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

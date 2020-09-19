@@ -35,7 +35,8 @@ class BundleEntry extends DataObject
 
     private static $many_many_extraFields = [
         'Variants' => [
-            'Quantity' => 'Int'
+            'Quantity' => 'Int',
+            'Delivered' => 'Boolean',
         ]
     ];
 
