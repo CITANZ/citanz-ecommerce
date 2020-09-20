@@ -113,7 +113,9 @@ class Order extends DataObject
     private static $searchable_fields = [
         'MerchantReference',
         'CustomerReference',
-        'Status'
+        'ShippingFirstname',
+        'ShippingSurname',
+        'Status',
     ];
 
     /**
@@ -1166,5 +1168,15 @@ class Order extends DataObject
         }
 
         return true;
+    }
+
+    public function getShippingCustomerFullname()
+    {
+        return trim("$this->ShippingFirstname $this->ShippingSurname");
+    }
+
+    public function getBillingCustomerFullname()
+    {
+        return trim("$this->BillingFirstname $this->BillingSurname");
     }
 }

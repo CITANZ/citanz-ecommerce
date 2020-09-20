@@ -71,7 +71,9 @@ class OrderAdmin extends ModelAdmin
                 $dataColumns->setDisplayFields([
                     'CustomerReference' => 'Ref#',
                     'ItemCount' => 'Item(s)',
+                    'ShippingCustomerFullname' => 'Customer',
                     'CartItemList' => 'Details',
+                    'Comment' => 'Comment',
                     'PayableTotal' => 'Amount',
                     'Status' => 'Status',
                     'Paidat' => 'Paid at'

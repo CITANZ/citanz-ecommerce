@@ -236,9 +236,7 @@ trait CartActions
             $cart->UpdateAmountWeight();
 
             $checkout   =   [
-                'email'             =>  $cart->Email ?
-                                        $cart->Email :
-                                        (Member::currentUser() ? Member::currentUser()->Email : null),
+                'email'             =>  $cart->Email ?: (Member::currentUser() ? (strpos(Member::currentUser()->Email, '@') !== false ? Member::currentUser()->Email : null) : null),
                 'amount'            =>  (float) $cart->TotalAmount,
                 'amounts'           =>  [
                                             'discountable_taxable' => $cart->DiscountableTaxable,
