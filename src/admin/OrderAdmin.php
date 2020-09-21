@@ -10,6 +10,8 @@ use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldDataColumns;
 use SilverStripe\Forms\GridField\GridFieldExportButton;
 use SilverStripe\Forms\GridField\GridFieldPrintButton;
+use SilverStripe\Forms\GridField\GridFieldFilterHeader;
+use SilverStripe\Forms\TextField;
 
 /**
  * Description
@@ -46,7 +48,12 @@ class OrderAdmin extends ModelAdmin
         $list   =   parent::getList();
 
         if (Member::currentUser() && Member::currentUser()->isDefaultadmin()) {
-            return $list->filter(['ClassName' => Order::class]);
+            $list = $list->filter(['ClassName' => Order::class]);
+        }
+
+        if (!empty($this->getRequest()->postVar('filter')) && $this->hasMethod('FilterList')) {
+            $params = $this->getRequest()->postVar('filter');
+            return $this->FilterList($list, $params);
         }
 
         return $list->filter(['ClassName' => Order::class])->exclude(['Status' => 'Pending']);
@@ -56,12 +63,11 @@ class OrderAdmin extends ModelAdmin
     {
         $form = parent::getEditForm($id, $fields);
         if($this->modelClass == Order::class) {
-            $form
-            ->Fields()
-            ->fieldByName($this->sanitiseClassName($this->modelClass))
-            ->getConfig()
-            ->getComponentByType(GridFieldDetailForm::class)
-            ->setItemRequestClass(OrderGridFieldDetailForm_ItemRequest::class);
+            $form->Fields()
+                ->fieldByName($this->sanitiseClassName($this->modelClass))
+                ->getConfig()
+                ->getComponentByType(GridFieldDetailForm::class)
+                ->setItemRequestClass(OrderGridFieldDetailForm_ItemRequest::class);
         }
 
         if ($gridField = $form->Fields()->dataFieldByName($this->sanitiseClassName($this->modelClass))) {
@@ -83,10 +89,18 @@ class OrderAdmin extends ModelAdmin
                     'CartItemList' => 'HTMLText->RAW',
                     'Paidat' => 'Datetime->Nice'
                 ]);
+
+                if($this->modelClass == Order::class) {
+                    $filter = $config->getComponentByType(GridFieldFilterHeader::class);
+                    $context = $filter->getSearchContext($gridField);
+                    $context->getFields()->insertBefore(TextField::create(
+                        'ProductName',
+                        'Product'
+                    ), 'Status');
+                }
             }
         }
 
         return $form;
     }
-
 }

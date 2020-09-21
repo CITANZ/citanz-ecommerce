@@ -83,7 +83,8 @@ class Order extends DataObject
         'BillingPhone'              =>  'Varchar(128)',
         'Comment'                   =>  'Text',
         'TrackingNumber'            =>  'Varchar(128)',
-        'ShippingCost'              =>  'Currency'
+        'ShippingCost'              =>  'Currency',
+        'Paidat'                    =>  'Datetime',
     ];
 
     private static $indexes = [
@@ -132,7 +133,10 @@ class Order extends DataObject
      * Default sort ordering
      * @var array
      */
-    private static $default_sort = ['ID' => 'DESC'];
+    private static $default_sort = [
+        'Paidat' => 'DESC',
+        'ID' => 'DESC',
+    ];
 
     public function populateDefaults()
     {
@@ -524,6 +528,10 @@ class Order extends DataObject
             $this->Status   =   $status;
         }
 
+        if ($status == 'Free Order') {
+            $this->Paidat = time();
+        }
+
         $this->write();
 
         foreach ($this->Variants() as $item) {
@@ -589,6 +597,10 @@ class Order extends DataObject
             if ($this->isAllShipped()) {
                 $this->Status = 'Shipped';
             }
+        }
+
+        if ($payment = $this->SuccessPayment) {
+            $this->Paidat = $payment->LastEdited;
         }
     }
 
@@ -682,13 +694,13 @@ class Order extends DataObject
 
     public function is_freeshipping()
     {
-        if ($this->Variants()->count() == 0) {
-            return true;
+        $result = $this->extend('isFreeShipping');
+
+        if (!empty($result)) {
+            return $result[0];
         }
 
-        $n  =   0;
-
-        return $this->Variants()->filter(['isDigital' => true])->count() == $this->Variants()->count();
+        return empty($this->ShippableVariants);
     }
 
     public function AddToCart($vid, $qty, $isupdate = false)
@@ -1125,15 +1137,6 @@ class Order extends DataObject
 
         if (!empty($list)) {
             return "<ul style='padding-left: 1.5em; margin: 0;'>$list</ul>";
-        }
-
-        return null;
-    }
-
-    public function getPaidat()
-    {
-        if ($payment = $this->SuccessPayment) {
-            return $payment->LastEdited;
         }
 
         return null;
