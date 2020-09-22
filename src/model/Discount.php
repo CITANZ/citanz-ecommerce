@@ -77,6 +77,7 @@ class Discount extends DataObject
      */
     private static $summary_fields = [
         'Title',
+        'Type',
         'CouponCode',
         'Used'
     ];
@@ -293,7 +294,7 @@ class Discount extends DataObject
     public function validate()
     {
         $result = parent::validate();
-        if ($discount = Discount::get()->filter(['Type' => 'Item Count'])->first()) {
+        if ($this->Type == 'Item Count' && ($discount = Discount::get()->filter(['Type' => 'Item Count'])->first())) {
             if ($discount->ID != $this->ID) {
                 $result->addError("You already have one 'Item count' type of discount!");
             }
