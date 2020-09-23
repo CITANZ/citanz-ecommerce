@@ -175,8 +175,8 @@ class Order extends DataObject
      */
     private static $has_many = [
         'Bundles' => BundleEntry::class,
-        'Payments'  =>  Payment::class,
-        'Messages'  =>  OrderMessage::class
+        'Payments' => Payment::class,
+        'Messages' => OrderMessage::class
     ];
 
     private static $many_many = [
@@ -620,6 +620,7 @@ class Order extends DataObject
         $discounted_taxable = $this->Discount()->exists() ? $this->Discount()->calc_discount($dt) : 0;
 
         $gst_base = $dt - $discounted_taxable + $ndt;
+        $gst_base = $gst_base < 0 ? 0 : $gst_base;
         $gst = $gst_base * $gst_rate;
 
         return number_format($gst, 2);
@@ -628,7 +629,13 @@ class Order extends DataObject
     public function getIncludedGST()
     {
         $gst_rate = SiteConfig::current_site_config()->GSTRate;
-        $includedGST = $this->TaxIncludedTotal * $gst_rate / (1 + $gst_rate);
+        $dis_amount = 0;
+
+        if ($this->Discount()->exists()) {
+            $dis_amount = $this->Discounted;
+        }
+
+        $includedGST = ($this->TaxIncludedTotal - $dis_amount) * $gst_rate / (1 + $gst_rate);
 
         return number_format($includedGST, 2);
     }
@@ -807,7 +814,7 @@ class Order extends DataObject
         if ($this->Discount()->exists()) {
             $dt = $this->DiscountableTaxable;
             $dnt = $this->DiscountableNonTaxable;
-            $data['discount']['amount'] = $this->getDiscounted();
+            $data['discount']['amount'] = $this->Discounted;
         }
 
         $this->extend('getData', $data);
@@ -930,6 +937,7 @@ class Order extends DataObject
         $discounted             =   $this->Discount()->exists() ? $this->Discount()->calc_discount($dt + $dnt) : 0;
 
         $gst_base   =   $dt - $discounted_taxable + $ndt;
+        $gst_base   =   $gst_base < 0 ? 0 : $gst_base;
         $gst        =   $gst_base * $gst_rate;
 
         return $this->TotalAmount - $discounted + $gst + $shipping;
