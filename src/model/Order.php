@@ -271,7 +271,7 @@ class Order extends DataObject
     protected function prep_pdf()
     {
         $siteconfig =   SiteConfig::current_site_config();
-        $payment    =   $this->getSuccessPayment();
+        $payment    =   $this->SuccessPayment;
 
         $invoice = new InvoicePrinter();
         if ($siteconfig->StoreLogo()->exists()) {
@@ -279,10 +279,10 @@ class Order extends DataObject
         }
 
         $invoice->setColor("#000000");      // pdf color scheme
-        $invoice->setType("Sale Invoice");    // Invoice Type
+        $invoice->setType($payment ? "Receipt" : "Invoice");    // Invoice Type
         $invoice->setReference($this->CustomerReference);   // Reference
-        $invoice->setDate(date('d/m/Y',time()));   //Billing Date
-        $invoice->setTime(date('h:i:s A',time()));   //Billing Time
+        $invoice->setDate(date('d/m/Y', time()));   //Billing Date
+        $invoice->setTime(date('h:i:s A', time()));   //Billing Time
 
         $billing_from   =   [];
         if (!empty($siteconfig->TradingName)) {
@@ -306,9 +306,12 @@ class Order extends DataObject
         }
 
         $billing_to         =   [];
-        $billing_to[]       =   trim((
-            !empty($this->BillingFirstname) ?
-            $this->BillingFirstname : '') . ' ' . (!empty($this->BillingSurname) ? $this->BillingSurname : ''));
+        $billing_to[]       =   trim($this->BillingFirstname . ' ' . $this->BillingSurname);
+        $billing_to[]       =   'Email: ' . $this->Email;
+
+        if (!empty($this->BillingPhone)) {
+            $billing_to[]   =   'Phone: ' . $this->BillingPhone;
+        }
 
         if (!empty($this->BillingOrganisation)) {
             $billing_to[]   =   $this->BillingOrganisation;
@@ -331,10 +334,8 @@ class Order extends DataObject
         }
 
         if (!empty($this->BillingCountry)) {
-            $billing_to[]   =   $this->BillingCountry . (!empty($this->BillingPostcode) ? (', ' . $this->BillingPostcode) : '');
+            $billing_to[]   =   eCommerce::translate_country($this->owner->BillingCountry) . (!empty($this->BillingPostcode) ? (', ' . $this->BillingPostcode) : '');
         }
-
-        $billing_to[]   =   $this->Email . (!empty($this->BillingPhone) ? (', ' . $this->BillingPhone) : '');
 
         $size           =   count($billing_from) > count($billing_to) ? count($billing_from) : count($billing_to);
 
@@ -368,11 +369,11 @@ class Order extends DataObject
         return  $invoice->render($siteconfig->TradingName . ' Invoice #' . $this->ID . '.pdf', 'D');
     }
 
-    public function send_invoice()
+    public function send_invoice($skip_admin = false)
     {
         $siteconfig =   SiteConfig::current_site_config();
         $invoice    =   $this->prep_pdf();
-        $str        =   $invoice->render($siteconfig->TradingName . ' Invoice #' . $this->ID . '.pdf','S');
+        $str        =   $invoice->render($siteconfig->TradingName . ' Reference - ' . $this->CustomerReference . '.pdf','S');
         $from       =   Config::inst()->get(Email::class, 'noreply_email');
         $to         =   $this->Email;
 
@@ -393,7 +394,7 @@ class Order extends DataObject
         $admin_sent_flag    =   ['sent' => false];
         $to_admin           =   !empty($siteconfig->OrderEmail) ? explode(',', $siteconfig->OrderEmail) : $siteconfig->ContactEmail;
 
-        if (!empty($to_admin)) {
+        if (!empty($to_admin) && !$skip_admin) {
             $this->extend('SendAdminEmail', $from, $to_admin, $str, $admin_sent_flag);
             if (!$admin_sent_flag['sent']) {
                 $admin_email    =   Email::create($from, $to_admin, $siteconfig->TradingName . ': New order received (#' . $this->ID . ')');

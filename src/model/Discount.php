@@ -264,7 +264,7 @@ class Discount extends DataObject
 
     public function getDescription()
     {
-        return $this->DiscountBy == 'ByPercentage' ? (((float) $this->DiscountRate) . '% off') : ('-$' . $this->DiscountRate);
+        return $this->DiscountBy == 'ByPercentage' ? (((float) $this->DiscountRate) . '% off') : ('-$' . number_format($this->DiscountRate, 2));
     }
 
     public function isValid()

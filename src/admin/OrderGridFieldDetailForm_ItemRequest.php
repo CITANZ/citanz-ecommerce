@@ -84,7 +84,7 @@ class OrderGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_ItemReque
         $form->sessionMessage($msg, 'good', ValidationResult::CAST_HTML);
 
         if ($this->gridField->getList()->byId($this->record->ID)) {
-            $this->record->send_invoice();
+            $this->record->send_invoice(true);
             return $this->edit(Controller::curr()->getRequest());
         }
 
