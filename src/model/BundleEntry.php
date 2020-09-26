@@ -67,6 +67,14 @@ class BundleEntry extends DataObject
         ];
     }
 
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        if ($this->Bundle()->exists()) {
+            $this->Tilte = $this->Bundle()->Title;
+        }
+    }
+
     public function onBeforeDelete()
     {
         parent::onBeforeDelete();

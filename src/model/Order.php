@@ -18,7 +18,7 @@ use Cita\eCommerce\API\Poli;
 use Cita\eCommerce\API\Paystation;
 use Cita\eCommerce\Model\Freight;
 use SilverStripe\Control\Cookie;
-use Konekt\PdfInvoice\InvoicePrinter;
+use Leochenftw\PdfInvoice\InvoicePrinter;
 use SilverStripe\Control\Email\Email;
 use SilverStripe\Control\Director;
 use Leochenftw\Grid;
@@ -280,7 +280,7 @@ class Order extends DataObject
 
         $invoice->setColor("#000000");      // pdf color scheme
         $invoice->setType("Sale Invoice");    // Invoice Type
-        $invoice->setReference("Invoice#" . $this->ID);   // Reference
+        $invoice->setReference($this->CustomerReference);   // Reference
         $invoice->setDate(date('d/m/Y',time()));   //Billing Date
         $invoice->setTime(date('h:i:s A',time()));   //Billing Time
 
@@ -1129,6 +1129,15 @@ class Order extends DataObject
         }
 
         return $variants;
+    }
+
+    public function getDirectCartItemList()
+    {
+        if ($this->hasMethod('CustomDirectCartItemList')) {
+            return $this->CustomDirectCartItemList();
+        }
+
+        return null;
     }
 
     public function getCartItemList()

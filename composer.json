@@ -17,7 +17,7 @@
         "silvershop/silverstripe-hasonefield": "^3.0.1",
         "unclecheese/display-logic": "^2.0",
         "silverstripe/framework": "^4.0",
-        "konekt/pdf-invoice": "^1.5",
+        "leochenftw/tailored-pdf-invoice": "^1.6",
         "dynamic/silverstripe-country-dropdown-field": "^1.2",
         "colymba/gridfield-bulk-editing-tools": "^3.0",
         "leochenftw/ss-arsenal": "dev-master",

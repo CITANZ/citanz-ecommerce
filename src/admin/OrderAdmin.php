@@ -56,7 +56,7 @@ class OrderAdmin extends ModelAdmin
             return $this->FilterList($list, $params);
         }
 
-        return $list->filter(['ClassName' => Order::class])->exclude(['Status' => 'Pending']);
+        return $list->filter(['ClassName' => Order::class]);//->exclude(['Status' => 'Pending']);
     }
 
     public function getEditForm($id = null, $fields = null)

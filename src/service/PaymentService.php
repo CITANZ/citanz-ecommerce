@@ -33,7 +33,25 @@ class PaymentService
                 ]);
             } elseif ($gateway == 'Stripe') {
                 $config = array_merge($config, [
-                    'token' => $stripe_token
+                    'token' => $stripe_token,
+                    'receipt_email' => $order->Email,
+                    'shipping' => [
+                        'address' => [
+                            'line1' => $order->ShippingAddress,
+                            'line2' => $order->ShippingSuburb,
+                            'city' => $order->ShippingTown,
+                            'state' => $order->ShippingRegion,
+                            'country' => $order->ShippingCountry,
+                            'postal_code' => $order->ShippingPostcode,
+                        ],
+                        'name' => trim($order->ShippingFirstname . ' ' . $order->ShippingSurname)
+                    ],
+                    'description' => $order->DirectCartItemList,
+                    'metadata' => [
+                        'Order ID' => $order->ID,
+                        'Reference' => $order->CustomerReference,
+                        'Customer' => trim($order->BillingFirstname . ' ' . $order->BillingSurname)
+                    ],
                 ]);
             }
 
