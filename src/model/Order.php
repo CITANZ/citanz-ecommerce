@@ -35,6 +35,9 @@ use Leochenftw\Debugger;
  */
 class Order extends DataObject
 {
+    private static $dependencies = [
+        'Logger' => '%$' . LoggerInterface::class,
+    ];
     /**
      * Defines the database table name
      * @var string
@@ -334,7 +337,7 @@ class Order extends DataObject
         }
 
         if (!empty($this->BillingCountry)) {
-            $billing_to[]   =   eCommerce::translate_country($this->owner->BillingCountry) . (!empty($this->BillingPostcode) ? (', ' . $this->BillingPostcode) : '');
+            $billing_to[]   =   eCommerce::translate_country($this->BillingCountry) . (!empty($this->BillingPostcode) ? (', ' . $this->BillingPostcode) : '');
         }
 
         $size           =   count($billing_from) > count($billing_to) ? count($billing_from) : count($billing_to);
@@ -426,14 +429,14 @@ class Order extends DataObject
     public function ShippableItemCount()
     {
         $count = 0;
-        foreach ($this->owner->Variants() as $v) {
+        foreach ($this->Variants() as $v) {
             if ($v->isDigital) {
                 continue;
             }
             $count++;
         }
 
-        foreach ($this->owner->Bundles() as $bundle) {
+        foreach ($this->Bundles() as $bundle) {
             foreach ($bundle->Variants() as $v) {
                 if ($v->isDigital) {
                     continue;
@@ -547,7 +550,7 @@ class Order extends DataObject
             ]);
         }
 
-        if ($this->Status == 'Payment Received') {
+        if ($this->Status == 'Payment Received' || $this->Status == 'Shipped' || $this->Status == 'Free Order' || $this->Status == 'Completed') {
             if ($this->Discount()->exists()) {
                 $discount = $this->Discount();
 
@@ -985,11 +988,11 @@ class Order extends DataObject
     public function getAllVariants()
     {
         $variants = [];
-        foreach ($this->owner->Variants() as $v) {
+        foreach ($this->Variants() as $v) {
             $variants[] = $v;
         }
 
-        foreach ($this->owner->Bundles() as $bundle) {
+        foreach ($this->Bundles() as $bundle) {
             foreach ($bundle->Variants() as $v) {
                 $variants[] = $v;
             }
@@ -1001,7 +1004,7 @@ class Order extends DataObject
     public function getAllVariantsStacked()
     {
         $variants = [];
-        foreach ($this->owner->Variants() as $v) {
+        foreach ($this->Variants() as $v) {
             if (empty($variants[$v->ID])) {
                 $variants[$v->ID] = $v;
             } else {
@@ -1009,7 +1012,7 @@ class Order extends DataObject
             }
         }
 
-        foreach ($this->owner->Bundles() as $bundle) {
+        foreach ($this->Bundles() as $bundle) {
             foreach ($bundle->Variants() as $v) {
                 if (empty($variants[$v->ID])) {
                     $variants[$v->ID] = $v;
@@ -1025,20 +1028,24 @@ class Order extends DataObject
     public function getDigitalVariants()
     {
         $variants = [];
-        foreach ($this->owner->Variants() as $v) {
-            if (!$v->isDigital) {
-                continue;
-            }
-            $variants[] = $v;
-        }
+        $this->extend('UpdateDigitalVariants', $variants);
 
-        foreach ($this->owner->Bundles() as $bundle) {
-            foreach ($bundle->Variants() as $v) {
+        if (empty($variants)) {
+            foreach ($this->Variants() as $v) {
                 if (!$v->isDigital) {
                     continue;
                 }
-
                 $variants[] = $v;
+            }
+
+            foreach ($this->Bundles() as $bundle) {
+                foreach ($bundle->Variants() as $v) {
+                    if (!$v->isDigital) {
+                        continue;
+                    }
+
+                    $variants[] = $v;
+                }
             }
         }
 
@@ -1048,20 +1055,10 @@ class Order extends DataObject
     public function getDigitalVariantsStacked()
     {
         $variants = [];
-        foreach ($this->owner->Variants() as $v) {
-            if (!$v->isDigital) {
-                continue;
-            }
+        $this->extend('UpdateDigitalVariantsStacked', $variants);
 
-            if (empty($variants[$v->ID])) {
-                $variants[$v->ID] = $v;
-            } else {
-                $variants[$v->ID]->Quantity += $v->Quantity;
-            }
-        }
-
-        foreach ($this->owner->Bundles() as $bundle) {
-            foreach ($bundle->Variants() as $v) {
+        if (empty($variants)) {
+            foreach ($this->Variants() as $v) {
                 if (!$v->isDigital) {
                     continue;
                 }
@@ -1072,6 +1069,20 @@ class Order extends DataObject
                     $variants[$v->ID]->Quantity += $v->Quantity;
                 }
             }
+
+            foreach ($this->Bundles() as $bundle) {
+                foreach ($bundle->Variants() as $v) {
+                    if (!$v->isDigital) {
+                        continue;
+                    }
+
+                    if (empty($variants[$v->ID])) {
+                        $variants[$v->ID] = $v;
+                    } else {
+                        $variants[$v->ID]->Quantity += $v->Quantity;
+                    }
+                }
+            }
         }
 
         return $variants;
@@ -1080,14 +1091,14 @@ class Order extends DataObject
     public function getShippableVariants()
     {
         $variants = [];
-        foreach ($this->owner->Variants() as $v) {
+        foreach ($this->Variants() as $v) {
             if ($v->isDigital) {
                 continue;
             }
             $variants[] = $v;
         }
 
-        foreach ($this->owner->Bundles() as $bundle) {
+        foreach ($this->Bundles() as $bundle) {
             foreach ($bundle->Variants() as $v) {
                 if ($v->isDigital) {
                     continue;
@@ -1103,7 +1114,7 @@ class Order extends DataObject
     public function getShippableVariantsStacked()
     {
         $variants = [];
-        foreach ($this->owner->Variants() as $v) {
+        foreach ($this->Variants() as $v) {
             if ($v->isDigital) {
                 continue;
             }
@@ -1115,7 +1126,7 @@ class Order extends DataObject
             }
         }
 
-        foreach ($this->owner->Bundles() as $bundle) {
+        foreach ($this->Bundles() as $bundle) {
             foreach ($bundle->Variants() as $v) {
                 if ($v->isDigital) {
                     continue;
@@ -1174,13 +1185,13 @@ class Order extends DataObject
 
     public function isAllShipped()
     {
-        foreach ($this->owner->Variants() as $v) {
+        foreach ($this->Variants() as $v) {
             if (!$v->isDigital && !$v->Delivered) {
                 return false;
             }
         }
 
-        foreach ($this->owner->Bundles() as $bundle) {
+        foreach ($this->Bundles() as $bundle) {
             foreach ($bundle->Variants() as $v) {
                 if (!$v->isDigital && !$v->Delivered) {
                     return false;
