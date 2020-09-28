@@ -1,6 +1,7 @@
 <?php
 
 namespace Cita\eCommerce\Model;
+use SilverStripe\Control\Controller;
 use SilverStripe\Dev\Debug;
 use SilverStripe\View\Requirements;
 use SilverStripe\Forms\HeaderField;
@@ -392,8 +393,13 @@ class Discount extends DataObject
         }
 
         foreach ($order->Variants() as $item) {
+
+            if ($item->NoDiscount) {
+                continue;
+            }
+
             if (in_array($item->ID, $eligible_variants)) {
-                $amount = $item->Quantity * $item->UnitPrice;
+                $amount = $item->Quantity * $item->Price;
                 if ($this->owner->DiscountBy == 'ByPercentage') {
                     $amount = $amount * $this->owner->DiscountRate * 0.01;
                 } else {
@@ -405,6 +411,10 @@ class Discount extends DataObject
                     ['DiscountedAmount' => number_format($amount, 2)]
                 );
             }
+        }
+
+        if (empty($list['discounted_items'])) {
+            return Controller::curr()->httpError(402, 'No eligible items found in your cart!');
         }
 
         return $list;
