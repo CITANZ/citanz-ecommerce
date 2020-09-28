@@ -296,7 +296,7 @@ trait CartActions
             $discount_result = $cart->Discount()->calc_discount($cart->DiscountableTaxable + $cart->DiscountableNonTaxable, $cart);
 
             if (is_array($discount_result)) {
-                return array_merge($cart->Discount()->Data, $discount_data);
+                return array_merge($cart->Discount()->Data, $discount_result);
             }
 
             return $cart->Discount()->Data;
