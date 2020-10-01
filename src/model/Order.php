@@ -353,6 +353,8 @@ class Order extends DataObject
 
         if ($payment) {
             $invoice->addBadge("Payment Received");
+        } elseif ($this->Status == 'Free Order') {
+            $invoice->addBadge("Free Order");
         } else {
             $invoice->addBadge("Payment Outstanding");
             $invoice->addTitle("Cheque payment");
