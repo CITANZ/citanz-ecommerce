@@ -54,7 +54,7 @@ class BundleEntry extends DataObject
             'price' => $this->Price,
             'pagelink' => $this->Bundle()->Link(),
             'price_label' => '$' . number_format($this->Price, 2),
-            'image' => null,
+            'image' => $this->Bundle()->Image()->getData('ScaleHeight', 100),
             'quantity' => 1, // maybe should allow stack
             'variants' => array_map(function($v) {
                 return array_merge(

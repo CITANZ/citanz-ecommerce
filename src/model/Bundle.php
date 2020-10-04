@@ -2,6 +2,8 @@
 
 namespace Cita\eCommerce\Model;
 use SilverStripe\Forms\CheckboxField;
+use SilverStripe\Assets\Image;
+use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Dev\Debug;
 use Page;
 use SilverStripe\Forms\CurrencyField;
@@ -36,6 +38,21 @@ class Bundle extends Page
     private static $db = [
         'SKU' => 'Varchar(64)',
         'BundledPrice' => 'Currency'
+    ];
+
+    /**
+     * Has_one relationship
+     * @var array
+     */
+    private static $has_one = [
+        'Image' =>  Image::class
+    ];
+/**
+     * Relationship version ownership
+     * @var array
+     */
+    private static $owns = [
+        'Image'
     ];
 
     /**
@@ -79,12 +96,18 @@ class Bundle extends Page
     {
         $fields = parent::getCMSFields();
 
-        $fields->addFieldToTab(
+        $fields->addFieldsToTab(
             'Root.Main',
-            CurrencyField::create(
-                'BundledPrice',
-                'Bundled Price'
-            ),
+            [
+                CurrencyField::create(
+                    'BundledPrice',
+                    'Bundled Price'
+                ),
+                UploadField::create(
+                    'Image',
+                    'Image'
+                ),
+            ],
             'Content'
         );
 
@@ -266,7 +289,7 @@ class Bundle extends Page
             'price' => $this->BundledPrice,
             'stock' => "Infinite",
             'price_label' => '$' . number_format($this->BundledPrice, 2),
-            'image' => null,
+            'image' => $this->Image()->Data,
             'link' => $this->Link(),
             'title' => $this->Title,
             'variants' => $variants
