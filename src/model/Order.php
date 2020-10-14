@@ -27,6 +27,8 @@ use SilverStripe\Omnipay\Model\Payment;
 use Cita\eCommerce\Model\Bundle;
 use Leochenftw\Debugger;
 use Psr\Log\LoggerInterface;
+use SilverStripe\Forms\LiteralField;
+use SilverStripe\View\ViewableData;
 
 /**
  * Description
@@ -211,7 +213,6 @@ class Order extends DataObject
 
         return null;
     }
-
     /**
      * CMS Fields
      * @return FieldList
@@ -220,54 +221,63 @@ class Order extends DataObject
     {
         $fields =   parent::getCMSFields();
 
-        $fields->addFieldsToTab(
-            'Root.Shipping',
-            [
-                TextField::create('ShippingFirstname', 'First Name'),
-                TextField::create('ShippingSurname', 'Surname'),
-                TextField::create('ShippingOrganisation', 'Organisation'),
-                TextField::create('ShippingApartment', 'Apartment'),
-                TextareaField::create('ShippingAddress', 'Address'),
-                TextField::create('ShippingSuburb', 'Suburb'),
-                TextField::create('ShippingTown', 'Town'),
-                TextField::create('ShippingRegion', 'Region'),
-                CountryDropdownField::create('ShippingCountry', 'Country')->setEmptyString('- select one -'),
-                TextField::create('ShippingPostcode', 'Postcode'),
-                TextField::create('ShippingPhone', 'Phone'),
-            ]
+        $fields->removeByName([
+            'ShippingServiceName',
+            'MerchantReference',
+            'CustomerReference',
+            'AnonymousCustomer',
+            'TotalAmount',
+            'DiscountableTaxable',
+            'DiscountableNonTaxable',
+            'NonDiscountableTaxable',
+            'NonDiscountableNonTaxable',
+            'TaxIncludedTotal',
+            'TotalWeight',
+            'PayableTotal',
+            'Email',
+            'SameBilling',
+            'TrackingNumber',
+            'ShippingCost',
+            'Paidat',
+            'ShippingFirstname',
+            'ShippingSurname',
+            'ShippingOrganisation',
+            'ShippingApartment',
+            'ShippingSuburb',
+            'ShippingTown',
+            'ShippingRegion',
+            'ShippingCountry',
+            'ShippingPostcode',
+            'ShippingPhone',
+            'BillingFirstname',
+            'BillingSurname',
+            'BillingOrganisation',
+            'BillingApartment',
+            'BillingSuburb',
+            'BillingTown',
+            'BillingRegion',
+            'BillingCountry',
+            'BillingPostcode',
+            'Status',
+            'ShippingAddress',
+            'BillingAddress',
+            'BillingPhone',
+            'Comment',
+            'DiscountID',
+            'CustomerID',
+            'FreightID',
+            'Bundles',
+            'Variants',
+            'Messages',
+        ]);
+
+        $fields->addFieldToTab(
+            'Root.Main',
+            LiteralField::create('OrderVue', ViewableData::create()->customise([
+                'RawData' => json_encode($this->VueUIData),
+            ])->renderWith("Form\\Field\\OrderVue")),
+            'ShippingServiceName'
         );
-
-        $fields->addFieldsToTab(
-            'Root.Billing',
-            [
-                TextField::create('BillingFirstname', 'First Name'),
-                TextField::create('BillingSurname', 'Surname'),
-                TextField::create('BillingOrganisation', 'Organisation'),
-                TextField::create('BillingApartment', 'Apartment'),
-                TextareaField::create('BillingAddress', 'Address'),
-                TextField::create('BillingSuburb', 'Suburb'),
-                TextField::create('BillingTown', 'Town'),
-                TextField::create('BillingRegion', 'Region'),
-                CountryDropdownField::create('BillingCountry', 'Country')->setEmptyString('- select one -'),
-                TextField::create('BillingPostcode', 'Postcode'),
-                TextField::create('BillingPhone', 'Phone'),
-            ]
-        );
-
-        $fields->addFieldsToTab(
-            'Root.Freight & Tracking',
-            [
-                $fields->fieldByName('Root.Main.FreightID')->setTitle('Freight Provider'),
-                $tracking_field =   TextField::create('TrackingNumber', 'Tracking Number')
-            ]
-        );
-
-        if (empty($this->TrackingNumber) || empty($this->FreightID)) {
-            $tracking_field->setDescription('To send tracking number to the customer, please choose a freight provide, fill the tracking number, and then Apply Changes. <br />You will see the button after page refresh');
-        }
-
-        $frozen =   $fields->fieldByName('Root.Main.Status')->performReadonlyTransformation();
-        $fields->replaceField('Status', $frozen);
 
         return $fields;
     }
@@ -1213,5 +1223,19 @@ class Order extends DataObject
     public function getBillingCustomerFullname()
     {
         return trim("$this->BillingFirstname $this->BillingSurname");
+    }
+
+    public function getVueUIData()
+    {
+        return [
+            'title' => "Order#$this->ID",
+            'status' => $this->Status,
+            'payment' => $this->Payments()->first() ? $this->Payments()->first()->Data : null,
+            'cart' => $this->Data,
+            'shipping' => $this->ShippingData,
+            'billing' => $this->BillingData,
+            'email' => $this->Email,
+            'freight' => $this->Freight()->exists() ? array_merge($this->Freight()->Data, ['price' => $this->ShippingCost]) : null,
+        ];
     }
 }

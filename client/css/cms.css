@@ -33,3 +33,62 @@
     padding: 0;
     margin-top: 1rem;
 }
+
+#cita-ecom-order h1,
+#cita-ecom-order h2,
+#cita-ecom-order h3,
+#cita-ecom-order h4,
+#cita-ecom-order h5,
+#cita-ecom-order h6 {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+#cita-ecom-order h2,
+#cita-ecom-order h3,
+#cita-ecom-order h4,
+#cita-ecom-order h5,
+#cita-ecom-order h6 {
+    margin-bottom: 0.5rem;
+}
+
+#cita-ecom-order h1 {
+    display: flex;
+    align-items: center;
+}
+
+#cita-ecom-order h1 span {
+    margin-right: 1rem;
+}
+
+#cita-ecom-order p:last-child {
+    margin-bottom: 0;
+}
+
+#cita-ecom-order .address-detail p {
+    margin-bottom: 0.5rem;
+}
+
+#cita-ecom-order ul {
+    padding-left: 1.25em;
+}
+
+#cita-ecom-order ul:last-child {
+    margin-bottom: 0;
+}
+
+#cita-ecom-order tfoot td {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+#cita-ecom-order tfoot tr:first-child td {
+    padding-top: 0.5rem;
+}
+
+
+#cita-ecom-order .aside-inner {
+    background-color: #e7e7e7;
+    border-radius: 8px;
+    padding: 1rem;
+}

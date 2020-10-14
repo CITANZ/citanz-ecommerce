@@ -10,8 +10,28 @@ axios.defaults.headers.common = {
         {
             onmatch: initDiscountInferface
         });
+
+        $('#cita-ecom-order-holder').entwine(
+        {
+            onmatch: initOrderInferface
+        });
     });
 }(jQuery));
+
+
+
+function initOrderInferface() {
+    const app = new Vue({
+        el: '#cita-ecom-order',
+        data: {
+            order_data: null
+        },
+        mounted() {
+            this.order_data = JSON.parse(this.$refs.order_data.value)
+            console.log(this.order_data);
+        }
+    });
+}
 
 function initDiscountInferface () {
 
@@ -147,3 +167,86 @@ function initDiscountInferface () {
         }
     })
 }
+
+Date.prototype.nzst = function(include_time, include_second) {
+    var d = this.getDate().DoubleDigit() + '/' + (this.getMonth() + 1).DoubleDigit() + '/' + this.getFullYear(),
+        t = '',
+        ampm = this.getHours() >= 12 ? 'pm' : 'am',
+        hours = this.getHours() % 12;
+
+    hours = hours ? hours : 12;
+    t = ' - ' + hours + '.' + this.getMinutes().DoubleDigit();
+
+    if (include_second) {
+        t += '.' + this.getSeconds().DoubleDigit();
+    }
+
+    t += ampm;
+
+    return d + (include_time ? t : '');
+};
+
+String.prototype.nzst = function(include_time, include_second) {
+    let d = new Date(this);
+
+    return d.nzst(include_time, include_second);
+};
+
+String.prototype.DoubleDigit = function() {
+    return this.padStart(2, '0');
+};
+
+Number.prototype.DoubleDigit = function() {
+    return this.toString().padStart(2, '0')
+};
+
+
+String.prototype.toFloat = function toFloat() {
+    var n = this.trim();
+    n = n.replace(/\$/gi, '').replace(/,/gi, '');
+    if (n.length === 0) {
+        return 0;
+    }
+    return isNaN(parseFloat(n)) ? 0 : parseFloat(n);
+};
+
+Number.prototype.toFloat = function toFloat() {
+    return this.valueOf();
+};
+
+String.prototype.kmark = function() {
+    if (this.length === 0) {
+        return this;
+    }
+    var x = this.split('.'),
+        x1 = x[0],
+        x2 = x.length > 1 ? '.' + x[1] : '',
+        rgx = /(\d+)(\d{3})/;
+    while (rgx.test(x1)) {
+        x1 = x1.replace(rgx, '$1' + ',' + '$2');
+    }
+    return x1 + x2;
+};
+
+Number.prototype.kmark = function() {
+    var s = this.toString();
+    return s.kmark();
+};
+
+String.prototype.toDollar = function toDollar(digits) {
+    var n           =   this.toFloat(),
+        is_minus    =   n < 0;
+    n   =   Math.round(n * 100) / 100;
+    n   =   Math.abs(n);
+    digits = (digits === null || digits === undefined) ? 2 : digits;
+    return (is_minus ? '-$' : '$') + n.toFixed(digits).kmark();
+};
+
+Number.prototype.toDollar = function toDollar(digits) {
+    var n           =   this,
+        is_minus    =   n < 0;
+    n   =   Math.round(n * 100) / 100;
+    n   =   Math.abs(n);
+    digits = (digits === null || digits === undefined) ? 2 : digits;
+    return (is_minus ? '-$' : '$') + n.toFixed(digits).kmark();
+};

@@ -75,6 +75,7 @@ class OrderAdmin extends ModelAdmin
                 $config = $gridField->getConfig();
                 $dataColumns = $config->getComponentByType(GridFieldDataColumns::class);
                 $dataColumns->setDisplayFields([
+                    'ID' => 'Order#',
                     'CustomerReference' => 'Ref#',
                     'ItemCount' => 'Item(s)',
                     'ShippingCustomerFullname' => 'Customer',
