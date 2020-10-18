@@ -60,7 +60,8 @@ class BundleEntry extends DataObject
                 return array_merge(
                     $v->Data,
                     [
-                        'count' => $v->Quantity
+                        'count' => $v->Quantity,
+                        'delivered' => $v->Delivered,
                     ]
                 );
             }, $this->Variants()->toArray())

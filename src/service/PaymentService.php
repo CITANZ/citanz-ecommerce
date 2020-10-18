@@ -69,4 +69,16 @@ class PaymentService
 
         throw new \Exception("Please define '$gateway' in your .env file");
     }
+
+    public static function refund($gateway, &$payment)
+    {
+        if ($config = Environment::getEnv($gateway)) {
+            $config = (array) json_decode($config);
+            $service = ServiceFactory::create()->getService($payment, ServiceFactory::INTENT_REFUND);
+
+            return $service->initiate($config);
+        }
+
+        return null;
+    }
 }

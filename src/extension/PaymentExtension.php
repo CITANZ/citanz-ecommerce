@@ -24,6 +24,7 @@ class PaymentExtension extends DataExtension
             'status'            =>  $this->owner->TranslatedStatus,
             'amount'            =>  $this->owner->Amount,
             'payment_method'    =>  $this->owner->GatewayTitle,
+            'last_message'      =>  $this->owner->Messages()->sort('Created DESC')->first() ? $this->owner->Messages()->sort('Created DESC')->first()->Message : null,
             // 'account_no'        =>  $this->PayerAccountNumber,
             // 'bank_name'         =>  $this->PayerBankName,
             // 'sort_code'         =>  $this->PayerAccountSortCode,
@@ -37,11 +38,27 @@ class PaymentExtension extends DataExtension
 
     public function getTranslatedStatus()
     {
+        /*
+        'Created'
+        'PendingAuthorization'
+        'Authorized'
+        'PendingCreateCard'
+        'CardCreated'
+        'PendingPurchase'
+        'PendingCapture'
+        'Captured'
+        'PendingRefund'
+        'Refunded'
+        'PendingVoid'
+        'Void'
+        */
         $status = $this->owner->PaymentStatus;
         if ($status == 'Captured') {
             return 'Successful';
         } elseif ($status == 'Void') {
             return 'Cancelled';
+        } elseif ($status == 'Created') {
+            return 'Failed';
         }
 
         return $status;

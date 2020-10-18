@@ -201,7 +201,6 @@ class Order extends DataObject
             'StoredisExempt' => 'Boolean',
             'StoredGSTIncluded' => 'Boolean',
             'StoredNoDiscount' => 'Boolean',
-            'Delivered' => 'Boolean'
         ]
     ];
 
@@ -683,6 +682,10 @@ class Order extends DataObject
 
     public function refund()
     {
+        if ($this->hasMethod('doRefund')) {
+            return $this->doRefund();
+        }
+
         if ($this->Status == 'Payment Received' ||
             $this->Status == 'Shipped' ||
             $this->Status == 'Completed'
@@ -690,8 +693,6 @@ class Order extends DataObject
             $this->Status  =   'Refunded';
             $this->write();
         }
-
-        $this->extend('doRefund');
     }
 
     public function cheque_cleared()
@@ -847,7 +848,8 @@ class Order extends DataObject
             $list[] = array_merge(
                 $item->Data,
                 [
-                    'quantity' => $item->Quantity
+                    'quantity' => $item->Quantity,
+                    'delivered' => $item->Delivered,
                 ]
             );
         }
@@ -1229,7 +1231,7 @@ class Order extends DataObject
     {
         return [
             'title' => "Order#$this->ID",
-            'status' => $this->Status,
+            'status' => $this->Status == 'Free Order' ? 'Payment Received' : $this->Status,
             'payment' => $this->Payments()->first() ? $this->Payments()->first()->Data : null,
             'cart' => $this->Data,
             'shipping' => $this->ShippingData,

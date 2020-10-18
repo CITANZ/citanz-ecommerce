@@ -24,15 +24,6 @@ trait CartActions
     {
         $cart   =   eCommerce::get_cart();
 
-        // if (!$cart->Variants()->exists()) {
-        //     $list = [1157,66,2,15,279,981,988];
-        //     foreach ($list as $item) {
-        //         $variant = Variant::get()->byID($item);
-        //         Debug::dump($variant->Book()->BookCategories()->column('Title'));
-        //         $cart->AddToCart($item, 1);
-        //     }
-        // }
-
         if ($this->request->getVar('mini')) {
             if (!$cart) return $cart;
             return $cart->getData();
@@ -219,7 +210,7 @@ trait CartActions
         $data['title']      =   $this->Title;
         $data['catalog']    =   eCommerce::get_catalog_url();
         $data['status']     =   $cart->Status;
-        $data['payment']    =   $cart->Payments()->first() ? $cart->Payments()->first()->getData() : null;
+        $data['payment']    =   $cart->Payments()->first() ? $cart->Payments()->first()->Data : null;
         $data['cart']       =   $cart->getData();
         $data['shipping']   =   $cart->getShippingData();
         $data['billing']    =   $cart->getBillingData();
