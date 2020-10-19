@@ -91,6 +91,7 @@ class Order extends DataObject
         'TrackingNumber'            =>  'Varchar(128)',
         'ShippingCost'              =>  'Currency',
         'Paidat'                    =>  'Datetime',
+        'StoredDetails'             =>  'Text'
     ];
 
     private static $indexes = [
@@ -221,6 +222,7 @@ class Order extends DataObject
         $fields =   parent::getCMSFields();
 
         $fields->removeByName([
+            'StoredDetails',
             'ShippingServiceName',
             'MerchantReference',
             'CustomerReference',
