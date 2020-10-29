@@ -145,7 +145,13 @@ trait CartActions
         if ($code = $this->request->postVar('coupon')) {
             if ($coupon = Discount::check_valid($code)) {
                 $order = eCommerce::get_cart();
-                return array_merge($coupon->Data, $coupon->calc_discount(0, $order));
+                $result = $coupon->calc_discount(0, $order);
+
+                if (is_array($result)) {
+                    return array_merge($coupon->Data, $coupon->calc_discount(0, $order));
+                }
+
+                return $coupon->Data;
             }
         }
 
