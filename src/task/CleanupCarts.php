@@ -2,8 +2,8 @@
 
 namespace Cita\eCommerce\Task;
 use SilverStripe\Dev\BuildTask;
-use Cita\eCommerce\eCommerce\Model\Customer;
-use Cita\eCommerce\eCommerce\Model\Order;
+use Cita\eCommerce\Model\Customer;
+use Cita\eCommerce\Model\Order;
 /**
  * Description
  *
