@@ -132,3 +132,6 @@ SilverStripe\Admin\LeftAndMain:
     - https://cdn.jsdelivr.net/npm/vue/dist/vue.js
     - https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js
     - resources/vendor/cita/ecommerce/client/js/vue.js
+
+Cita\eCommerce\Admin\OrderAdmin:
+  hide_pending: true

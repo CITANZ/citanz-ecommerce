@@ -21,6 +21,7 @@ use SilverStripe\Forms\TextField;
  */
 class OrderAdmin extends ModelAdmin
 {
+    private static $hide_pending = true;
     /**
      * Managed data objects for CMS
      * @var array
@@ -56,7 +57,11 @@ class OrderAdmin extends ModelAdmin
             return $this->FilterList($list, $params);
         }
 
-        return $list->filter(['ClassName' => Order::class]);//->exclude(['Status' => 'Pending']);
+        if ($this->config()->hide_pending) {
+            return $list->filter(['ClassName' => Order::class])->exclude(['Status' => 'Pending']);
+        }
+
+        return $list->filter(['ClassName' => Order::class]);
     }
 
     public function getEditForm($id = null, $fields = null)
