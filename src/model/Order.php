@@ -29,6 +29,7 @@ use Leochenftw\Debugger;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\View\ViewableData;
+use SilverStripe\Core\Environment;
 
 /**
  * Description
@@ -91,7 +92,8 @@ class Order extends DataObject
         'TrackingNumber'            =>  'Varchar(128)',
         'ShippingCost'              =>  'Currency',
         'Paidat'                    =>  'Datetime',
-        'StoredDetails'             =>  'Text'
+        'StoredDetails'             =>  'Text',
+        'ManualEditRequired' => 'Boolean',
     ];
 
     private static $indexes = [
@@ -149,21 +151,23 @@ class Order extends DataObject
     {
         $this->SameBilling  =   true;
         $member             =   Member::currentUser();
-        $cookie             =   Cookie::get('eCommerceCookie');
 
-        if (empty($cookie)) {
-            $cookie =   session_id();
+        if (!Environment::isCli()) {
+            $cookie = Cookie::get('eCommerceCookie');
             if (empty($cookie)) {
-                session_start();
                 $cookie =   session_id();
+                if (empty($cookie)) {
+                    session_start();
+                    $cookie =   session_id();
+                }
+                Cookie::set('eCommerceCookie', $cookie, $expiry = 30);
             }
-            Cookie::set('eCommerceCookie', $cookie, $expiry = 30);
         }
 
         if (!empty($member) && $member->ClassName == Customer::class) {
-            $this->CustomerID           =   $member->ID;
+            $this->CustomerID = $member->ID;
         } else {
-            $this->AnonymousCustomer    =   $cookie;
+            $this->AnonymousCustomer = !Environment::isCli() ? $cookie : 'CLI Imported';
         }
 
         $this->MerchantReference    =   sha1(md5(round(microtime(true) * 1000) . '-' . session_id()));
@@ -220,6 +224,10 @@ class Order extends DataObject
     public function getCMSFields()
     {
         $fields =   parent::getCMSFields();
+
+        if ($this->ManualEditRequired) {
+            return $fields;
+        }
 
         $fields->removeByName([
             'StoredDetails',
