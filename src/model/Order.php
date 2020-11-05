@@ -230,6 +230,7 @@ class Order extends DataObject
         }
 
         $fields->removeByName([
+            'ManualEditRequired',
             'StoredDetails',
             'ShippingServiceName',
             'MerchantReference',

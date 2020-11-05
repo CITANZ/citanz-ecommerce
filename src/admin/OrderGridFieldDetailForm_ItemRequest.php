@@ -18,6 +18,9 @@ class OrderGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_ItemReque
         $form   =   parent::ItemEditForm();
 
         if ($this->record->exists()) {
+            if ($this->record->ManualEditRequired) {
+                return $form;
+            }
             // $formActions    =   $form->Actions();
             $formActions    =   FieldList::create();
             $buttons        =   Config::inst()->get(Order::class, 'default_buttons');
