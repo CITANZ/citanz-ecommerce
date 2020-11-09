@@ -75,9 +75,15 @@ class Variant extends DataObject
      */
     private static $summary_fields = [
         'Title' => 'Title',
+        'Digital' => 'Digital',
         'Price' => 'Price',
         'Stock' => 'Stock'
     ];
+
+    public function getDigital()
+    {
+        return $this->isDigital ? '✔️' : '❌';
+    }
 
     /**
      * Defines a default list of filters for the search context
