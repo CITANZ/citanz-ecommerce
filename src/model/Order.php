@@ -590,7 +590,9 @@ class Order extends DataObject
             }
 
             $this->extend('doPaymentSuccessAction', $this);
-            $this->send_invoice();
+            if (empty($this->config()->no_send_invoice)) {
+                $this->send_invoice();
+            }
         }
     }
 
