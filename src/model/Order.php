@@ -227,8 +227,8 @@ class Order extends DataObject
 
         if ($this->ManualEditRequired) {
 
-            $fields->replaceField('ShippingCountry', CountryDropdownField::create('ShippingCountry'));
-            $fields->replaceField('BillingCountry', CountryDropdownField::create('BillingCountry'));
+            $fields->replaceField('ShippingCountry', CountryDropdownField::create('ShippingCountry')->setEmptyString('- select one -'));
+            $fields->replaceField('BillingCountry', CountryDropdownField::create('BillingCountry')->setEmptyString('- select one -'));
 
             return $fields;
         }
