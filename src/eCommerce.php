@@ -143,6 +143,7 @@ class eCommerce
     public static function translate_country($code)
     {
         if ($code) {
+            $code = strtolower($code) == 'new zealand' ? 'nz' : $code;
             return static::get_all_countries()[$code];
         }
 

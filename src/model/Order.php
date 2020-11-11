@@ -226,6 +226,10 @@ class Order extends DataObject
         $fields =   parent::getCMSFields();
 
         if ($this->ManualEditRequired) {
+
+            $fields->replaceField('ShippingCountry', CountryDropdownField::create('ShippingCountry'));
+            $fields->replaceField('BillingCountry', CountryDropdownField::create('BillingCountry'));
+
             return $fields;
         }
 
@@ -285,6 +289,7 @@ class Order extends DataObject
             'Root.Main',
             LiteralField::create('OrderVue', ViewableData::create()->customise([
                 'RawData' => json_encode($this->VueUIData),
+                'NonShippable' => empty($this->ShippableVariants) ? 1 : 0,
             ])->renderWith("Form\\Field\\OrderVue")),
             'ShippingServiceName'
         );

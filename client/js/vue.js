@@ -24,11 +24,12 @@ function initOrderInferface() {
     const app = new Vue({
         el: '#cita-ecom-order',
         data: {
-            order_data: null
+            order_data: null,
+            non_shippable: null
         },
         mounted() {
             this.order_data = JSON.parse(this.$refs.order_data.value)
-            console.log(this.order_data);
+            this.non_shippable = this.$refs.non_shippable == '0' ? false : true
         }
     });
 }
