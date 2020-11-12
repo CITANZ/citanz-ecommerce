@@ -12,6 +12,8 @@
         }
     ],
     "require": {
+        "omnipay/common": "^3",
+        "php-http/buzz-adapter": "^1.0",
         "silverstripe/framework": "^4.6",
         "guzzlehttp/guzzle": "^6",
         "silvershop/silverstripe-hasonefield": "^3.0.1",
@@ -22,7 +24,6 @@
         "leochenftw/ss-arsenal": "dev-master",
         "symbiote/silverstripe-gridfieldextensions": "^3",
         "silverstripe/tagfield": "^2.4",
-        "omnipay/common": "^3",
         "silverstripe/silverstripe-omnipay": "^3@dev",
         "omnipay/paymentexpress": "^3@dev",
         "omnipay/stripe": "^3.1.0"
