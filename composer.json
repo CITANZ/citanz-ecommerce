@@ -27,7 +27,6 @@
         "omnipay/paypal": "^2.6.4",
         "burnbright/omnipay-poli": "^2.0",
         "burnbright/omnipay-paystation": "^2.0",
-        "php-http/guzzle6-adapter": "^2.0",
         "omnipay/stripe": "^2.4.7"
     },
     "extra": {
