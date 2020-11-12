@@ -23,7 +23,7 @@
         "leochenftw/ss-arsenal": "dev-master",
         "symbiote/silverstripe-gridfieldextensions": "^3",
         "silverstripe/tagfield": "^2.4",
-        "silverstripe/silverstripe-omnipay": "^3",
+        "silverstripe/silverstripe-omnipay": "^2",
         "omnipay/paymentexpress": "^2@dev",
         "omnipay/paypal": "^2.6.4",
         "burnbright/omnipay-poli": "~2.0",
