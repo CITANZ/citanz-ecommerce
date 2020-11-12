@@ -21,8 +21,7 @@
         "colymba/gridfield-bulk-editing-tools": "^3.0",
         "leochenftw/ss-arsenal": "dev-master",
         "symbiote/silverstripe-gridfieldextensions": "^3",
-        "silverstripe/tagfield": "^2.4",
-        "omnipay/stripe": "^3.1.0"
+        "silverstripe/tagfield": "^2.4"
     },
     "extra": {
         "expose": [
