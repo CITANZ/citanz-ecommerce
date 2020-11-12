@@ -275,7 +275,7 @@ trait CartActions
             'items' => $cart ? $cart->getData()['items'] : null
         ];
 
-        if (in_array('Stripe', eCommerce::get_available_payment_methods())) {
+        if (in_array('Stripe', array_keys(eCommerce::get_available_payment_methods()))) {
             if ($config = Environment::getEnv('Stripe')) {
                 $config = json_decode($config);
                 $data['stripe_key'] = $config->privateKey;

@@ -99,7 +99,7 @@ class Cart extends PageController
     {
         parent::init();
 
-        if (in_array('Stripe', eCommerce::get_available_payment_methods())) {
+        if (in_array('Stripe', array_keys(eCommerce::get_available_payment_methods()))) {
             Requirements::javascript('https://js.stripe.com/v3/');
         }
     }
