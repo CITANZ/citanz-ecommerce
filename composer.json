@@ -13,7 +13,7 @@
     ],
     "require": {
         "silverstripe/framework": "^4.6",
-        "guzzlehttp/guzzle": "^7",
+        "guzzlehttp/guzzle": "^6",
         "silvershop/silverstripe-hasonefield": "^3.0.1",
         "unclecheese/display-logic": "^2.0",
         "leochenftw/tailored-pdf-invoice": "dev-master",
