@@ -85,7 +85,7 @@ class OrderAdmin extends ModelAdmin
                     'ItemCount' => 'Item(s)',
                     'ShippingCustomerFullname' => 'Customer',
                     'CartItemList' => 'Details',
-                    'Comment' => 'Comment',
+                    'CommentText' => 'Comment',
                     'PayableTotal' => 'Amount',
                     'Status' => 'Status',
                     'Paidat' => 'Paid at'

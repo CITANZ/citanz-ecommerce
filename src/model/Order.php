@@ -1258,4 +1258,16 @@ class Order extends DataObject
             'freight' => $this->Freight()->exists() ? array_merge($this->Freight()->Data, ['price' => $this->ShippingCost]) : null,
         ];
     }
+
+    public function getCommentText()
+    {
+        $comment = $this->Comment;
+
+        if ($this->hasMethod('extraComment')) {
+            $comment .= !empty(trim($comment)) ? "\n\n" : '';
+            $comment .= $this->extraComment();
+        }
+
+        return $comment;
+    }
 }
