@@ -259,6 +259,10 @@ trait CartActions
                 'amount'            =>  $cart->TotalAmount,
                 'shipping_cost'     =>  $cart->ShippingCost
             ];
+
+            if ($cart->hasMethod('extraCheckoutData')) {
+                $checkout = array_merge($checkout, $cart->extraCheckoutData);
+            }
         }
 
         $data                       =   Page::create()->getData();
