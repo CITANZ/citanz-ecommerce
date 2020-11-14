@@ -2,6 +2,8 @@
     <div id="cita-ecom-order">
         <input ref="order_data" type="hidden" value="$RawData" />
         <input ref="non_shippable" type="hidden" value="$NonShippable" />
+        <input ref="incomplete_shipping_address" type="hidden" value="$ShippingAddressIncomplete" />
+        <input ref="incomplete_billing_address" type="hidden" value="$BillingAddressIncomplete" />
         <template v-if="order_data">
             <h1 class="mb-4"><span>{{order_data.title}}</span> <span class="btn btn-outline-primary">{{order_data.status}}</span></h1>
             <div class="row">
@@ -9,7 +11,7 @@
                     <div class="row">
                         <div class="col-6">
                             <h2>Shipping</h2>
-                            <div v-if="!non_shippable" class="address-detail">
+                            <div v-if="!shipping_missing" class="address-detail">
                                 <p>{{order_data.shipping.firstname}} {{order_data.shipping.surname}}</p>
                                 <p>{{order_data.billing.phone}}</p>
                                 <p v-if="order_data.shipping.org">{{order_data.shipping.org}}</p>
@@ -17,13 +19,14 @@
                                 <p>{{order_data.shipping.suburb}}, {{order_data.shipping.town}}, {{order_data.shipping.region}}</p>
                                 <p>{{order_data.shipping.country}}, {{order_data.shipping.postcode}}</p>
                             </div>
-                            <p v-else>
-                                This order does not contain any shippable item
+                            <p v-else>Shipping address is missing or incomplete</p>
+                            <p class="form-text text-muted" v-if="non_shippable">
+                                <em>This order does not contain any shippable item</em>
                             </p>
                         </div>
                         <div class="col-6">
                             <h2>Billing</h2>
-                            <div class="address-detail">
+                            <div v-if="!billing_missing" class="address-detail">
                                 <p>{{order_data.billing.firstname}} {{order_data.billing.surname}}</p>
                                 <p>{{order_data.billing.email}}</p>
                                 <p>{{order_data.billing.phone}}</p>
@@ -32,6 +35,7 @@
                                 <p>{{order_data.billing.suburb ? `${ order_data.billing.suburb },` : ''}} {{order_data.billing.town}}, {{order_data.billing.region}}</p>
                                 <p>{{order_data.billing.country}}, {{order_data.billing.postcode}}</p>
                             </div>
+                            <p v-else>Billing address is missing or incomplete</p>
                         </div>
                         <div class="col-12 mt-4 mb-4">
                             <h2 class="title is-5">Email</h2>
@@ -109,7 +113,7 @@
                         <template v-else>
                             <p class="h2">Free Order</p>
                         </template>
-                        <div v-if="order_data.cart.comment">
+                        <div v-if="order_data.cart.comment || order_data.cart.giftwrap">
                             <hr />
                             <div class="content">
                                 <p><strong>Comment</strong><br />
