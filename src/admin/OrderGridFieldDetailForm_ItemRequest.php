@@ -76,8 +76,15 @@ class OrderGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_ItemReque
     private function create_button($key, &$formActions, &$config)
     {
         $button =   FormAction::create($key);
-        $button->setTitle($config['label']);
-        $button->addExtraClass($config['extra_class']);
+
+        if (!empty($config['label'])) {
+            $button->setTitle($config['label']);
+        }
+
+        if (!empty($config['extra_class'])) {
+            $button->addExtraClass($config['extra_class']);
+        }
+
         $formActions->push($button);
     }
 
@@ -137,6 +144,19 @@ class OrderGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_ItemReque
 
         if ($this->gridField->getList()->byId($this->record->ID)) {
             $this->record->refund();
+            return $this->edit(Controller::curr()->getRequest());
+        }
+
+        return $this->goback($data);
+    }
+
+    public function makeSnapshot($data, $form)
+    {
+        $msg    =   Config::inst()->get(Order::class, 'default_buttons')[__FUNCTION__]['message'];
+        $form->sessionMessage($msg, 'good', ValidationResult::CAST_HTML);
+
+        if ($this->gridField->getList()->byId($this->record->ID)) {
+            $this->record->makeSnapshot();
             return $this->edit(Controller::curr()->getRequest());
         }
 

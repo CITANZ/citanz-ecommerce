@@ -57,6 +57,10 @@ Cita\eCommerce\Model\Order:
       label: 'Delete'
       extra_class: 'btn-danger action-delete'
       message: 'Order has been deleted!'
+    makeSnapshot:
+      enabled: true
+      label: 'Make Snapshot'
+      message: 'Snapshot made'
 
 Cita\eCommerce\Model\Freight:
   allowed_countries:

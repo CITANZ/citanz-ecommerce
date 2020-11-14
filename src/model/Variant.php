@@ -103,14 +103,6 @@ class Variant extends DataObject
     ];
 
     /**
-     * Has_many relationship
-     * @var array
-     */
-    private static $has_many = [
-        'OrderItems' => OrderItem::class
-    ];
-
-    /**
      * Many_many relationship
      * @var array
      */
@@ -143,7 +135,6 @@ class Variant extends DataObject
             'Title',
             'ProductID',
             'Tags',
-            'OrderItems',
             'UnitWeight',
             'Width',
             'Height',

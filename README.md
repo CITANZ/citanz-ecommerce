@@ -70,8 +70,6 @@ Cita\eCommerce\Model\Order:
     debit_cleared   :   true
 ```
 
-## OrderItem
-
 ## Email sending
 If you want to customise emails, please implement below methods:
 - SendCustomerEmail($from, $to, $str, $customer_sent_flag)

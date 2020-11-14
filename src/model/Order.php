@@ -9,7 +9,6 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Security\Member;
-use Cita\eCommerce\Model\OrderItem;
 use Cita\eCommerce\Model\Customer;
 use Cita\eCommerce\Model\Variant;
 use SilverStripe\Core\Config\Config;
@@ -37,7 +36,7 @@ use SilverStripe\Core\Environment;
  * @package silverstripe
  * @subpackage mysite
  */
-class Order extends DataObject
+class Order extends DataObject implements \JsonSerializable
 {
     private static $dependencies = [
         'Logger' => '%$' . LoggerInterface::class,
@@ -92,7 +91,6 @@ class Order extends DataObject
         'TrackingNumber'            =>  'Varchar(128)',
         'ShippingCost'              =>  'Currency',
         'Paidat'                    =>  'Datetime',
-        'StoredDetails'             =>  'Text',
         'ManualEditRequired' => 'Boolean',
     ];
 
@@ -135,7 +133,8 @@ class Order extends DataObject
     private static $has_one = [
         'Discount'  =>  Discount::class,
         'Customer'  =>  Customer::class,
-        'Freight'   =>  Freight::class
+        'Freight'   =>  Freight::class,
+        'Snapshot'  =>  OrderSnapshot::class,
     ];
 
     /**
@@ -235,7 +234,7 @@ class Order extends DataObject
 
         $fields->removeByName([
             'ManualEditRequired',
-            'StoredDetails',
+            'SnapshotID',
             'ShippingServiceName',
             'MerchantReference',
             'CustomerReference',
@@ -290,6 +289,8 @@ class Order extends DataObject
             LiteralField::create('OrderVue', ViewableData::create()->customise([
                 'RawData' => json_encode($this->VueUIData),
                 'NonShippable' => empty($this->ShippableVariants) ? 1 : 0,
+                'ShippingAddressIncomplete' => $this->ShippingAddressIncomplete() ? 1 : 0,
+                'BillingAddressIncomplete' => $this->BillingAddressIncomplete() ? 1 : 0,
             ])->renderWith("Form\\Field\\OrderVue")),
             'ShippingServiceName'
         );
@@ -549,6 +550,17 @@ class Order extends DataObject
         $this->write();
     }
 
+    public function makeSnapshot()
+    {
+        if ($this->Snapshot()->exists()) {
+            $this->Snapshot()->delete();
+        }
+
+        $this->SnapshotID = OrderSnapshot::create()->StoreJSON($this);
+
+        $this->write();
+    }
+
     public function completePayment($status)
     {
         if ($this->Status == 'Payment Received' || $this->Status == 'Shipped' || $this->Status == 'Cancelled' || $this->Status == 'Refunded' || $this->Status == 'Completed') return false;
@@ -563,6 +575,12 @@ class Order extends DataObject
         if ($status == 'Free Order') {
             $this->Paidat = time();
         }
+
+        if ($this->Snapshot()->exists()) {
+            $this->Snapshot()->delete();
+        }
+
+        $this->SnapshotID = OrderSnapshot::create()->StoreJSON($this);
 
         $this->write();
 
@@ -856,6 +874,10 @@ class Order extends DataObject
         $this->extend('getData', $data);
 
         return $data;
+    }
+
+    public function jsonSerialize() {
+        return $this->Data;
     }
 
     public function getItems()
@@ -1269,5 +1291,26 @@ class Order extends DataObject
         }
 
         return $comment;
+    }
+
+    public function ShippingAddressIncomplete()
+    {
+        if (empty($this->ShippingAddress) ||
+            empty($this->ShippingTown) ||
+            empty($this->ShippingCountry)
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function BillingAddressIncomplete()
+    {
+        if ((empty($this->BillingAddress) || empty($this->BillingTown) || empty($this->BillingCountry)) && !$this->SameBilling) {
+            return true;
+        }
+
+        return false;
     }
 }

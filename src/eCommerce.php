@@ -6,7 +6,6 @@ use SilverStripe\Security\Security;
 use SilverStripe\Control\Session;
 use Cita\eCommerce\Model\Customer;
 use Cita\eCommerce\Model\Order;
-use Cita\eCommerce\Model\OrderItem;
 use Cita\eCommerce\Model\Freight;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Control\Cookie;

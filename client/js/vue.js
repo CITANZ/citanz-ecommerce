@@ -25,11 +25,15 @@ function initOrderInferface() {
         el: '#cita-ecom-order',
         data: {
             order_data: null,
-            non_shippable: null
+            non_shippable: null,
+            shipping_missing: null,
+            billing_missing: null,
         },
         mounted() {
             this.order_data = JSON.parse(this.$refs.order_data.value)
-            this.non_shippable = this.$refs.non_shippable == '0' ? false : true
+            this.non_shippable = this.$refs.non_shippable.value == '0' ? false : true
+            this.shipping_missing = this.$refs.incomplete_shipping_address.value == '0' ? false : true
+            this.billing_missing = this.$refs.incomplete_billing_address.value == '0' ? false : true
         }
     });
 }
