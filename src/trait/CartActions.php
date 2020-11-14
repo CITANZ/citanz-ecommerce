@@ -261,7 +261,7 @@ trait CartActions
             ];
 
             if ($cart->hasMethod('extraCheckoutData')) {
-                $checkout = array_merge($checkout, $cart->extraCheckoutData);
+                $checkout = array_merge($checkout, $cart->extraCheckoutData());
             }
         }
 
