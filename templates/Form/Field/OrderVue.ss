@@ -155,7 +155,7 @@
                     <table class="table is-fullwidth">
                         <thead>
                             <tr>
-                                <th>Delivered</th>
+                                <th style="width: 140px;">Delivered</th>
                                 <th>Item</th>
                                 <th class="text-center">Qty</th>
                                 <th class="text-right" style="width: 15%;">Total</th>
@@ -163,7 +163,15 @@
                         </thead>
                         <tbody>
                             <tr v-for="item in order_data.cart.items">
-                                <td><template v-if="!item.variants || !item.variants.length">{{ item.delivered ? 'Delivered' : 'Pending' }}</template><template v-else>-</template></td>
+                                <td>
+                                    <template v-if="!item.variants || !item.variants.length">
+                                        <select class="form-control" style="padding: 0 0.5rem; height: 2rem;" v-model="item.delivered" @change="updateItemStatus(item)">
+                                            <option :value="false">Pending</option>
+                                            <option :value="true">Dispatched</option>
+                                        </select>
+                                    </template>
+                                    <template v-else>-</template>
+                                </td>
                                 <td>
                                     <p>{{ item.title }}</p>
                                     <ul class="bundled-variants" v-if="item.variants && item.variants.length">

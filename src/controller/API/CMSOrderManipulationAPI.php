@@ -19,6 +19,7 @@ class CMSOrderManipulationAPI extends Controller
     private static $allowed_actions = [
         'update_shipping',
         'update_billing',
+        'update_item',
     ];
 
     protected function handleAction($request, $action)
@@ -52,6 +53,17 @@ class CMSOrderManipulationAPI extends Controller
         }
 
         return $this->httpError(404, 'not allowed');
+    }
+
+    public function update_item(&$request)
+    {
+        $vid = Convert::raw2sql($request->postVar('vid'));
+        if (empty($vid)) {
+            return $this->httpError(400, 'Missing variant id');
+        }
+        
+        $status = Convert::raw2sql($request->postVar('delivered'));
+        $this->order->Variants()->add($vid, ['Delivered' => $status]);
     }
 
     public function update_shipping(&$request)
