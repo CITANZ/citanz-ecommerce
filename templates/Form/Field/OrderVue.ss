@@ -10,32 +10,142 @@
                 <article class="col">
                     <div class="row">
                         <div class="col-6">
-                            <h2>Shipping</h2>
-                            <div v-if="!shipping_missing" class="address-detail">
-                                <p>{{order_data.shipping.firstname}} {{order_data.shipping.surname}}</p>
-                                <p>{{order_data.billing.phone}}</p>
-                                <p v-if="order_data.shipping.org">{{order_data.shipping.org}}</p>
-                                <p>{{order_data.shipping.apartment ? (order_data.shipping.apartment + ', ') : ''}}{{order_data.shipping.address}}</p>
-                                <p>{{order_data.shipping.suburb}}, {{order_data.shipping.town}}, {{order_data.shipping.region}}</p>
-                                <p>{{order_data.shipping.country}}, {{order_data.shipping.postcode}}</p>
+                            <h2>Shipping <a v-if="!toggle_shipping_editor" @click.prevent="toggle_shipping_editor = true" class="btn btn-primary btn-sm" href="#" style="font-size: 10px; padding: 0.025em 0.5em; margin-left: 0.5em;">Update</a></h2>
+                            <template v-if="!toggle_shipping_editor">
+                                <div v-if="!shipping_missing" class="address-detail">
+                                    <p>{{order_data.shipping.firstname}} {{order_data.shipping.surname}}</p>
+                                    <p v-if="order_data.shipping.phone">{{order_data.shipping.phone}}</p>
+                                    <p v-if="order_data.shipping.org">{{order_data.shipping.org}}</p>
+                                    <p v-if="order_data.shipping.apartment || order_data.shipping.address">{{order_data.shipping.apartment ? (order_data.shipping.apartment + ', ') : ''}}{{order_data.shipping.address}}</p>
+                                    <p v-if="order_data.shipping.suburb || order_data.shipping.town || order_data.shipping.region">{{order_data.shipping.suburb ? `${order_data.shipping.suburb}, `: ''}}{{order_data.shipping.town ? `${order_data.shipping.town}, ` : ''}}{{order_data.shipping.region}}</p>
+                                    <p>{{order_data.shipping.country ? `${order_data.shipping.country}, ` : ''}}{{order_data.shipping.postcode}}</p>
+                                </div>
+                                <p v-else>Shipping address is missing or incomplete</p>
+                                <p class="form-text text-muted" v-if="non_shippable">
+                                    <em>This order does not contain any shippable item</em>
+                                </p>
+                            </template>
+                            <div v-else class="address-detail__editor">
+                                <div class="field">
+                                    <label for="shippingFirstname">First name</label>
+                                    <input type="text" class="form-control" id="shippingFirstname" v-model="order_data.shipping.firstname" />
+                                </div>
+                                <div class="field">
+                                    <label for="shippingLastname">Last name</label>
+                                    <input type="text" class="form-control" id="shippingLastname" v-model="order_data.shipping.surname" />
+                                </div>
+                                <div class="field">
+                                    <label for="shippingPhone">Phone</label>
+                                    <input type="text" class="form-control" id="shippingPhone" v-model="order_data.shipping.phone" />
+                                </div>
+                                <div class="field">
+                                    <label for="shippingOrg">Organisation</label>
+                                    <input type="text" class="form-control" id="shippingOrg" v-model="order_data.shipping.org" />
+                                </div>
+                                <div class="field">
+                                    <label for="shippingApartment">Apt/Unit/Suite</label>
+                                    <input type="text" class="form-control" id="shippingApartment" v-model="order_data.shipping.apartment" />
+                                </div>
+                                <div class="field">
+                                    <label for="shippingAddress">Address</label>
+                                    <input type="text" class="form-control" id="shippingAddress" v-model="order_data.shipping.address" />
+                                </div>
+                                <div class="field">
+                                    <label for="shippingSuburb">Suburb</label>
+                                    <input type="text" class="form-control" id="shippingSuburb" v-model="order_data.shipping.suburb" />
+                                </div>
+                                <div class="field">
+                                    <label for="shippingCity">City</label>
+                                    <input type="text" class="form-control" id="shippingCity" v-model="order_data.shipping.town" />
+                                </div>
+                                <div class="field">
+                                    <label for="shippingRegion">Region</label>
+                                    <input type="text" class="form-control" id="shippingRegion" v-model="order_data.shipping.region" />
+                                </div>
+                                <div class="field">
+                                    <label for="shippingCountry">Country</label>
+                                    <select v-model="order_data.shipping.country_code" class="form-control" id="shippingCountry">
+                                        <option v-for="country, code in order_data.countries" :value="code">
+                                            {{country}}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="field actions">
+                                    <a @click.prevent="updateShipping" class="btn btn-primary btn-sm" href="#">Update</a>
+                                </div>
                             </div>
-                            <p v-else>Shipping address is missing or incomplete</p>
-                            <p class="form-text text-muted" v-if="non_shippable">
-                                <em>This order does not contain any shippable item</em>
-                            </p>
                         </div>
                         <div class="col-6">
-                            <h2>Billing</h2>
-                            <div v-if="!billing_missing" class="address-detail">
-                                <p>{{order_data.billing.firstname}} {{order_data.billing.surname}}</p>
-                                <p>{{order_data.billing.email}}</p>
-                                <p>{{order_data.billing.phone}}</p>
-                                <p v-if="order_data.billing.org">{{order_data.billing.org}}</p>
-                                <p>{{order_data.billing.apartment ? (order_data.billing.apartment + ', ') : ''}}{{order_data.billing.address}}</p>
-                                <p>{{order_data.billing.suburb ? `${ order_data.billing.suburb },` : ''}} {{order_data.billing.town}}, {{order_data.billing.region}}</p>
-                                <p>{{order_data.billing.country}}, {{order_data.billing.postcode}}</p>
+                            <h2>Billing <a v-if="!toggle_billing_editor" @click.prevent="toggle_billing_editor = true" class="btn btn-primary btn-sm" href="#" style="font-size: 10px; padding: 0.025em 0.5em; margin-left: 0.5em;">Update</a></h2>
+                            <template v-if="!toggle_billing_editor">
+                                <div v-if="!billing_missing" class="address-detail">
+                                    <p>{{order_data.billing.firstname}} {{order_data.billing.surname}}</p>
+                                    <p>{{order_data.billing.email}}</p>
+                                    <p>{{order_data.billing.phone}}</p>
+                                    <p v-if="order_data.billing.org">{{order_data.billing.org}}</p>
+                                    <p>{{order_data.billing.apartment ? (order_data.billing.apartment + ', ') : ''}}{{order_data.billing.address}}</p>
+                                    <p>{{order_data.billing.suburb ? `${ order_data.billing.suburb },` : ''}} {{order_data.billing.town}}, {{order_data.billing.region}}</p>
+                                    <p>{{order_data.billing.country}}, {{order_data.billing.postcode}}</p>
+                                </div>
+                                <p v-else>Billing address is missing or incomplete</p>
+                            </template>
+                            <div v-else class="address-detail__editor">
+                                <div class="field form-check">
+                                    <input class="form-check-input" type="checkbox" v-model="order_data.billing.same_addr" value="" id="SameBilling">
+                                    <label class="form-check-label" for="SameBilling">
+                                        Same as shipping
+                                    </label>
+                                </div>
+                                <template v-if="!order_data.billing.same_addr">
+                                    <div class="field">
+                                        <label for="billingFirstname">First name</label>
+                                        <input type="text" class="form-control" id="billingFirstname" v-model="order_data.billing.firstname" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="billingLastname">Last name</label>
+                                        <input type="text" class="form-control" id="billingLastname" v-model="order_data.billing.surname" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="billingPhone">Phone</label>
+                                        <input type="text" class="form-control" id="billingPhone" v-model="order_data.billing.phone" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="billingOrg">Organisation</label>
+                                        <input type="text" class="form-control" id="billingOrg" v-model="order_data.billing.org" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="billingApartment">Apt/Unit/Suite</label>
+                                        <input type="text" class="form-control" id="billingApartment" v-model="order_data.billing.apartment" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="billingAddress">Address</label>
+                                        <input type="text" class="form-control" id="billingAddress" v-model="order_data.billing.address" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="billingSuburb">Suburb</label>
+                                        <input type="text" class="form-control" id="billingSuburb" v-model="order_data.billing.suburb" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="billingCity">City</label>
+                                        <input type="text" class="form-control" id="billingCity" v-model="order_data.billing.town" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="billingRegion">Region</label>
+                                        <input type="text" class="form-control" id="billingRegion" v-model="order_data.billing.region" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="billingCountry">Country</label>
+                                        <select v-model="order_data.billing.country_code" class="form-control" id="billingCountry">
+                                            <option v-for="country, code in order_data.countries" :value="code">
+                                                {{country}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </template>
+                                <div class="field actions">
+                                    <a @click.prevent="updateBilling" class="btn btn-primary btn-sm" href="#">Update</a>
+                                </div>
                             </div>
-                            <p v-else>Billing address is missing or incomplete</p>
                         </div>
                         <div class="col-12 mt-4 mb-4">
                             <h2 class="title is-5">Email</h2>

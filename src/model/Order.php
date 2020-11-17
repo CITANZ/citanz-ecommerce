@@ -91,7 +91,6 @@ class Order extends DataObject implements \JsonSerializable
         'TrackingNumber'            =>  'Varchar(128)',
         'ShippingCost'              =>  'Currency',
         'Paidat'                    =>  'Datetime',
-        'ManualEditRequired' => 'Boolean',
     ];
 
     private static $indexes = [
@@ -224,16 +223,7 @@ class Order extends DataObject implements \JsonSerializable
     {
         $fields =   parent::getCMSFields();
 
-        if ($this->ManualEditRequired) {
-
-            $fields->replaceField('ShippingCountry', CountryDropdownField::create('ShippingCountry')->setEmptyString('- select one -'));
-            $fields->replaceField('BillingCountry', CountryDropdownField::create('BillingCountry')->setEmptyString('- select one -'));
-
-            return $fields;
-        }
-
         $fields->removeByName([
-            'ManualEditRequired',
             'SnapshotID',
             'ShippingServiceName',
             'MerchantReference',
@@ -1013,6 +1003,7 @@ class Order extends DataObject implements \JsonSerializable
             'suburb'    =>  $this->ShippingSuburb,
             'town'      =>  $this->ShippingTown,
             'region'    =>  $this->ShippingRegion,
+            'country_code' => $this->ShippingCountry,
             'country'   =>  $translate_country ?
                             eCommerce::translate_country($this->ShippingCountry) :
                             $this->ShippingCountry,
@@ -1024,6 +1015,7 @@ class Order extends DataObject implements \JsonSerializable
     public function getBillingData($translate_country = true)
     {
         return [
+            'same_addr' => $this->SameBilling,
             'firstname' =>  $this->BillingFirstname,
             'surname'   =>  $this->BillingSurname,
             'org'       =>  $this->BillingOrganisation,
@@ -1032,6 +1024,7 @@ class Order extends DataObject implements \JsonSerializable
             'suburb'    =>  $this->BillingSuburb,
             'town'      =>  $this->BillingTown,
             'region'    =>  $this->BillingRegion,
+            'country_code' => $this->BillingCountry,
             'country'   =>  $translate_country ?
                             eCommerce::translate_country($this->BillingCountry) :
                             $this->BillingCountry,
@@ -1278,6 +1271,7 @@ class Order extends DataObject implements \JsonSerializable
             'billing' => $this->BillingData,
             'email' => $this->Email,
             'freight' => $this->Freight()->exists() ? array_merge($this->Freight()->Data, ['price' => $this->ShippingCost]) : null,
+            'countries' => eCommerce::get_all_countries(),
         ];
     }
 

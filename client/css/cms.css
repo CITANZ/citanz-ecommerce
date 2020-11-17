@@ -91,4 +91,15 @@
     background-color: #e7e7e7;
     border-radius: 8px;
     padding: 1rem;
+    position: sticky;
+    top: 1rem;
+}
+
+#cita-ecom-order .field:not(:last-child) {
+    margin-bottom: 1rem;
+}
+
+#cita-ecom-order .field.actions {
+    display: flex;
+    justify-content: flex-end;
 }

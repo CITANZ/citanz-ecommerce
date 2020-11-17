@@ -28,12 +28,51 @@ function initOrderInferface() {
             non_shippable: null,
             shipping_missing: null,
             billing_missing: null,
+            toggle_billing_editor: false,
+            toggle_shipping_editor: false,
         },
         mounted() {
             this.order_data = JSON.parse(this.$refs.order_data.value)
             this.non_shippable = this.$refs.non_shippable.value == '0' ? false : true
             this.shipping_missing = this.$refs.incomplete_shipping_address.value == '0' ? false : true
             this.billing_missing = this.$refs.incomplete_billing_address.value == '0' ? false : true
+            console.log(this.order_data)
+        },
+        methods: {
+            updateShipping() {
+                this.toggle_shipping_editor = false
+                const data = new FormData();
+                for (let key in this.order_data.shipping) {
+                    if (this.order_data.shipping[key]) {
+                        data.append(key, this.order_data.shipping[key])
+                    }
+                }
+                axios.post(
+                    `/admin/cita-ecom/api/order/${this.order_data.cart.id}/update_shipping`,
+                    data
+                ).then(resp => {
+                    this.order_data = resp.data
+                })
+            },
+            updateBilling() {
+                this.toggle_billing_editor = false
+                const data = new FormData();
+                if (this.order_data.billing.same_addr) {
+                    data.append('same_addr', this.order_data.billing.same_addr)
+                } else {
+                    for (let key in this.order_data.billing) {
+                        if (this.order_data.billing[key]) {
+                            data.append(key, this.order_data.billing[key])
+                        }
+                    }
+                }
+                axios.post(
+                    `/admin/cita-ecom/api/order/${this.order_data.cart.id}/update_billing`,
+                    data
+                ).then(resp => {
+                    this.order_data = resp.data
+                })
+            }
         }
     });
 }
