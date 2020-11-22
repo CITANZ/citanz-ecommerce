@@ -10,6 +10,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Security\Member;
+use SilverStripe\Security\Security;
 use Cita\eCommerce\Model\Customer;
 use Cita\eCommerce\Model\Variant;
 use SilverStripe\Core\Config\Config;
@@ -105,10 +106,12 @@ class Order extends DataObject implements \JsonSerializable
 
     public function canView($member = null)
     {
-        if ($member) {
-            if ($member->inGroup('administrators') || $this->CustomerID == $member->ID) {
-                return true;
-            }
+        if (!$member) {
+            $member = Security::getCurrentUser();
+        }
+
+        if ($member->inGroup('administrators') || $this->CustomerID == $member->ID) {
+            return true;
         }
 
         if (!Environment::isCli()) {
