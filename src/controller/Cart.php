@@ -1,6 +1,7 @@
 <?php
 
 namespace Cita\eCommerce\Controller;
+
 use SilverStripe\Dev\Debug;
 use PageController;
 use SilverStripe\SiteConfig\SiteConfig;
@@ -40,6 +41,8 @@ class Cart extends PageController
         'read'              =>  true,
         'estimate_freight'  =>  true,
         'coupon_validate'   =>  true,
+        'subscribe'         =>  true,
+        'unsubscribe'       =>  true,
         // For forms
         'CartUpdateForm'    =>  true,
         'CheckoutForm'      =>  true,
@@ -48,7 +51,7 @@ class Cart extends PageController
 
     protected function handleAction($request, $action)
     {
-        if ($this->request->httpMethod() === 'OPTIONS' ) {
+        if ($this->request->httpMethod() === 'OPTIONS') {
             // create direct response without requesting any controller
             $response   =   $this->getResponse();
             // set CORS header from config
@@ -77,7 +80,6 @@ class Cart extends PageController
         }
 
         if ($action = $this->request->Param('action')) {
-
             if ($this->request->isPost()) {
                 return json_encode($this->{'do_' . $action}());
             }
@@ -104,7 +106,7 @@ class Cart extends PageController
         }
     }
 
-    public function Link($action = NULL)
+    public function Link($action = null)
     {
         return '/cart/';
     }
@@ -146,5 +148,4 @@ class Cart extends PageController
                 ])
             ]));
     }
-
 }

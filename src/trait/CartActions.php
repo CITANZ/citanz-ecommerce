@@ -1,9 +1,11 @@
 <?php
 namespace Cita\eCommerce\Traits;
+
 use SilverStripe\Dev\Debug;
 use Cita\eCommerce\eCommerce;
 use SilverStripe\SiteConfig\SiteConfig;
 use Cita\eCommerce\Model\Order;
+use Cita\eCommerce\Model\SubscriptionOrder;
 use Cita\eCommerce\Model\Freight;
 use Cita\eCommerce\Model\Discount;
 use SilverStripe\Control\Director;
@@ -15,8 +17,10 @@ use Cita\eCommerce\API\Stripe;
 use Cita\eCommerce\Service\PaymentService;
 use Page;
 use Cita\eCommerce\Model\Variant;
+use Cita\eCommerce\Model\SubscriptionVariant;
 use Leochenftw\Util;
 use SilverStripe\Core\Convert;
+use SilverStripe\Core\ClassInfo;
 
 trait CartActions
 {
@@ -25,7 +29,9 @@ trait CartActions
         $cart   =   eCommerce::get_cart();
 
         if ($this->request->getVar('mini')) {
-            if (!$cart) return $cart;
+            if (!$cart) {
+                return $cart;
+            }
             return $cart->getData();
         }
 
@@ -52,6 +58,30 @@ trait CartActions
         }
 
         return $this->httpError(500, 'Cannot close message!');
+    }
+
+    private function do_unsubscribe()
+    {
+    }
+
+    private function do_subscribe()
+    {
+        $vid = Convert::raw2sql($this->request->postVar('id'));
+
+        if (empty($vid)) {
+            return $this->httpError(400, 'Missing subscription vid');
+        }
+
+        $cart = eCommerce::get_subscription_cart();
+
+        if (!$cart) {
+            $cart = SubscriptionOrder::create();
+            $cart->write();
+            $session = $this->request->getSession();
+            $session->set('subscription_cart_id', $cart->ID);
+        }
+
+        return $cart->AddToCart($vid);
     }
 
     private function do_add()
@@ -207,7 +237,9 @@ trait CartActions
 
         // fugly hack to work with Stripe's Element code behaviour
         if ($this->request->getVar('mini')) {
-            if (!$cart->Payments()->first()) return false;
+            if (!$cart->Payments()->first()) {
+                return false;
+            }
             return true;
         }
 
@@ -253,7 +285,7 @@ trait CartActions
                 'comment'           =>  $cart->Comment,
                 'discount'          =>  $this->getDiscountData($cart),
                 'shipping'          =>  $cart->getShippingData(false),
-                'same_addr'         =>  $cart->SameBilling ? 1 : 0,
+                'same_addr'         =>  ($cart instanceof SubscriptionOrder) ? true : ($cart->SameBilling ? 1 : 0),
                 'billing'           =>  $cart->getBillingData(false),
                 'is_freeshipping'   =>  $cart->is_freeshipping(),
                 'amount'            =>  $cart->TotalAmount,
@@ -265,16 +297,17 @@ trait CartActions
             }
         }
 
-        $data                       =   Page::create()->getData();
+        $data                       =   Page::create()->Data;
         $data['id']                 =   !empty($cart) ? $cart->ID : 0;
-        $data['pagetype']           =   'CheckoutPage';
-        $data['title']              =   $this->Title;
+        $data['pagetype']           =   $this->getPageTemplate($cart);
+        $data['title']              =   ($cart instanceof SubscriptionOrder ? 'Express ' : '') . $this->Title;
         $data['countries']          =   eCommerce::get_all_countries();
         $data['freight_options']    =   eCommerce::get_freight_options()->getData();
         $data['payment_methods']    =   eCommerce::get_available_payment_methods();
         $data['gst_rate']           =   SiteConfig::current_site_config()->GSTRate;
         $data['checkout']           =   !empty($checkout) ? $checkout : null;
-
+        $data['is_express']         =   !empty($this->request->getVar('order_id'));
+        $data['accept_discount']    =   $this->CartAcceptDiscount($cart);
         $data['cart']               =   [
             'items' => $cart ? $cart->getData()['items'] : null
         ];
@@ -289,6 +322,28 @@ trait CartActions
         $data['session_oid']        =   $this->request->getSession()->get('cart_id');
         \SilverStripe\i18n\i18n::get_locale();
         return $data;
+    }
+
+    private function CartAcceptDiscount(&$cart)
+    {
+        if (empty($cart)) {
+            return true;
+        }
+        
+        $list = array_unique(array_map(function($item) {
+            return $item->NoDiscount;
+        }, $cart->Variants()->toArray()));
+
+        return !(count($list) == 1 && $list[0] == true);
+    }
+
+    private function getPageTemplate(&$cart)
+    {
+        if ($cart instanceof SubscriptionOrder) {
+            return 'SubscriptionCheckoutPage';
+        }
+
+        return 'CheckoutPage';
     }
 
     private function getDiscountData(&$cart)

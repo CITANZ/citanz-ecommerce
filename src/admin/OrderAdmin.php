@@ -4,6 +4,7 @@ namespace Cita\eCommerce\Admin;
 use SilverStripe\Dev\Debug;
 use SilverStripe\Admin\ModelAdmin;
 use Cita\eCommerce\Model\Order;
+use Cita\eCommerce\Model\SubscriptionOrder;
 use SilverStripe\Security\Member;
 use SilverStripe\Forms\GridField\GridFieldDetailForm;
 use SilverStripe\Forms\GridField\GridField;
@@ -27,7 +28,8 @@ class OrderAdmin extends ModelAdmin
      * @var array
      */
     private static $managed_models = [
-        Order::class
+        Order::class,
+        SubscriptionOrder::class,
     ];
 
     /**
@@ -46,11 +48,8 @@ class OrderAdmin extends ModelAdmin
 
     public function getList()
     {
-        $list   =   parent::getList();
-
-        if (Member::currentUser() && Member::currentUser()->isDefaultadmin()) {
-            $list = $list->filter(['ClassName' => Order::class]);
-        }
+        $list = parent::getList();
+        $list = $list->filter(['ClassName' => $this->modelClass]);
 
         if (!empty($this->getRequest()->postVar('filter')) && $this->hasMethod('FilterList')) {
             $params = $this->getRequest()->postVar('filter');
@@ -58,51 +57,56 @@ class OrderAdmin extends ModelAdmin
         }
 
         if ($this->config()->hide_pending) {
-            return $list->filter(['ClassName' => Order::class])->exclude(['Status' => 'Pending']);
+            return $list->filter(['ClassName' => $this->modelClass])->exclude(['Status' => 'Pending']);
         }
 
-        return $list->filter(['ClassName' => Order::class]);
+        return $list->filter(['ClassName' => $this->modelClass]);
     }
 
     public function getEditForm($id = null, $fields = null)
     {
         $form = parent::getEditForm($id, $fields);
-        if($this->modelClass == Order::class) {
+
+        if ($this->modelClass == Order::class) {
             $form->Fields()
                 ->fieldByName($this->sanitiseClassName($this->modelClass))
                 ->getConfig()
                 ->getComponentByType(GridFieldDetailForm::class)
                 ->setItemRequestClass(OrderGridFieldDetailForm_ItemRequest::class);
-        }
 
-        if ($gridField = $form->Fields()->dataFieldByName($this->sanitiseClassName($this->modelClass))) {
-            if ($gridField instanceof GridField) {
-                $config = $gridField->getConfig();
-                $dataColumns = $config->getComponentByType(GridFieldDataColumns::class);
-                $dataColumns->setDisplayFields([
-                    'ID' => 'Order#',
-                    'CustomerReference' => 'Ref#',
-                    'ItemCount' => 'Item(s)',
-                    'ShippingCustomerFullname' => 'Customer',
-                    'CartItemList' => 'Details',
-                    'CommentText' => 'Comment',
-                    'PayableTotal' => 'Amount',
-                    'Status' => 'Status',
-                    'Paidat' => 'Paid at'
-                ])->setFieldCasting([
-                    'TotalAmount' => 'Currency->Nice',
-                    'PayableTotal' => 'Currency->Nice',
-                    'CartItemList' => 'HTMLText->RAW',
-                    'Paidat' => 'Datetime->Nice'
-                ]);
+            if ($gridField = $form->Fields()->dataFieldByName($this->sanitiseClassName($this->modelClass))) {
+                if ($gridField instanceof GridField) {
+                    $config = $gridField->getConfig();
+                    $dataColumns = $config->getComponentByType(GridFieldDataColumns::class);
+                    $dataColumns->setDisplayFields([
+                        'ID' => 'Order#',
+                        'CustomerReference' => 'Ref#',
+                        'ItemCount' => 'Item(s)',
+                        'ShippingCustomerFullname' => 'Customer',
+                        'CartItemList' => 'Details',
+                        'CommentText' => 'Comment',
+                        'PayableTotal' => 'Amount',
+                        'Status' => 'Status',
+                        'Paidat' => 'Paid at'
+                    ])->setFieldCasting([
+                        'TotalAmount' => 'Currency->Nice',
+                        'PayableTotal' => 'Currency->Nice',
+                        'CartItemList' => 'HTMLText->RAW',
+                        'Paidat' => 'Datetime->Nice'
+                    ]);
 
-                if($this->modelClass == Order::class) {
-                    $filter = $config->getComponentByType(GridFieldFilterHeader::class);
-                    $context = $filter->getSearchContext($gridField);
-                    $context->getFields()->insertBefore(TextField::create(
-                        'ProductName',
-                        'Product'
-                    ), 'Status');
+                    if($this->modelClass == Order::class) {
+                        $filter = $config->getComponentByType(GridFieldFilterHeader::class);
+                        $context = $filter->getSearchContext($gridField);
+                        $context->getFields()->insertBefore(TextField::create(
+                            'ID',
+                            'Order#'
+                        ), 'CustomerReference');
+                        $context->getFields()->insertBefore(TextField::create(
+                            'ProductName',
+                            'Product'
+                        ), 'Status');
+                    }
                 }
             }
         }

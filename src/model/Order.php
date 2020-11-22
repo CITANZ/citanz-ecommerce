@@ -2,6 +2,7 @@
 
 namespace Cita\eCommerce\Model;
 
+use SilverStripe\Core\Convert;
 use SilverStripe\Dev\Debug;
 use Cita\eCommerce\eCommerce;
 use SilverStripe\SiteConfig\SiteConfig;
@@ -102,6 +103,21 @@ class Order extends DataObject implements \JsonSerializable
         'Payments'
     ];
 
+    public function canView($member = null)
+    {
+        if ($member) {
+            if ($member->inGroup('administrators') || $this->CustomerID == $member->ID) {
+                return true;
+            }
+        }
+
+        if (!Environment::isCli()) {
+            return $this->AnonymousCustomer == Cookie::get('eCommerceCookie');
+        }
+
+        return parent::canView($member);
+    }
+
     /**
      * Defines summary fields commonly used in table columns
      * as a quick overview of the data for this dataobject
@@ -118,7 +134,7 @@ class Order extends DataObject implements \JsonSerializable
      * @var array
      */
     private static $searchable_fields = [
-        'MerchantReference',
+        'ID',
         'CustomerReference',
         'ShippingFirstname',
         'ShippingSurname',
@@ -147,6 +163,8 @@ class Order extends DataObject implements \JsonSerializable
 
     public function populateDefaults()
     {
+        parent::populateDefaults();
+
         $this->SameBilling  =   true;
         $member             =   Member::currentUser();
 
@@ -442,7 +460,7 @@ class Order extends DataObject implements \JsonSerializable
             }
         }
 
-        return $this->Variants()->sum('Quantity') + $bundled_items;
+        return ($this->Variants()->exists() ? $this->Variants()->sum('Quantity') : 0) + $bundled_items ;
     }
 
     public function ShippableItemCount()
@@ -895,37 +913,37 @@ class Order extends DataObject implements \JsonSerializable
 
     public function digest(&$data, $cal_freight = true)
     {
-        $this->Email                    =   $data->email;
-        $this->FreightID                =   $data->freight;
-        $this->ShippingFirstname        =   $data->shipping->firstname;
-        $this->ShippingSurname          =   $data->shipping->surname;
-        $this->ShippingAddress          =   $data->shipping->address;
-        $this->ShippingOrganisation     =   $data->shipping->org;
-        $this->ShippingApartment        =   $data->shipping->apartment;
-        $this->ShippingSuburb           =   $data->shipping->suburb;
-        $this->ShippingTown             =   $data->shipping->town;
-        $this->ShippingRegion           =   $data->shipping->region;
-        $this->ShippingCountry          =   $data->shipping->country;
-        $this->ShippingPostcode         =   $data->shipping->postcode;
-        $this->ShippingPhone            =   $data->shipping->phone;
-        $this->SameBilling              =   $data->same_addr;
+        $this->Email                    =   Convert::raw2sql($data->email);
+        $this->FreightID                =   Convert::raw2sql($data->freight);
+        $this->ShippingFirstname        =   Convert::raw2sql($data->shipping->firstname);
+        $this->ShippingSurname          =   Convert::raw2sql($data->shipping->surname);
+        $this->ShippingAddress          =   Convert::raw2sql($data->shipping->address);
+        $this->ShippingOrganisation     =   Convert::raw2sql($data->shipping->org);
+        $this->ShippingApartment        =   Convert::raw2sql($data->shipping->apartment);
+        $this->ShippingSuburb           =   Convert::raw2sql($data->shipping->suburb);
+        $this->ShippingTown             =   Convert::raw2sql($data->shipping->town);
+        $this->ShippingRegion           =   Convert::raw2sql($data->shipping->region);
+        $this->ShippingCountry          =   Convert::raw2sql($data->shipping->country);
+        $this->ShippingPostcode         =   Convert::raw2sql($data->shipping->postcode);
+        $this->ShippingPhone            =   Convert::raw2sql($data->shipping->phone);
+        $this->SameBilling              =   Convert::raw2sql($data->same_addr);
 
         if (!$data->same_addr) {
-            $this->BillingFirstname     =   $data->billing->firstname;
-            $this->BillingSurname       =   $data->billing->surname;
-            $this->BillingAddress       =   $data->billing->address;
-            $this->BillingOrganisation  =   $data->billing->org;
-            $this->BillingApartment     =   $data->billing->apartment;
-            $this->BillingSuburb        =   $data->billing->suburb;
-            $this->BillingTown          =   $data->billing->town;
-            $this->BillingRegion        =   $data->billing->region;
-            $this->BillingCountry       =   $data->billing->country;
-            $this->BillingPostcode      =   $data->billing->postcode;
-            $this->BillingPhone         =   $data->billing->phone;
+            $this->BillingFirstname     =   Convert::raw2sql($data->billing->firstname);
+            $this->BillingSurname       =   Convert::raw2sql($data->billing->surname);
+            $this->BillingAddress       =   Convert::raw2sql($data->billing->address);
+            $this->BillingOrganisation  =   Convert::raw2sql($data->billing->org);
+            $this->BillingApartment     =   Convert::raw2sql($data->billing->apartment);
+            $this->BillingSuburb        =   Convert::raw2sql($data->billing->suburb);
+            $this->BillingTown          =   Convert::raw2sql($data->billing->town);
+            $this->BillingRegion        =   Convert::raw2sql($data->billing->region);
+            $this->BillingCountry       =   Convert::raw2sql($data->billing->country);
+            $this->BillingPostcode      =   Convert::raw2sql($data->billing->postcode);
+            $this->BillingPhone         =   Convert::raw2sql($data->billing->phone);
         }
 
         if (!empty($data->discount)) {
-            if ($discount = Discount::check_valid($data->discount->code)) {
+            if ($discount = Discount::check_valid(Convert::raw2sql($data->discount->code))) {
                 $this->DiscountID       =   $discount->ID;
             } else {
                 $this->DiscountID       =   0;
@@ -934,7 +952,7 @@ class Order extends DataObject implements \JsonSerializable
             $this->DiscountID           =   0;
         }
 
-        $this->Comment                  =   $data->comment;
+        $this->Comment                  =   Convert::raw2sql($data->comment);
 
         if ($cal_freight) {
             if ($freight = $this->get_freight_data()) {
@@ -1262,7 +1280,7 @@ class Order extends DataObject implements \JsonSerializable
 
     public function getVueUIData()
     {
-        return [
+        $data = [
             'title' => "Order#$this->ID",
             'status' => $this->Status == 'Free Order' ? 'Payment Received' : $this->Status,
             'payment' => $this->Payments()->first() ? $this->Payments()->first()->Data : null,
@@ -1273,6 +1291,10 @@ class Order extends DataObject implements \JsonSerializable
             'freight' => $this->Freight()->exists() ? array_merge($this->Freight()->Data, ['price' => $this->ShippingCost]) : null,
             'countries' => eCommerce::get_all_countries(),
         ];
+
+        $this->extend('UpdateVueUIData', $data);
+
+        return $data;
     }
 
     public function getCommentText()

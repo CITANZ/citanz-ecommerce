@@ -6,7 +6,7 @@ use SilverStripe\ORM\DataObject;
 
 class OrderSnapshot extends DataObject
 {
-    private static $table_name = 'OrderSnapshot';
+    private static $table_name = 'Cita_eCommerce_OrderSnapshot';
 
     private static $db = [
         'StoredDetails' => 'Text',
