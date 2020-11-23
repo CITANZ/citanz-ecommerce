@@ -110,7 +110,7 @@ class Order extends DataObject implements \JsonSerializable
             $member = Security::getCurrentUser();
         }
 
-        if ($member->inGroup('administrators') || $this->CustomerID == $member->ID) {
+        if ($member && ($member->inGroup('administrators') || $this->CustomerID == $member->ID)) {
             return true;
         }
 
@@ -416,7 +416,7 @@ class Order extends DataObject implements \JsonSerializable
     {
         $siteconfig =   SiteConfig::current_site_config();
         $invoice    =   $this->prep_pdf();
-        $str        =   $invoice->render($siteconfig->TradingName . ' Reference - ' . $this->CustomerReference . '.pdf','S');
+        $str        =   $invoice->render($siteconfig->TradingName . ' Reference - ' . $this->CustomerReference . '.pdf', 'S');
         $from       =   Config::inst()->get(Email::class, 'noreply_email');
         $to         =   $this->Email;
 
@@ -574,8 +574,12 @@ class Order extends DataObject implements \JsonSerializable
 
     public function completePayment($status)
     {
-        if ($this->Status == 'Payment Received' || $this->Status == 'Shipped' || $this->Status == 'Cancelled' || $this->Status == 'Refunded' || $this->Status == 'Completed') return false;
-        if ($status != 'CardCreated' && $status != 'Captured' && $status != 'Invoice Pending' && $status != 'Debit Pending' && $status != 'Free Order') return false;
+        if ($this->Status == 'Payment Received' || $this->Status == 'Shipped' || $this->Status == 'Cancelled' || $this->Status == 'Refunded' || $this->Status == 'Completed') {
+            return false;
+        }
+        if ($status != 'CardCreated' && $status != 'Captured' && $status != 'Invoice Pending' && $status != 'Debit Pending' && $status != 'Free Order') {
+            return false;
+        }
 
         if ($status == 'Success' || $status == 'Captured') {
             $this->Status   =   'Payment Received';
@@ -887,7 +891,8 @@ class Order extends DataObject implements \JsonSerializable
         return $data;
     }
 
-    public function jsonSerialize() {
+    public function jsonSerialize()
+    {
         return $this->Data;
     }
 
@@ -986,7 +991,6 @@ class Order extends DataObject implements \JsonSerializable
                 $result = $freight->Calculate($this);
                 return $result;
             } catch (\Exception $e) {
-
             }
         }
 
