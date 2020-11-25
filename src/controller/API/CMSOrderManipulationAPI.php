@@ -20,6 +20,7 @@ class CMSOrderManipulationAPI extends Controller
         'update_shipping',
         'update_billing',
         'update_item',
+        'update_email',
     ];
 
     protected function handleAction($request, $action)
@@ -55,13 +56,35 @@ class CMSOrderManipulationAPI extends Controller
         return $this->httpError(404, 'not allowed');
     }
 
+    public function update_email(&$request)
+    {
+        if (!$request->isPost()) {
+            return $this->httpError(400, 'Wrong method');
+        }
+
+        $email = Convert::raw2sql($request->postVar('email'));
+
+        if (empty($email)) {
+            return $this->httpError(400, 'Missing email');
+        }
+
+        $this->order->Email = $email;
+        $this->order->write();
+
+        return $this->order->VueUIData;
+    }
+
     public function update_item(&$request)
     {
+        if (!$request->isPost()) {
+            return $this->httpError(400, 'Wrong method');
+        }
+
         $vid = Convert::raw2sql($request->postVar('vid'));
         if (empty($vid)) {
             return $this->httpError(400, 'Missing variant id');
         }
-        
+
         $status = Convert::raw2sql($request->postVar('delivered'));
         $this->order->Variants()->add($vid, ['Delivered' => $status]);
     }

@@ -30,6 +30,7 @@ function initOrderInferface() {
             billing_missing: null,
             toggle_billing_editor: false,
             toggle_shipping_editor: false,
+            toggle_email_editor: false,
         },
         mounted() {
             this.order_data = JSON.parse(this.$refs.order_data.value)
@@ -42,10 +43,27 @@ function initOrderInferface() {
             })
         },
         methods: {
+            updateEmail() {
+                this.toggle_email_editor = false
+                this.revertChangedStatus()
+                const data = new FormData()
+                data.append('email', this.order_data.email)
+                axios.post(
+                    `/admin/cita-ecom/api/order/${this.order_data.cart.id}/update_email`,
+                    data
+                )
+            },
             updateItemStatus(item) {
                 const data = new FormData()
                 data.append('vid', item.id)
                 data.append('delivered', item.delivered)
+                
+                this.$nextTick().then(() => {
+                    setTimeout(() => {
+                        this.revertChangedStatus()
+                    }, 300);
+                })
+
                 axios.post(
                     `/admin/cita-ecom/api/order/${this.order_data.cart.id}/update_item`,
                     data
@@ -53,6 +71,7 @@ function initOrderInferface() {
             },
             updateShipping() {
                 this.toggle_shipping_editor = false
+                this.revertChangedStatus()
                 const data = new FormData()
                 for (let key in this.order_data.shipping) {
                     if (this.order_data.shipping[key]) {
@@ -71,6 +90,7 @@ function initOrderInferface() {
             },
             updateBilling() {
                 this.toggle_billing_editor = false
+                this.revertChangedStatus()
                 const data = new FormData()
                 if (this.order_data.billing.same_addr) {
                     data.append('same_addr', this.order_data.billing.same_addr)
@@ -90,7 +110,12 @@ function initOrderInferface() {
                         o.delivered = o.delivered == 0 || o.delivered == "0" ? false : true
                     })
                 })
-            }
+            },
+            revertChangedStatus() {
+                document.querySelectorAll(".changed").forEach(item => {
+                    item.classList.remove("changed")
+                })
+            },
         }
     });
 }

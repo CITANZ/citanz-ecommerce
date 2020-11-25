@@ -35,18 +35,6 @@
                                     <input type="text" class="form-control" id="shippingLastname" v-model="order_data.shipping.surname" />
                                 </div>
                                 <div class="field">
-                                    <label for="shippingPhone">Phone</label>
-                                    <input type="text" class="form-control" id="shippingPhone" v-model="order_data.shipping.phone" />
-                                </div>
-                                <div class="field">
-                                    <label for="shippingOrg">Organisation</label>
-                                    <input type="text" class="form-control" id="shippingOrg" v-model="order_data.shipping.org" />
-                                </div>
-                                <div class="field">
-                                    <label for="shippingApartment">Apt/Unit/Suite</label>
-                                    <input type="text" class="form-control" id="shippingApartment" v-model="order_data.shipping.apartment" />
-                                </div>
-                                <div class="field">
                                     <label for="shippingAddress">Address</label>
                                     <input type="text" class="form-control" id="shippingAddress" v-model="order_data.shipping.address" />
                                 </div>
@@ -106,18 +94,6 @@
                                         <input type="text" class="form-control" id="billingLastname" v-model="order_data.billing.surname" />
                                     </div>
                                     <div class="field">
-                                        <label for="billingPhone">Phone</label>
-                                        <input type="text" class="form-control" id="billingPhone" v-model="order_data.billing.phone" />
-                                    </div>
-                                    <div class="field">
-                                        <label for="billingOrg">Organisation</label>
-                                        <input type="text" class="form-control" id="billingOrg" v-model="order_data.billing.org" />
-                                    </div>
-                                    <div class="field">
-                                        <label for="billingApartment">Apt/Unit/Suite</label>
-                                        <input type="text" class="form-control" id="billingApartment" v-model="order_data.billing.apartment" />
-                                    </div>
-                                    <div class="field">
                                         <label for="billingAddress">Address</label>
                                         <input type="text" class="form-control" id="billingAddress" v-model="order_data.billing.address" />
                                     </div>
@@ -149,7 +125,16 @@
                         </div>
                         <div class="col-12 mt-4 mb-4">
                             <h2 class="title is-5">Email</h2>
-                            <p>{{order_data.email}}</p>
+                            <p v-if="!toggle_email_editor">
+                                <span style="vertical-align: middle;">{{order_data.email}}</span>
+                                <a @click.prevent="toggle_email_editor = true" class="btn btn-primary btn-sm" href="#" style="font-size: 10px; padding: 0.025em 0.5em; vertical-align: middle; margin-left: 0.5em;">Update</a>
+                            </p>
+                            <template v-else>
+                                <div class="field" style="display: flex; align-items: center;">
+                                    <input style="width: 33.33%; margin-right: 1rem;" type="text" class="form-control" v-model="order_data.email" />
+                                    <a style="line-height: 24px;" @click.prevent="updateEmail" class="btn btn-primary btn-sm" href="#">Update</a>
+                                </div>
+                            </template>
                         </div>
                     </div>
                     <table class="table is-fullwidth">
@@ -231,7 +216,7 @@
                         <template v-else>
                             <p class="h2">Free Order</p>
                         </template>
-                        <div v-if="order_data.cart.comment || order_data.cart.giftwrap">
+                        <div v-if="order_data.cart.comment">
                             <hr />
                             <div class="content">
                                 <p><strong>Comment</strong><br />
