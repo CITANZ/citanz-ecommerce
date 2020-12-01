@@ -57,17 +57,25 @@ function initOrderInferface() {
                 const data = new FormData()
                 data.append('vid', item.id)
                 data.append('delivered', item.delivered)
-                
-                this.$nextTick().then(() => {
-                    setTimeout(() => {
-                        this.revertChangedStatus()
-                    }, 300);
-                })
+                data.append('qty', item.quantity)
 
                 axios.post(
                     `/admin/cita-ecom/api/order/${this.order_data.cart.id}/update_item`,
                     data
-                )
+                ).then(() => {
+                    this.$nextTick().then(() => {
+                        setTimeout(() => {
+                            this.revertChangedStatus()
+                        }, 300);
+                    })
+                }).catch(error => {
+                    alert(error.response.data);
+                    this.$nextTick().then(() => {
+                        setTimeout(() => {
+                            this.revertChangedStatus()
+                        }, 300);
+                    })
+                });
             },
             updateShipping() {
                 this.toggle_shipping_editor = false

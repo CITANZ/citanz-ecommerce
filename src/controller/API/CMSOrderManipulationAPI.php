@@ -86,7 +86,22 @@ class CMSOrderManipulationAPI extends Controller
         }
 
         $status = Convert::raw2sql($request->postVar('delivered'));
-        $this->order->Variants()->add($vid, ['Delivered' => $status]);
+        $qty = Convert::raw2sql($request->postVar('qty'));
+
+        $data = [];
+
+        if (!empty($status)) {
+            $data = array_merge($data, ['Delivered' => $status]);
+        }
+
+        if (!empty($qty)) {
+            $qty = (int) $qty;
+            $data = array_merge($data, ['Quantity' => $qty]);
+        } elseif ($qty == 0) {
+            return $this->httpError(400, 'You cannot set this to 0');
+        }
+
+        $this->order->Variants()->add($vid, $data);
     }
 
     public function update_shipping(&$request)
