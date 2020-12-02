@@ -53,11 +53,17 @@ function initOrderInferface() {
                     data
                 )
             },
-            updateItemStatus(item) {
+            updateItemStatus(item, bundle_id) {
+
+                console.log(item);
+                return false
                 const data = new FormData()
                 data.append('vid', item.id)
                 data.append('delivered', item.delivered)
                 data.append('qty', item.quantity)
+                if (bundle_id) {
+                    data.append('bundle_id', bundle_id)
+                }
 
                 axios.post(
                     `/admin/cita-ecom/api/order/${this.order_data.cart.id}/update_item`,
@@ -66,14 +72,14 @@ function initOrderInferface() {
                     this.$nextTick().then(() => {
                         setTimeout(() => {
                             this.revertChangedStatus()
-                        }, 300);
+                        }, 500);
                     })
                 }).catch(error => {
                     alert(error.response.data);
                     this.$nextTick().then(() => {
                         setTimeout(() => {
                             this.revertChangedStatus()
-                        }, 300);
+                        }, 500);
                     })
                 });
             },

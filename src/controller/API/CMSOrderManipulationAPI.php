@@ -80,7 +80,9 @@ class CMSOrderManipulationAPI extends Controller
             return $this->httpError(400, 'Wrong method');
         }
 
+        $bundle_id = Convert::raw2sql($request->postVar('bundle_id'));
         $vid = Convert::raw2sql($request->postVar('vid'));
+
         if (empty($vid)) {
             return $this->httpError(400, 'Missing variant id');
         }
@@ -101,7 +103,18 @@ class CMSOrderManipulationAPI extends Controller
             return $this->httpError(400, 'You cannot set this to 0');
         }
 
-        $this->order->Variants()->add($vid, $data);
+        if (!empty($bundle_id)) {
+            $bundle = $this->order->Bundles()->byID($bundle_id);
+
+            if (empty($bundle)) {
+                return $this->httpError(400, 'no such bundle!');
+            }
+
+            $bundle->Variants()->add($vid, $data);
+
+        } else {
+            $this->order->Variants()->add($vid, $data);
+        }
     }
 
     public function update_shipping(&$request)

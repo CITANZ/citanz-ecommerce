@@ -61,7 +61,8 @@ class BundleEntry extends DataObject
                     $v->Data,
                     [
                         'count' => $v->Quantity,
-                        'delivered' => $v->Delivered,
+                        'quantity' => $v->Quantity,
+                        'delivered' => (boolean) $v->Delivered,
                     ]
                 );
             }, $this->Variants()->toArray())
