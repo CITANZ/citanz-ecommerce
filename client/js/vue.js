@@ -54,14 +54,11 @@ function initOrderInferface() {
                 )
             },
             updateItemStatus(item, bundle_id) {
-
-                console.log(item);
-                return false
                 const data = new FormData()
                 data.append('vid', item.id)
                 data.append('delivered', item.delivered)
                 data.append('qty', item.quantity)
-                
+
                 if (bundle_id) {
                     data.append('bundle_id', bundle_id)
                 }
