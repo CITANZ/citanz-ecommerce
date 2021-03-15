@@ -1,6 +1,8 @@
 <?php
 
 namespace Cita\eCommerce\Admin;
+
+use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Dev\Debug;
 use SilverStripe\Admin\ModelAdmin;
 use Cita\eCommerce\Model\Order;
@@ -51,16 +53,19 @@ class OrderAdmin extends ModelAdmin
         $list = parent::getList();
         $list = $list->filter(['ClassName' => $this->modelClass]);
 
-        if (!empty($this->getRequest()->postVar('filter')) && $this->hasMethod('FilterList')) {
+        if (!empty($this->getRequest()->postVar('filter'))) {
             $params = $this->getRequest()->postVar('filter');
-            return $this->FilterList($list, $params);
+
+            if (!empty($params['Cita-eCommerce-Model-Order']) && !empty($params['Cita-eCommerce-Model-Order']['NonPendings'])) {
+                return $list->exclude(['Status' => 'Pending']);
+            }
+
+            if ($this->hasMethod('FilterList')) {
+                return $this->FilterList($list, $params);
+            }
         }
 
-        if ($this->config()->hide_pending) {
-            return $list->filter(['ClassName' => $this->modelClass])->exclude(['Status' => 'Pending']);
-        }
-
-        return $list->filter(['ClassName' => $this->modelClass]);
+        return $list;
     }
 
     public function getEditForm($id = null, $fields = null)
@@ -105,6 +110,10 @@ class OrderAdmin extends ModelAdmin
                         $context->getFields()->insertBefore(TextField::create(
                             'ProductName',
                             'Product'
+                        ), 'Status');
+                        $context->getFields()->insertBefore(CheckboxField::create(
+                            'NonPendings',
+                            'Non-pendings'
                         ), 'Status');
                     }
                 }
