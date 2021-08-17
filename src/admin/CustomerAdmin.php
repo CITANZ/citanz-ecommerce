@@ -3,6 +3,7 @@
 namespace Cita\eCommerce\Admin;
 use SilverStripe\Admin\ModelAdmin;
 use Cita\eCommerce\Model\Customer;
+use Cita\eCommerce\Model\CustomerGroup;
 
 /**
  * Description
@@ -17,7 +18,8 @@ class CustomerAdmin extends ModelAdmin
      * @var array
      */
     private static $managed_models = [
-        Customer::class
+        Customer::class,
+        CustomerGroup::class,
     ];
 
     /**
