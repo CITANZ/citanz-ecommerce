@@ -12,10 +12,6 @@ Cita\eCommerce\eCommerce:
 Cita\eCommerce\Controller\eCommerceController:
   CompleteURL: "/cart/complete/"
 
-SilverStripe\Security\Group:
-  extensions:
-    - Cita\eCommerce\Extension\MemberGroupExtension
-
 SilverStripe\SiteConfig\SiteConfig:
   extensions:
     - Cita\eCommerce\Extension\SiteconfigExtension
