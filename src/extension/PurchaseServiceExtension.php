@@ -15,8 +15,8 @@ class PurchaseServiceExtension extends DataExtension
             $gateway = $payment->Gateway;
 
             if ($config = Environment::getEnv($gateway)) {
-                $config = json_decode($config);
-                $gatewayData = array_merge($gatewayData, (array) $config);
+                $config = json_decode($config, true);
+                $gatewayData = array_merge($gatewayData, $config);
             }
         }
     }

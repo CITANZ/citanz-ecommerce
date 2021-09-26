@@ -1,6 +1,7 @@
 <?php
 
 namespace Cita\eCommerce\Extension;
+
 use SilverStripe\ORM\DataExtension;
 use Cita\eCommerce\Model\Order;
 

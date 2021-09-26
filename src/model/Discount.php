@@ -9,7 +9,6 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\LiteralField;
-use SilverStripe\Security\Group;
 use Cita\eCommerce\Model\Product;
 use Cita\eCommerce\Model\Variant;
 use SilverStripe\View\ViewableData;
@@ -88,7 +87,7 @@ class Discount extends DataObject
      * @var array
      */
     private static $belongs_to = [
-        'Group' =>  Group::class
+        'Group' =>  CustomerGroup::class
     ];
 
     private static $many_many = [
@@ -138,9 +137,9 @@ class Discount extends DataObject
             );
         } elseif ($this->Type == 'Member Type') {
             if ($this->Group()->exists()) {
-                $field  =   LiteralField::create('Group', 'This discount has been bound to <a href="/admin/security/EditForm/field/Groups/item/' . $this->Group()->ID . '/edit">' . $this->Group()->Title . '</a> group');
+                $field  =   LiteralField::create('Group', 'This discount has been bound to <a href="/admin/customers/Cita-eCommerce-Model-CustomerGroup/EditForm/field/Cita-eCommerce-Model-CustomerGroup/item/' . $this->Group()->ID . '/edit">' . $this->Group()->Title . '</a> group');
             } else {
-                $field  =   LiteralField::create('Group', 'Please go to the <a href="/admin/security/groups">Group panel</a>, and bind the discount to the desired group');
+                $field  =   LiteralField::create('Group', 'Please go to the <a href="/admin/customers/Cita-eCommerce-Model-CustomerGroup">Group panel</a>, and bind the discount to the desired group');
             }
 
             $fields->addFieldToTab(
@@ -254,7 +253,7 @@ class Discount extends DataObject
             'by'    =>  $this->DiscountBy == 'ByPercentage' ? '%' : '-',
             'rate'  =>  (float) $this->DiscountRate,
             'code'  =>  $this->CouponCode,
-            'desc'  =>  $this->getDescription(),
+            'desc'  =>  $this->Description,
             'cancellable' => $this->Type != 'Item Count'
         ];
 

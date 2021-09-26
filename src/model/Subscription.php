@@ -21,10 +21,20 @@ class Subscription extends Product
         'Variants' => SubscriptionVariant::class,
     ];
 
+    public function getMiniData()
+    {
+        return [
+            'id' => $this->ID,
+            'title' => $this->Title,
+            'price_label' => $this->PriceLabel,
+            'variants' => $this->Variants()->Data,
+        ];
+    }
+
     public function getData()
     {
         return array_merge(parent::getData(), [
-            'subscriptions' => $this->Variants()->Data,
+            'variants' => $this->Variants()->Data,
         ]);
     }
 }

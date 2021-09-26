@@ -15,7 +15,8 @@ Cita\eCommerce\Controller\eCommerceController:
 SilverStripe\SiteConfig\SiteConfig:
   extensions:
     - Cita\eCommerce\Extension\SiteconfigExtension
-
+Cita\eCommerce\Model\Customer:
+  AllowMembershipRenewalBeforeExpiry: 0
 Cita\eCommerce\Model\Order:
   default_buttons:
     complete_order:

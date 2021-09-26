@@ -315,7 +315,7 @@ trait CartActions
         if (in_array('Stripe', array_keys(eCommerce::get_available_payment_methods()))) {
             if ($config = Environment::getEnv('Stripe')) {
                 $config = json_decode($config);
-                $data['stripe_key'] = $config->privateKey;
+                $data['stripe_key'] = $config->public;
             }
         }
 
@@ -329,7 +329,7 @@ trait CartActions
         if (empty($cart)) {
             return true;
         }
-        
+
         $list = array_unique(array_map(function($item) {
             return $item->NoDiscount;
         }, $cart->Variants()->toArray()));

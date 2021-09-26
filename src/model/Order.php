@@ -169,7 +169,7 @@ class Order extends DataObject implements \JsonSerializable
         parent::populateDefaults();
 
         $this->SameBilling  =   true;
-        $member             =   Member::currentUser();
+        $member             =   null;
 
         if (!Environment::isCli()) {
             $cookie = Cookie::get('eCommerceCookie');
@@ -183,7 +183,7 @@ class Order extends DataObject implements \JsonSerializable
             }
         }
 
-        if (!empty($member) && $member->ClassName == Customer::class) {
+        if (!empty($member) && $member instanceof Customer) {
             $this->CustomerID = $member->ID;
         } else {
             $this->AnonymousCustomer = !Environment::isCli() ? $cookie : 'CLI Imported';
@@ -489,8 +489,14 @@ class Order extends DataObject implements \JsonSerializable
         return $count;
     }
 
-    public function UpdateAmountWeight()
+    public function UpdateAmountWeight($writePending = false)
     {
+        if (!$this->Discount()->exists() && $this->Customer()->exists() && ($group = $this->Customer()->Groups()->first())) {
+            if ($group->Discount()->exists()) {
+                $this->DiscountID = $group->DiscountID;
+            }
+        }
+
         $amount = 0;
         $weight = 0;
         $distax = 0;
@@ -558,7 +564,10 @@ class Order extends DataObject implements \JsonSerializable
         $this->PayableTotal = $this->CalculatePayableTotal();
 
         $this->extend('updateOrderFields', $this);
-        $this->write();
+
+        if (!$writePending) {
+            $this->write();
+        }
     }
 
     public function makeSnapshot()
@@ -638,12 +647,6 @@ class Order extends DataObject implements \JsonSerializable
 
         if (empty($this->CustomerReference)) {
             $this->CustomerReference    =   strtoupper(substr($this->MerchantReference, 0, 8));
-        }
-
-        if (!$this->Customer()->exists() && Member::currentUser()) {
-            if (Member::currentUser()->ClassName == Customer::class) {
-                $this->CustomerID = Member::currentUser()->ID;
-            }
         }
 
         if ($this->Status == 'Pending') {
@@ -812,7 +815,7 @@ class Order extends DataObject implements \JsonSerializable
             $this->UpdateAmountWeight();
         }
 
-        return $this->getData();
+        return $this->Data;
     }
 
     public function CheckOrderRoutine()
@@ -835,9 +838,9 @@ class Order extends DataObject implements \JsonSerializable
             } else {
                 $this->DiscountID = 0;
             }
-
-            $this->UpdateAmountWeight();
         }
+
+        $this->UpdateAmountWeight();
     }
 
     public function Log($message, $admin = false)
@@ -877,7 +880,8 @@ class Order extends DataObject implements \JsonSerializable
             'weight' => $this->TotalWeight,
             'comment' => $this->Comment,
             'discount' => $this->Discount()->getData(),
-            'shipping_cost' => $this->ShippingCost
+            'shipping_cost' => $this->ShippingCost,
+            'payable_total' => $this->PayableTotal,
         ];
 
         if ($this->Discount()->exists()) {

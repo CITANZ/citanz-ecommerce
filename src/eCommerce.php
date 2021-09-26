@@ -23,19 +23,17 @@ use SilverStripe\Control\Controller;
 
 class eCommerce
 {
-    public static function get_subscription_cart($order_id = null)
+    public static function get_subscription_cart($order_id = null, $member = null)
     {
         if (!empty($order_id)) {
             return Order::get()->byID($order_id);
         }
 
-        $member = Security::getCurrentUser();
-
         if (!static::can_order($member)) {
             return null;
         }
 
-        if ($member && $member->inGroup('customers')) {
+        if ($member && $member instanceof Customer) {
             return $member->Orders()->filter(['ClassName' => SubscriptionOrder::class, 'Status' => 'Pending'])->first();
         }
 
@@ -186,7 +184,7 @@ class eCommerce
             return Config::inst()->get(__CLASS__, 'AllowAnonymousCustomer');
         }
 
-        return $member->ClassName == Customer::class || $member->inGroup('administrators');
+        return $member instanceof Customer || $member->inGroup('administrators');
     }
 
     public static function get_available_payment_methods()
@@ -212,12 +210,11 @@ class eCommerce
 
     public static function translate_country($code)
     {
-        if ($code) {
-            $code = strtolower($code) == 'new zealand' ? 'nz' : $code;
+        if ($code && strlen($code) === 2 && strtolower($code) === $code) {
             return static::get_all_countries()[$code];
         }
 
-        return null;
+        return $code;
     }
 
     public static function get_freight_options()

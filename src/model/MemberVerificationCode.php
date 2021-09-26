@@ -12,6 +12,7 @@ class MemberVerificationCode extends DataObject
     private static $db = [
         'Code' => 'Varchar(40)',
         'Invalid' => 'Boolean',
+        'Type' => 'Enum("activation,recovery")'
     ];
 
     private static $has_one = [
@@ -33,6 +34,15 @@ class MemberVerificationCode extends DataObject
 
     public static function createOnePassCode(Customer $customer, $type = 'activation')
     {
+        $found = $customer->VerificationCodes()->filter([
+            'Type' => $type,
+            'Invalid' => false,
+        ])->sort('ID DESC')->first();
+
+        if ($found) {
+            return $found;
+        }
+
         if ($type == 'activation') {
             $bytes = random_bytes(32);
             $code = strtolower(substr(bin2hex($bytes), 0, 6));
@@ -43,6 +53,7 @@ class MemberVerificationCode extends DataObject
 
         $verificationCode = new self();
         $verificationCode->Code = $code;
+        $verificationCode->Type = $type;
         $verificationCode->Invalid = false;
         $verificationCode->CustomerID = $customer->ID;
         $verificationCode->write();

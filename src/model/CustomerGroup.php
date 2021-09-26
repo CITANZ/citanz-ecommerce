@@ -7,7 +7,7 @@ use SilverStripe\Forms\TextField;
 use Cita\eCommerce\Model\Order;
 use Cita\eCommerce\Model\Address;
 use SilverStripe\Security\Group;
-
+use SilverStripe\ORM\DB;
 use Ramsey\Uuid\Uuid;
 use SilverStripe\Control\Email\Email;
 use SilverStripe\Core\Environment;
@@ -52,4 +52,16 @@ class CustomerGroup extends DataObject
         'Title' => 'Title',
         'Description' => 'Description',
     ];
+
+    public function requireDefaultRecords()
+    {
+        parent::requireDefaultRecords();
+
+        if (!self::get()->exists()) {
+            self::create()->update([
+                'Title' => 'Normal members',
+            ])->write();
+            DB::alteration_message('Normal member group has been created!', 'created');
+        }
+    }
 }

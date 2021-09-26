@@ -2,6 +2,7 @@
 
 namespace Cita\eCommerce\Model;
 
+use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use Cita\eCommerce\Model\Order;
@@ -13,19 +14,31 @@ use SilverStripe\Control\Email\Email;
 use SilverStripe\Core\Environment;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\SiteConfig\SiteConfig;
+use SilverStripe\Control\Director;
+use Psr\Log\LoggerInterface;
+use Cita\eCommerce\Model\SubscriptionOrder;
 
 class Customer extends DataObject implements \JsonSerializable
 {
+    private static $dependencies = [
+        'Logger' => '%$' . LoggerInterface::class,
+    ];
+
+    protected $logger;
+
     private static $table_name = 'Cita_eCommerce_Customer';
     private static $db = [
         'GUID' => 'Varchar(40)',
         'FirstName' => 'Varchar(255)',
         'LastName' => 'Varchar(255)',
         'Email' => 'Varchar(255)',
+        'Phone' => 'Varchar(32)',
         'Password' => 'Varchar(255)',
         'LastLoggedIn' => 'Datetime',
         'Verified' => 'Boolean',
         'AccountInitialised' => 'Boolean',
+        'Expiry' => 'Date',
+        'NeverExpire' => 'Boolean',
     ];
 
     /**
@@ -53,9 +66,46 @@ class Customer extends DataObject implements \JsonSerializable
     ];
 
     private static $has_many = [
+        'VerificationCodes' => MemberVerificationCode::class,
         'Orders'    =>  Order::class,
-        'Addresses' =>  Address::class
+        'Addresses' =>  Address::class,
     ];
+
+    private static $belongs_many_many = [
+        'Groups' => CustomerGroup::class,
+    ];
+
+    /**
+     * this owns those
+    */
+    private static $owns = [
+        'VerificationCodes',
+    ];
+
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+        return $this;
+    }
+
+    public function canRenew()
+    {
+        if ($this->NeverExpire) {
+            return false;
+        }
+
+        if (empty($this->Expiry)) {
+            return false;
+        }
+
+        $days = $this->config()->AllowMembershipRenewalBeforeExpiry;
+
+        if (empty($days)) {
+            return true;
+        }
+
+        return time() >= strtotime($this->Expiry . "-{$days} days");
+    }
 
     /**
      * CMS Fields.
@@ -80,17 +130,63 @@ class Customer extends DataObject implements \JsonSerializable
         return $fields;
     }
 
+    public function extendExpiry($days)
+    {
+        $this->logger->info($days);
+        $expiry = empty($this->Expiry) || (is_int($this->Expiry) ? $this->Expiry : strtotime($this->Expiry)) < time() ? date('Y-m-d', time()) : $this->Expiry;
+
+        $expiry = $expiry . " +{$days} days";
+        $this->logger->info($expiry);
+        $this->Expiry = strtotime($expiry);
+        $this->logger->info(date('Y-m-d', $this->Expiry));
+        $this->write();
+
+        return $this->Expiry;
+    }
+
+    public function isValidMembership()
+    {
+        if ($this->NeverExpire) {
+            return true;
+        }
+
+        if (empty($this->Expiry)) {
+            return false;
+        }
+
+        return time() < strtotime($this->Expiry . '+1 day');
+    }
+
+    public function getLastSubscription()
+    {
+        return $this->Orders()->filter([
+            'ClassName' => SubscriptionOrder::class,
+            'Status' => ['PaymentReceived', 'Shipped', 'Completed', 'Free Order']
+        ])->first();
+    }
+
     public function jsonSerialize()
     {
-        return [
-            'id' => $this->GUID,
-            'email' => $this->Email,
-            'first_name' => $this->FirstName,
-            'last_name' => $this->LastName,
-            'verified' => (bool) $this->Verified,
-            'inited' => (bool) $this->AccountInitialised,
-            'last_logged_in' => date(\DateTime::ATOM, strtotime($this->LastLoggedIn)),
-        ];
+        $extraData = $this->hasMethod('getExtraCustomerData') ? $this->ExtraCustomerData : [];
+        return array_merge(
+            $extraData,
+            [
+                'id' => $this->GUID,
+                'email' => $this->Email,
+                'first_name' => $this->FirstName,
+                'last_name' => $this->LastName,
+                'phone' => $this->Phone,
+                'verified' => (bool) $this->Verified,
+                'inited' => (bool) $this->AccountInitialised,
+                'last_logged_in' => date(\DateTime::ATOM, strtotime($this->LastLoggedIn)),
+            ]
+        );
+    }
+
+    public function getMyQRCode()
+    {
+        $password = $this->Password;
+        return $this->GUID . '@' . substr($password, 0, 8) . substr($password, -8);
     }
 
     public function getTitle()
@@ -114,20 +210,45 @@ class Customer extends DataObject implements \JsonSerializable
         }
     }
 
+    public function onAfterWrite()
+    {
+        parent::onAfterWrite();
+
+        if (!$this->Addresses()->exists()) {
+            $this->createAddressHolder();
+        }
+    }
+
+    public function createAddressHolder()
+    {
+        $defaultAddress = Address::create()->update([
+            'FirstName' => $this->FirstName,
+            'Surname' => $this->LastName,
+            'Email' => $this->Email,
+            'Phone' => $this->Phone,
+            'CustomerID' => $this->ID,
+        ]);
+
+        $defaultAddress->write();
+    }
+
     public function SendVerificationEmail()
     {
         $sitename = SiteConfig::current_site_config()->Title;
         $email = Email::create(null, $this->Email, "[{$sitename}] Your account activation code");
 
-        $email->setHTMLTemplate('App\\Web\\Email\\UserVerificationEmail');
+        $email->setHTMLTemplate('Cita\\eCommerce\\Email\\UserVerificationEmail');
 
         $verificationCode = MemberVerificationCode::createOnePassCode($this);
 
+        $baseURL = !empty(Environment::getEnv('FRONTEND_BASE_URL')) ? Environment::getEnv('FRONTEND_BASE_URL') : Director::absoluteBaseURL();
+
         $email->setData([
             'ID' => $this->ID,
-            'User' => $this,
+            'Customer' => $this,
             'VerificationCode' => $verificationCode->Code,
-            'Link' => rtrim(Environment::getEnv('FRONTEND_BASE_URL'), '/') . '/activate?code=' . $verificationCode->Code,
+            'Link' => rtrim($baseURL, '/') . '/member/me?code=' . $verificationCode->Code,
+            'Sitename' => $sitename,
         ]);
 
         $email->send();
@@ -136,21 +257,18 @@ class Customer extends DataObject implements \JsonSerializable
     public function RequestPasswordReset()
     {
         $sitename = SiteConfig::current_site_config()->Title;
-        $frontend_base_url = rtrim(Environment::getEnv('FRONTEND_BASE_URL'), '/');
-        if (empty($frontend_base_url)) {
-            user_error('Please define FRONTEND_BASE_URL constant in your .env file');
-        }
+        $baseURL = !empty(Environment::getEnv('FRONTEND_BASE_URL')) ? Environment::getEnv('FRONTEND_BASE_URL') : Director::absoluteBaseURL();
 
         $email = Email::create(null, $this->Email, "[{$sitename}] Password recovery link");
 
-        $email->setHTMLTemplate('App\\Web\\Email\\UserPasswordRecovery');
+        $email->setHTMLTemplate('Cita\\eCommerce\\Email\\UserPasswordRecovery');
 
-        $verificationCode = MemberVerificationCode::createOnePassCode($this, 'lostpass');
-        $recoverylink = "{$frontend_base_url}/me/password-recovery?recovery_token={$verificationCode->Code}";
+        $verificationCode = MemberVerificationCode::createOnePassCode($this, 'recovery');
+        $recoverylink = rtrim($baseURL, '/') . "/member/passwordRecovery?recovery_token={$verificationCode->Code}";
 
         $email->setData([
             'ID' => $this->ID,
-            'User' => $this,
+            'Customer' => $this,
             'RecoveryLink' => $recoverylink,
         ]);
 

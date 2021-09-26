@@ -11,7 +11,7 @@ use Dynamic\CountryDropdownField\Fields\CountryDropdownField;
  * @package silverstripe
  * @subpackage mysite
  */
-class Address extends DataObject
+class Address extends DataObject implements \JsonSerializable
 {
     /**
      * Defines the database table name
@@ -35,9 +35,10 @@ class Address extends DataObject
         'City'          =>  'Varchar(64)',
         'Region'        =>  'Varchar(64)',
         'Country'       =>  'Varchar(64)',
-        'Postcode'      =>  'Varchar(16)'
+        'Postcode'      =>  'Varchar(16)',
+        'Sort' => 'Int',
     ];
-    
+
     /**
      * Has_one relationship
      * @var array
@@ -45,4 +46,30 @@ class Address extends DataObject
     private static $has_one = [
         'Customer'      =>  Customer::class
     ];
+
+    private static $default_sort = ['Sort' => 'ASC'];
+
+    public function jsonSerialize()
+    {
+        return [
+          'id' => $this->ID,
+          'firstname' => $this->FirstName,
+          'surname' => $this->Surname,
+          'email' => $this->Email,
+          'phone' => $this->Phone,
+          'company' => $this->Company,
+          'address' => $this->Address,
+          'apartment' => $this->Apartment,
+          'suburb' => $this->Suburb,
+          'city' => $this->City,
+          'region' => $this->Region,
+          'country' => $this->Country,
+          'postcode' => $this->Postcode,
+        ];
+    }
+
+    public function getData()
+    {
+        return $this;
+    }
 }

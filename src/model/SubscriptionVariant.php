@@ -2,7 +2,7 @@
 
 namespace Cita\eCommerce\Model;
 
-class SubscriptionVariant extends Variant
+class SubscriptionVariant extends Variant implements \JsonSerializable
 {
     private static $table_name = 'Cita_eCommerce_SubscriptionVariant';
 
@@ -43,4 +43,18 @@ class SubscriptionVariant extends Variant
         return $fields;
     }
 
+    public function jsonSerialize()
+    {
+        return $this->Data;
+    }
+
+    public function getData()
+    {
+        return array_merge(
+            parent::getData(),
+            [
+                'duration' => $this->Duration . ' day' . ($this->Duration > 1 ? 's' : ''),
+            ]
+        );
+    }
 }
