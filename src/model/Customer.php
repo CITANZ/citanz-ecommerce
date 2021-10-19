@@ -138,7 +138,11 @@ class Customer extends DataObject implements \JsonSerializable
         $expiry = $expiry . " +{$days} days";
         $this->logger->info($expiry);
         $this->Expiry = strtotime($expiry);
-        $this->logger->info(date('Y-m-d', $this->Expiry));
+
+        if (Director::isDev()) {
+            $this->logger->info(date('Y-m-d', $this->Expiry));
+        }
+
         $this->write();
 
         return $this->Expiry;
@@ -163,6 +167,23 @@ class Customer extends DataObject implements \JsonSerializable
             'ClassName' => SubscriptionOrder::class,
             'Status' => ['PaymentReceived', 'Shipped', 'Completed', 'Free Order']
         ])->first();
+    }
+
+    public function getLastSubscriptionPaymentDate()
+    {
+        $subscription = $this->LastSubscription;
+
+        if (!$subscription) {
+            return '-';
+        }
+
+        $payment = $subscription->SuccessPayment;
+
+        if (!$payment) {
+            return '-';
+        }
+
+        return $payment->Created;
     }
 
     public function jsonSerialize()
@@ -230,6 +251,19 @@ class Customer extends DataObject implements \JsonSerializable
         ]);
 
         $defaultAddress->write();
+    }
+
+    public function getFriendlyExpiryDate()
+    {
+        if (empty($this->Expiry)) {
+            return '-';
+        }
+
+        if ($this->NeverExpire) {
+            return 'Perpetual';
+        }
+
+        return date('d/m/Y', strtotime($this->Expiry));
     }
 
     public function SendVerificationEmail()

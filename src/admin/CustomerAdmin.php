@@ -13,6 +13,7 @@ use Cita\eCommerce\Model\CustomerGroup;
  */
 class CustomerAdmin extends ModelAdmin
 {
+    public $showImportForm = false;
     /**
      * Managed data objects for CMS
      * @var array
