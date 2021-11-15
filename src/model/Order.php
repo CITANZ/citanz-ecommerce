@@ -1287,11 +1287,17 @@ class Order extends DataObject implements \JsonSerializable
 
     public function getVueUIData()
     {
+        $cartData = $this->Data;
+
+        if (!empty(trim($cartData['comment']))) {
+            $cartData['comment'] = '--------------<br />' . nl2br(trim($cartData['comment']));
+        }
+
         $data = [
             'title' => "Order#$this->ID",
             'status' => $this->Status == 'Free Order' ? 'Payment Received' : $this->Status,
             'payment' => $this->Payments()->first() ? $this->Payments()->first()->Data : null,
-            'cart' => $this->Data,
+            'cart' => $cartData,
             'shipping' => $this->ShippingData,
             'billing' => $this->BillingData,
             'email' => $this->Email,
