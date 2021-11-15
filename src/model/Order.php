@@ -960,7 +960,11 @@ class Order extends DataObject implements \JsonSerializable
             $this->DiscountID           =   0;
         }
 
+<<<<<<< HEAD
         $this->Comment                  =   $data->comment;
+=======
+        $this->Comment                  =   !empty($data->comment) ? $data->comment : null;
+>>>>>>> 9530c5e7f2c813eece2c95e0ce248dc212ea4320
 
         if ($cal_freight) {
             if ($freight = $this->get_freight_data()) {
