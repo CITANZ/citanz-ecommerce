@@ -109,28 +109,33 @@ class Order extends DataObject implements \JsonSerializable
         if (!$member) {
             $member = Security::getCurrentUser();
         }
-        
+       
         $extensionResults = $this->extend('canView', $member);
         $extensionResult = null;
-        
-        if (!empty($extensionResult)) {
-            $extensionResult = $extensionResult[0];
+       
+        if (!empty($extensionResults)) {
+            $extensionResult = $extensionResults[0];
         }
-        
+
         if ($member && ($member->inGroup('administrators') || $this->CustomerID == $member->ID)) {
-            if (!is_null($extensionResult) {
+            if (!is_null($extensionResult)) {
                 return $extensionResult;
             }
-                
+ 
             return true;
         }
 
         if (!Environment::isCli()) {
+            if (!is_null($extensionResult)) {
+                return $extensionResult;
+            }
+
             return $this->AnonymousCustomer == Cookie::get('eCommerceCookie');
         }
 
         return parent::canView($member);
     }
+
 
     /**
      * Defines summary fields commonly used in table columns
