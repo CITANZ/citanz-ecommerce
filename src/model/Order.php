@@ -1250,7 +1250,7 @@ class Order extends DataObject implements \JsonSerializable
         $list = '';
 
         foreach ($this->AllVariantsStacked as $vid => $variant) {
-            $list .= "<li>$v->Title x $v->Quantity</li>";
+            $list .= "<li>$variant->Title x $variant->Quantity</li>";
         }
 
         if (!empty($list)) {
