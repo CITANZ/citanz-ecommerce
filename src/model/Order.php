@@ -834,11 +834,12 @@ class Order extends DataObject implements \JsonSerializable
     public function CheckOrderRoutine()
     {
         // check bundle
-        $bundle = Bundle::MatchBundle($this);
+        // Check these comment lines later
+        // $bundle = Bundle::MatchBundle($this);
 
-        while ($bundle) {
-            $bundle = Bundle::MatchBundle($this);
-        }
+        // while ($bundle) {
+        //     $bundle = Bundle::MatchBundle($this);
+        // }
 
         // // bundle and discount item count type cannot be used together!
         if ($this->Bundles()->exists()) {
