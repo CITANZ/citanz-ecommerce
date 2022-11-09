@@ -15,7 +15,7 @@
         "omnipay/common": "^3",
         "php-http/buzz-adapter": "^1.0",
         "silverstripe/framework": "^4.6",
-        "guzzlehttp/guzzle": "^6",
+        "guzzlehttp/guzzle": "^7",
         "silvershop/silverstripe-hasonefield": "^3.0.1",
         "unclecheese/display-logic": "^2.0",
         "leochenftw/tailored-pdf-invoice": "dev-master",
