@@ -97,8 +97,55 @@ Cita\eCommerce\Model\Layout\Product.ss
 Cita\eCommerce\Model\Layout\ProductCollection.ss
 ```
 
+## Contribution
 
+We are assuming you had set [Demo shop](https://github.com/CITANZ/demo-shop) up
 
+Final directory structure as below,
+```
+.
+├── citanz-ecommerce 
+└── demo-shop
+```
+
+### Relink the vendor path
+
+##### 1. Fork the repository on GitHub;
+
+##### 2. Clone your forked repository on your computer as sibling folder of demo shop (IMPORTANT);
+
+```
+git clone git://github.com/[YOUR_USERNAME]/citanz-ecommerce.git
+```
+
+##### 3. Add below code in the composer.json in the root of demo shop,
+
+```
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../citanz-ecommerce"
+        }
+    ],
+```
+
+##### 4. Open terminal and go to the root folder of demo shop, then run `composer require cita/ecommerce dev-master`, this command will relink the e-commerce module to the path you defined,
+
+##### 5. Then you are able to contribute the project, then create a pull request on citanz ecommerce repository.
+
+```
+## Up-to-date origin project
+git remote add upstream git://github.com/CITANZ/citanz-ecommerce.git
+git fetch upstream
+git pull upstream master  ##
+
+## Contribute - fixes or new feature
+## blablablabla...
+
+git push origin master
+
+## Create pull requests on GitHub
+```
 
 ## FAQ
 ### Test cards?
