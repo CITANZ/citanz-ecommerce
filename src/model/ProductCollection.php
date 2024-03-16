@@ -96,7 +96,7 @@ class ProductCollection extends Page
 
         $this->add_pagesize_field($fields);
 
-        $this->extend('updateCMSFields', $fields);
+        // $this->extend('updateCMSFields', $fields); // This line will cause duplicate fields with subsite module.
 
         return $fields;
     }
