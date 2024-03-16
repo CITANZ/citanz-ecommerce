@@ -96,7 +96,10 @@ class ProductCollection extends Page
 
         $this->add_pagesize_field($fields);
 
-        // $this->extend('updateCMSFields', $fields); // This line will cause duplicate fields with subsite module.
+        if (!class_exists('SilverStripe\Subsites\Extensions\SiteTreeSubsites')) {
+            // This line will cause duplicate fields with subsite module.
+            $this->extend('updateCMSFields', $fields);
+        }
 
         return $fields;
     }
